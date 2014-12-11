@@ -1,0 +1,85 @@
+buildscript {
+    ext.kotlin_version = '0.9.206'
+    ext.kotlin_version = '0.9.66'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: "kotlin"
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+apply plugin: 'osgi'
+
+compileKotlin {
+    kotlinOptions.annotations = file('kannotations')
+}
+
+task sourceJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+[compileJava, compileTestJava,javadoc]*.options*.encoding = 'UTF-8'
+
+compileJava {
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+    options.compilerArgs << '-Xlint:unchecked'
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+group = 'com.github.sqlbuilder'
+version = '1.0.0'
+
+configurations {
+    embedded
+    compile.extendsFrom(embedded)
+}
+
+dependencies {
+    embedded "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-jdbc:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-jdk-annotations:$kotlin_version"
+    compile 'org.slf4j:slf4j-simple:1.7.7'
+    testCompile 'com.h2database:h2:1.4.+'
+    testCompile 'junit:junit:4.11'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'sqlbuilder'
+            artifactId 'sqlbuilder'
+
+            from components.java
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
+
+jar {
+    from(configurations.embedded) {
+        into('lib')
+    }
+    manifest {
+        instruction 'Bundle-Description', 'SQLBuilder for SQL lovers'
+        instruction 'Bundle-DocURL', 'https://github.com/laurentvdl/sqlbuilder'
+        instruction 'Import-Package', '!jet.*,!kotlin.*,*'
+        instruction 'Bundle-Classpath', ".,${configurations.embedded.files.collect({'lib/' + it.name}).join(',')}"
+    }
+}
+
+defaultTasks 'build'
+sourceSets {
+    main.java.srcDirs += 'src/main/kotlin'
+}
