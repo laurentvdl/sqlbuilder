@@ -56,12 +56,21 @@ dependencies {
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId 'sqlbuilder'
+            groupId 'com.github.sqlbuilder'
             artifactId 'sqlbuilder'
 
             from components.java
             artifact sourceJar {
                 classifier "sources"
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "https://api.bintray.com/maven/laurentvanderlinden/maven/sqlbuilder"
+            credentials {
+                username = bintray_username
+                password = bintray_api_key
             }
         }
     }

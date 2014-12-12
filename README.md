@@ -1,1 +1,53 @@
 # SQLBuilder for SQL lovers
+
+## What is it ?
+
+- SQL ResultSet to POJO mapper
+- query builder, allowing fluent construction of criteria arguments
+- comparable to Springs `JdbcTemplate`
+
+##Example:
+```java
+List<User> filteredUsers = sqlBuilder.select()
+    .where()
+        .group()
+            .and("username like ?", "java%")
+            .and("username like ?", "%user%")
+            .and(usernameFilter != null, "username like ?", usernameFilter)
+        .endGroup()
+        .or("id > 10")
+    .endWhere()
+    .selectBeans(User.class);
+
+List<User> allUsersAndFiles = sqlBuilder.select()
+    .sql("select * from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
+    .select(new JoiningRowHandler<User>() {
+        @Override
+        public boolean handle(@NotNull ResultSet set, int row) throws SQLException {
+            final User user = mapPrimaryBean(set, User.class, User.TABLE);
+            final File file = join(set, user, "files", File.class, File.TABLE);
+            join(set, file, "attributes", Attribute.class, Attribute.TABLE);
+            return true;
+        }
+    });
+```
+
+See more examples at <a href="https://github.com/laurentvdl/sqlbuilder/blob/master/src/test/java/sqlbuilder/JavaUsage.java">JavaUsage</a>.
+
+##Features:
+
+- non intrusive mapping, no annotations or configuration required to map a query result to
+  - a list of POJOs
+  - a single POJO
+  - a primitive
+- supports mapping of joined tables with cursor based pagination (not in memory like Hibernate)
+- all mappings are based on `RowHandler` interface
+
+##It does not:
+
+- generate SQL but for the simplest of cases (selectBeans)
+- try to enable type-safety on top of SQL
+- create/update table structures
+- abstract database dialects
+
+In short, if you love SQL and want to map the result to some POJOs, sqlbuilder might be the tool for you.
