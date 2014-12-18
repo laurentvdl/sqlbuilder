@@ -47,9 +47,9 @@ class SelectImpl(val backend: Backend) : Select {
     private var cacheStrategy: CacheStrategy? = null
     private var rowHandler: RowHandler? = null
     private var sql: String? = null
-    private var parameters: Array<Any>? = null
-    private var includeFields: Array<String>? = null
-    private var excludeFields: Array<String>? = null
+    private var parameters: Array<out Any>? = null
+    private var includeFields: Array<out String>? = null
+    private var excludeFields: Array<out String>? = null
 
     private var sqlMappings: MutableMap<Any, String>? = null
     private var propertyMappings: MutableMap<String, Any>? = null

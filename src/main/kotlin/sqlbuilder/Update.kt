@@ -25,7 +25,7 @@ trait Update {
      * @return updated rows
      * @throws sqlbuilder.PersistenceException if more or less than 1 row is updated
      */
-    fun updateBean(bean: Any, keys: Array<String>)
+    fun updateBean(bean: Any, keys: Array<out String>)
     /**
      * Custom update that allows null parameters due to the types argument.
      * @param sql statement
@@ -48,7 +48,7 @@ trait Update {
      * @param types array of java.sql.Types
      * @return updated rows
      */
-    fun updateStatement(sql: String, parameters: Array<Any>?, types: IntArray?): Int
+    fun updateStatement(sql: String, parameters: Array<out Any>?, types: IntArray?): Int
 
     /**
      * Special updatestatement that throws PersistenceException if updated rows do not match.

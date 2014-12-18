@@ -26,8 +26,8 @@ class UpdateImpl(private val backend: Backend): Update {
     private var entity: String? = null
     private var checkNullability = false
     private var getkeys = false
-    private var includeFields: Array<String>? = null
-    private var excludeFields: Array<String>? = null
+    private var includeFields: Array<out String>? = null
+    private var excludeFields: Array<out String>? = null
 
     var generatedKey: Long = 0
 
@@ -46,12 +46,12 @@ class UpdateImpl(private val backend: Backend): Update {
         updateBean(bean, keys)
     }
 
-    public override fun updateBean(bean: Any, keys: Array<String>) {
+    public override fun updateBean(bean: Any, keys: Array<out String>) {
         val metaResolver = backend.configuration.metaResolver
         if (entity == null) entity = metaResolver.getTableName(bean.javaClass)
         entity = backend.configuration.escapeEntity(entity)
 
-        if (keys.size == 0) {
+        if (keys.size() == 0) {
             throw PersistenceException("cannot update bean without a list of keys")
         }
 
@@ -135,7 +135,7 @@ class UpdateImpl(private val backend: Backend): Update {
      * @param types array of java.sql.Types
      * @return updated rows
      */
-    public override fun updateStatement(sql: String, parameters: Array<Any>?, types: IntArray?): Int {
+    public override fun updateStatement(sql: String, parameters: Array<out Any>?, types: IntArray?): Int {
         logger.info(sql)
         val connection = backend.getSqlConnection()
         try {

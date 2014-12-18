@@ -78,7 +78,7 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
     /**
      * varargs are not suitable for method overriding, use Array internally
      */
-    private fun andInterrnal(test: Boolean, condition: String, parameters: Array<Any>?): WhereGroup {
+    private fun andInterrnal(test: Boolean, condition: String, parameters: Array<out Any>?): WhereGroup {
         if (test) children.add(Condition(condition, parameters, Relation.AND))
         return this
     }
@@ -140,7 +140,7 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
     /**
      * varargs are not suitable for method overriding, use Array internally
      */
-    private fun orInternal(test: Boolean, condition: String, parameters: Array<Any>?): WhereGroup {
+    private fun orInternal(test: Boolean, condition: String, parameters: Array<out Any>?): WhereGroup {
         if (test) children.add(Condition(condition, parameters, Relation.OR))
         return this
     }

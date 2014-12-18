@@ -19,8 +19,8 @@ class InsertImpl(val backend: Backend): Insert {
     private var batch = false
     private var getkeys = false
     private var checkNullability = false
-    private var includeFields: Array<String>? = null
-    private var excludeFields: Array<String>? = null
+    private var includeFields: Array<out String>? = null
+    private var excludeFields: Array<out String>? = null
 
     public override fun into(entity: String): Insert {
         this.entity = entity

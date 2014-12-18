@@ -247,7 +247,7 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
         return null as W
     }
 
-    data class MappingKey(val aType: Class<*>, val keyValues: Array<Any>)
+    data class MappingKey(val aType: Class<*>, val keyValues: Array<out Any>)
 
     data class BeanProperty(val aType: Class<*>, val property: String)
 }
