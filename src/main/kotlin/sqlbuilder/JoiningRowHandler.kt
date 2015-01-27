@@ -81,7 +81,7 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
         if (table == null) {
             return columnToIndex.get(column)
         } else {
-            return columnToIndex.get(table + column)
+            return columnToIndex.get(table + column) ?: columnToIndex.get(column)
         }
     }
 
