@@ -118,6 +118,7 @@ public class StaticJavaResolver() : MetaResolver {
         public fun isSqlType(fieldType: Class<*>): Boolean {
             val isSqlType = javaClass<String>() == fieldType ||
                     javaClass<Int>() == fieldType ||
+                    javaClass<lang.Integer>() == fieldType ||
                     javaClass<Short>() == fieldType ||
                     javaClass<lang.Short>() == fieldType ||
                     javaClass<Double>() == fieldType ||
