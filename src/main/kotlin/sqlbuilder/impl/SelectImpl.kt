@@ -32,6 +32,7 @@ import sqlbuilder.SingleFieldListRowHandler
 import sqlbuilder.meta.PropertyReference
 import sqlbuilder.PropertiesHandler
 import org.slf4j.LoggerFactory
+import sqlbuilder.ReflectiveBeanListRowHandler
 
 class SelectImpl(val backend: Backend) : Select {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -196,7 +197,7 @@ class SelectImpl(val backend: Backend) : Select {
             return rowHandler!!
         } else {
             if (sql == null) {
-                return BeanListRowHandler(beanClass)
+                return ReflectiveBeanListRowHandler(beanClass)
             } else {
                 return DynamicBeanRowHandler(beanClass)
             }
@@ -299,8 +300,11 @@ class SelectImpl(val backend: Backend) : Select {
             val ps = con.prepareStatement(sql, cursorType, cursorConcurrency)!!
             if (fetchSize != null) ps.setFetchSize(fetchSize!!)
             try {
-                whereParameters.withIndices().forEach { pair ->
-                    SqlConverter.setParameter(ps, pair.second, pair.first + 1)
+                val parameterCount = ps.getParameterMetaData().getParameterCount()
+                whereParameters.withIndex().forEach { pair ->
+                    if (pair.index < parameterCount) {
+                        SqlConverter.setParameter(ps, pair.value, pair.index + 1)
+                    }
                 }
 
                 sqlbuilder.ResultSet(ps.executeQuery()).use { set ->

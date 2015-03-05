@@ -4,32 +4,25 @@ import sqlbuilder.meta.PropertyReference
 
 import java.util.ArrayList
 import sqlbuilder.meta.MetaResolver
+import java.sql.SQLException
 
-public class BeanListRowHandler<T>(protected var beanClass: Class<T>) : ListRowHandler<T>, ReflectionHandler, PropertiesHandler, BeanRowHandler<T> {
+public abstract class BeanListRowHandler<T> : ListRowHandler<T> {
     override var list = ArrayList<T>()
 
     override val result: MutableList<T> = list
 
-    override var properties: List<PropertyReference>? = null
-    override var metaResolver: MetaResolver? = null
-
     override fun handle(set: ResultSet, row: Int): Boolean {
-        try {
-            val bean = beanClass.newInstance()
+        val listItem = mapSetToListItem(set)
 
-            properties?.withIndices()?.forEach { pair ->
-                pair.second.set(bean, set.getObject(pair.second.classType, pair.first + 1))
-            }
-
-            handle(bean, set)
-            return true
-        } catch (e: Throwable) {
-            throw PersistenceException(e.getMessage(), e)
+        if (listItem != null) {
+            list.add(listItem)
         }
 
+        return true
     }
 
-    override fun handle(bean: T, set: ResultSet) {
-        list.add(bean)
-    }
+
+    [throws(javaClass<SQLException>())]
+    abstract fun mapSetToListItem(resultSet: ResultSet): T
+
 }

@@ -36,7 +36,7 @@ repositories {
 }
 
 group = 'com.github.sqlbuilder'
-version = '1.0.3'
+version = '1.0.4'
 
 configurations {
     embedded
@@ -68,8 +68,8 @@ publishing {
         maven {
             url "https://api.bintray.com/maven/laurentvanderlinden/maven/sqlbuilder"
             credentials {
-                username = bintray_username
-                password = bintray_api_key
+                username = project.hasProperty('bintray_username') ? project.bintray_username : ''
+                password = project.hasProperty('bintray_api_key') ? project.bintray_api_key : ''
             }
         }
     }

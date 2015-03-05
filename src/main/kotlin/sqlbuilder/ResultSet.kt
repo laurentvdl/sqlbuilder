@@ -14,11 +14,11 @@ class ResultSet(private val target: java.sql.ResultSet) : Closeable {
     }
 
     throws(javaClass<SQLException>())
-    public fun getObject(targetType: Class<*>, index: Int): Any? {
+    public fun <T> getObject(targetType: Class<T>, index: Int): T {
         when {
             targetType == javaClass<String>() -> {
                 val string = target.getString(index)
-                if (string != null) return string.trim()
+                if (string != null) return string.trim() as T
                 return null
             }
             targetType == javaClass<Int>(), targetType == javaClass<lang.Integer>() -> {
@@ -26,7 +26,7 @@ class ResultSet(private val target: java.sql.ResultSet) : Closeable {
                 if (target.wasNull()) {
                     return null
                 } else {
-                    return intValue
+                    return intValue as T
                 }
             }
             targetType == javaClass<Long>(), targetType == javaClass<lang.Long>() -> {
@@ -34,7 +34,7 @@ class ResultSet(private val target: java.sql.ResultSet) : Closeable {
                 if (target.wasNull()) {
                     return null
                 } else {
-                    return longValue
+                    return longValue as T
                 }
             }
             targetType == javaClass<Short>(), targetType == javaClass<lang.Short>() -> {
@@ -42,7 +42,7 @@ class ResultSet(private val target: java.sql.ResultSet) : Closeable {
                 if (target.wasNull()) {
                     return null
                 } else {
-                    return shortValue
+                    return shortValue as T
                 }
             }
             targetType == javaClass<Double>(), targetType == javaClass<lang.Double>() -> {
@@ -50,7 +50,7 @@ class ResultSet(private val target: java.sql.ResultSet) : Closeable {
                 if (target.wasNull()) {
                     return null
                 } else {
-                    return doubleValue
+                    return doubleValue as T
                 }
             }
             targetType == javaClass<Float>(), targetType == javaClass<lang.Float>() -> {
@@ -58,44 +58,44 @@ class ResultSet(private val target: java.sql.ResultSet) : Closeable {
                 if (target.wasNull()) {
                     return null
                 } else {
-                    return floatValue
+                    return floatValue as T
                 }
             }
             targetType == javaClass<Timestamp>() -> {
-                return target.getTimestamp(index)
+                return target.getTimestamp(index) as T
             }
             targetType == javaClass<Date>(), targetType == javaClass<java.util.Date>() -> {
                 val sqlDate = target.getDate(index)
                 if (sqlDate == null) {
                     return null
                 } else {
-                    return java.util.Date(sqlDate.getTime())
+                    return java.util.Date(sqlDate.getTime()) as T
                 }
             }
             targetType == javaClass<Boolean>() -> {
                 val truth = target.getBoolean(index)
                 if (target.wasNull()) return null
-                return truth
+                return truth as T
             }
             targetType == javaClass<String>(), targetType == javaClass<lang.Character>(), targetType.getName() == "char" -> {
-                return target.getString(index)?.charAt(0)
+                return target.getString(index)?.charAt(0) as T
             }
             targetType == javaClass<ByteArray>() -> {
-                return target.getBytes(index)
+                return target.getBytes(index) as T
             }
             targetType == javaClass<Boolean>(), targetType == javaClass<lang.Boolean>(), targetType.getName() == "boolean" -> {
-                return target.getBoolean(index)
+                return target.getBoolean(index) as T
             }
             javaClass<Enum<*>>().isAssignableFrom(targetType) -> {
                 val enumValue = target.getInt(index)
                 if (target.wasNull()) return null
-                return targetType.getEnumConstants()?.get(enumValue)
+                return targetType.getEnumConstants()?.get(enumValue) as T
             }
             targetType == javaClass<BigDecimal>() -> {
-                return target.getBigDecimal(index)
+                return target.getBigDecimal(index) as T
             }
             javaClass<Any>() == targetType -> {
-                return target.getObject(index)
+                return target.getObject(index) as T
             }
         }
         throw PersistenceException("unknown bean property, unable to find matching SQL variant: " + targetType.getName())

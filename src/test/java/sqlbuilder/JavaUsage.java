@@ -12,6 +12,7 @@ import sqlbuilder.pool.DefaultConfig;
 import sqlbuilder.pool.Drivers;
 
 import java.sql.SQLException;
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Set;
 
@@ -180,4 +181,22 @@ public class JavaUsage {
             .from("users")
             .selectBean(User.class);
     }
+	
+	@Test
+	public void customHandler() {
+		final List<AbstractMap.SimpleEntry<Integer,String>> userEntries = sqlBuilder.select()
+			.sql("select id,username from users")
+			.select(new BeanListRowHandler<AbstractMap.SimpleEntry<Integer,String>>() {
+				@Override
+				public AbstractMap.SimpleEntry<Integer, String> mapSetToListItem(@NotNull ResultSet resultSet) throws SQLException {
+					return new AbstractMap.SimpleEntry<>(
+						resultSet.getObject(Integer.class, 1),
+						resultSet.getJdbcResultSet().getString(2)
+					);
+				}
+			});
+
+		assertEquals(2, userEntries.size());
+		assertEquals("javauser a", userEntries.get(0).getValue());
+	}
 }

@@ -14,12 +14,10 @@ import org.slf4j.LoggerFactory
  *
  * @author Laurent Van der Linden
  */
-public class DynamicBeanRowHandler<T>(private val beanClass: Class<T>) : ListRowHandler<T>, ReflectionHandler, PropertiesHandler, BeanRowHandler<T> {
+public class DynamicBeanRowHandler<T>(private val beanClass: Class<T>) : ListRowHandler<T>, ReflectionHandler, PropertiesHandler, BeanListRowHandler<T>() {
     private val trace = LoggerFactory.getLogger("sqlbuildertrace")!!
 
     var mappings: Map<Any, String>? = null
-
-    override var list: MutableList<T> = ArrayList()
 
     override var properties: List<PropertyReference>? = null
         set(setters) {
@@ -37,7 +35,7 @@ public class DynamicBeanRowHandler<T>(private val beanClass: Class<T>) : ListRow
     private val simplifier1 = Pattern.compile("(\\w+\\.)|\\.|-")
     private val simplifier2 = Pattern.compile("(\\w+\\.)|\\.|-|_")
 
-    override fun handle(set: ResultSet, row: Int): Boolean {
+    override fun mapSetToListItem(set: ResultSet): T {
         try {
             val meta = set.getJdbcResultSet().getMetaData()
             val columns = meta.getColumnCount()
@@ -63,16 +61,12 @@ public class DynamicBeanRowHandler<T>(private val beanClass: Class<T>) : ListRow
                     prop.set(bean, set.getObject(prop.classType, index))
                 }
             }
-            handle(bean, set)
-            return true
+
+            return bean
         } catch (e: Exception) {
             throw PersistenceException(e.getMessage(), e)
         }
 
-    }
-
-    override fun handle(bean: T, set: ResultSet) {
-        list.add(bean)
     }
 
     override var result: MutableList<T> = list

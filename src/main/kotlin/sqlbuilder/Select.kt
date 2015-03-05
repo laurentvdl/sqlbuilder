@@ -95,7 +95,7 @@ trait Select {
      */
     fun cache(cacheStrategy: CacheStrategy): Select
 
-    fun <T> selectBean(beanClass: Class<T>): T?
+    fun <T> selectBean(beanClass: Class<T>): T
 
     fun <T> selectBeans(beanClass: Class<T>): List<T>
 
