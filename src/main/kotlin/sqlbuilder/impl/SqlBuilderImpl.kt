@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
 import sqlbuilder.meta.PropertyReference
 
 public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
-    private val logger = LoggerFactory.getLogger(javaClass())!!
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val txConnections = ThreadLocal<Connection>()
     private val caches = ConcurrentHashMap<String, MutableMap<CacheableQuery, SoftReference<Any>>>()
@@ -48,7 +48,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
     override fun <T> save(bean: T, vararg excludedFields: String): T {
         val metaResolver = configuration.metaResolver
         val keys = metaResolver.getKeys(bean.javaClass)
-        if (keys.size == 1 && keys[0] == "id") {
+        if (keys.size() == 1 && keys[0] == "id") {
             val idField = metaResolver.findField("id", bean.javaClass)
             if (idField == null) throw IllegalArgumentException("bean <${bean.javaClass}> has no id field")
             idField.setAccessible(true)
@@ -194,7 +194,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
         }
         logger.trace("checking nullability for {}.{}", schema, table)
 
-        val nonNullColumns = sqlCon.getMetaData()?.getColumns(null, schema, table, null)!!.usea {(cRs: ResultSet) ->
+        val nonNullColumns = sqlCon.getMetaData()?.getColumns(null, schema, table, null)!!.usea { cRs: ResultSet ->
             cRs.map { set ->
                 if (cRs.getInt(11) != 1) cRs.getString(4)!! else null
             }

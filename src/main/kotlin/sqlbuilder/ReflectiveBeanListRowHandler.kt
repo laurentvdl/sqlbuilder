@@ -10,12 +10,12 @@ public open class ReflectiveBeanListRowHandler<T>(protected var beanClass: Class
     override var properties: List<PropertyReference>? = null
     override var metaResolver: MetaResolver? = null
 
-    override fun mapSetToListItem(resultSet: ResultSet): T {
+    override fun mapSetToListItem(set: ResultSet): T {
         try {
             val bean = beanClass.newInstance()
 
             properties?.withIndex()?.forEach { pair ->
-                pair.value.set(bean, resultSet.getObject(pair.value.classType, pair.index + 1))
+                pair.value.set(bean, set.getObject(pair.value.classType, pair.index + 1))
             }
 
             return bean

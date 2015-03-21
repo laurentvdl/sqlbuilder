@@ -99,9 +99,9 @@ trait Select {
 
     fun <T> selectBeans(beanClass: Class<T>): List<T>
 
-    fun <T> excludeFields(vararg excludes: String): Select
+    fun excludeFields(vararg excludes: String): Select
 
-    fun <T> includeFields(vararg includes: String): Select
+    fun includeFields(vararg includes: String): Select
 
     /**
      * Select first/only occurrence of a single field and return null if no result.

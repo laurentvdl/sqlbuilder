@@ -10,7 +10,7 @@ public class SingleFieldRowHandler<T>(private val requiredType: Class<T>) : Cach
     override var result: T = null
 
     override fun handle(set: ResultSet, row: Int): Boolean {
-        result = set.getObject(requiredType, 1) as T
+        result = set.getObject(requiredType, 1)
         return false
     }
 }

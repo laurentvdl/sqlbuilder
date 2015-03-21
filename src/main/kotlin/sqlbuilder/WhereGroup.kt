@@ -3,7 +3,7 @@ package sqlbuilder
 import java.util.ArrayList
 
 /**
- * Where criterium builder.
+ * Where clause builder.
  */
 public class WhereGroup(protected var parent: Any, private val select: Select, private val relation: Relation) : WherePart {
     private val children = ArrayList<WherePart>()
@@ -37,7 +37,7 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
 
     /**
      * Add a fixed where condition that <b>AND</b>'s itself to its predecessor.
-     * @param condition
+     * @param condition where condition
      * @return this
      */
     public fun and(condition: String): WhereGroup {
@@ -46,8 +46,8 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
 
     /**
      * Add an AND condition if the test succeeds.
-     * @param test
-     * @param condition
+     * @param test only apply this operation if true, useful for builder invocation
+     * @param condition where condition
      * @return this
      */
     public fun and(test: Boolean, condition: String): WhereGroup {
@@ -56,8 +56,8 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
 
     /**
      * Add an parameterized where condition that <b>AND</b>'s itself to its predecessor.
-     * @param condition
-     * @param parameters
+     * @param condition where condition
+     * @param parameters values for any where parameters (?) specified in the condition
      * @return this
      */
     public fun and(condition: String, vararg parameters: Any): WhereGroup {
@@ -66,9 +66,9 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
 
     /**
      * Add an parameterized where condition that <b>AND</b>'s itself to its predecessor if the test succeeds.
-     * @param test
-     * @param condition
-     * @param parameters
+     * @param test only apply this operation if true, useful for builder invocation
+     * @param condition where condition
+     * @param parameters values for any where parameters (?) specified in the condition
      * @return this
      */
     public fun and(test: Boolean, condition: String, vararg parameters: Any): WhereGroup {
@@ -85,8 +85,8 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
 
     /**
      * Add a fixed where condition that <b>OR</b>'s itself to its predecessor.
-     * @param condition
-     * @return
+     * @param condition where condition
+     * @return this
      */
     public fun or(condition: String): WhereGroup {
         return orInternal(true, condition, null)
@@ -94,9 +94,9 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
 
     /**
      * Add a fixed where condition that <b>OR</b>'s itself to its predecessor if the test succeeds.
-     * @param test
-     * @param condition
-     * @return
+     * @param test only apply this operation if true, useful for builder invocation
+     * @param condition where condition
+     * @return this
      */
     public fun or(test: Boolean, condition: String): WhereGroup {
         return orInternal(test, condition, null)
@@ -104,9 +104,9 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
 
     /**
      * Add a parametrized where condition that <b>OR</b>'s itself to its predecessor.
-     * @param condition
-     * @param parameters
-     * @return
+     * @param condition where condition
+     * @param parameters values for any where parameters (?) specified in the condition
+     * @return this
      */
     public fun or(condition: String, vararg parameters: Any): WhereGroup {
         return orInternal(true, condition, parameters)
@@ -114,17 +114,23 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
 
     /**
      * Add a parametrized where condition that <b>OR</b>'s itself to its predecessor if the test succeeds.
-     * @param test
-     * @param condition
-     * @param parameters
-     * @return
+     * @param test only apply this operation if true, useful for builder invocation
+     * @param condition where condition
+     * @param parameters values for any where parameters (?) specified in the condition
+     * @return this
      */
     public fun or(test: Boolean, condition: String, vararg parameters: Any): WhereGroup {
         return orInternal(test, condition, parameters)
     }
 
+    /**
+     * create a nested AND group and specify the clauses for each iterated item via a visitor function
+     */
     public fun <T> and(iterable: Iterable<T>?, visitor: WhereGroupVisitor<T>): WhereGroup = forIterable(Relation.AND, iterable, visitor)
 
+    /**
+     * create a nested OR group and specify the clauses for each iterated item via a visitor function
+     */
     public fun <T> or(iterable: Iterable<T>?, visitor: WhereGroupVisitor<T>): WhereGroup = forIterable(Relation.OR, iterable, visitor)
 
     fun <T> forIterable(relation: Relation, iterable: Iterable<T>?, visitor: WhereGroupVisitor<T>): WhereGroup {
@@ -151,7 +157,7 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
 
     /**
      * Close the where builder.
-     * @return
+     * @return the select statement
      */
     public fun endWhere(): Select {
         return select
@@ -159,9 +165,7 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
 
     public fun toSql(sql: StringBuilder, parameters: MutableList<Any>) {
         var clean = true
-        val childrenSize = children.size()
-        for (i in 0..childrenSize - 1) {
-            val child = children.get(i)
+        for (child in children) {
             if (child is Condition) {
                 if (!clean) {
                     appendRelation(sql, child.relation)
@@ -175,11 +179,11 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
                 if (child is WhereGroup) {
                     if (!child.getNestedConditions().isEmpty()) {
                         if (!clean) {
-                            appendRelation(sql, (child as WhereGroup).relation)
+                            appendRelation(sql, child.relation)
                         }
                         clean = false
                         sql.append("(")
-                        (child as WhereGroup).toSql(sql, parameters)
+                        child.toSql(sql, parameters)
                         sql.append(")")
                     }
                 }

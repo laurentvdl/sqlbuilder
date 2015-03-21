@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
  * Helper class that sets/gets from sql objects according to type.
  */
 public class SqlConverter() {
-    class object {
+    companion object {
         private val logger = LoggerFactory.getLogger(javaClass)
 
         throws(javaClass<SQLException>())

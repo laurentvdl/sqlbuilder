@@ -13,6 +13,7 @@ class ResultSet(private val target: java.sql.ResultSet) : Closeable {
         return target
     }
 
+    [suppress("UNCHECKED_CAST", "PLATFORM_CLASS_MAPPED_TO_KOTLIN")]
     throws(javaClass<SQLException>())
     public fun <T> getObject(targetType: Class<T>, index: Int): T {
         when {

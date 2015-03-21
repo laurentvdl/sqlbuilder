@@ -5,7 +5,7 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-trait SqlBuilder {
+public trait SqlBuilder {
     public fun select(): Select
     public fun insert(): Insert
     public fun delete(): Delete

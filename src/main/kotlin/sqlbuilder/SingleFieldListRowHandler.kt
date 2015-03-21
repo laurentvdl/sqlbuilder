@@ -14,7 +14,7 @@ public class SingleFieldListRowHandler<T>(private val requiredType: Class<T>) : 
     override var result: List<T> = list
 
     override fun handle(set: ResultSet, row: Int): Boolean {
-        list.add(set.getObject(requiredType, 1) as T)
+        list.add(set.getObject(requiredType, 1))
         return true
     }
 }

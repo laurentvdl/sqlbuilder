@@ -3,7 +3,7 @@ package sqlbuilder.meta
 import java.lang.reflect.Field
 
 /**
- * @author
+ * @author Laurent Van der Linden
  */
 public trait MetaResolver {
     fun <T> getProperties(beanClass: Class<T>, mutators: Boolean): List<PropertyReference>

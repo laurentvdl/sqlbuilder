@@ -61,7 +61,7 @@ public class StaticJavaResolver() : MetaResolver {
                 if (accept) {
                     if (mutators) {
                         val parameters = method.getParameterTypes()
-                        if (parameters != null && parameters.size == 1 && (isSqlType(parameters[0]) || javaClass<Enum<*>>().isAssignableFrom(parameters[0]))) {
+                        if (parameters != null && parameters.size() == 1 && (isSqlType(parameters[0]) || javaClass<Enum<*>>().isAssignableFrom(parameters[0]))) {
                             result.add(JavaGetterSetterPropertyReference(flatName, method, parameters[0]))
                             names.add(flatName)
                         }
@@ -109,12 +109,13 @@ public class StaticJavaResolver() : MetaResolver {
         } catch (ignore: IllegalAccessException) {
         }
 
-        return array<String>("id")
+        return array("id")
     }
 
-    class object {
-        private val logger = LoggerFactory.getLogger(javaClass())!!
+    companion object {
+        private val logger = LoggerFactory.getLogger(javaClass)
 
+        [suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")]
         public fun isSqlType(fieldType: Class<*>): Boolean {
             val isSqlType = javaClass<String>() == fieldType ||
                     javaClass<Int>() == fieldType ||

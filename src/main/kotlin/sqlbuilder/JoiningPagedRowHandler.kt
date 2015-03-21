@@ -17,6 +17,7 @@ public abstract class JoiningPagedRowHandler<T>(private val offset: Int, private
     override fun handle(set: ResultSet, row: Int): Boolean {
         val parameterizedType = javaClass.getGenericSuperclass() as ParameterizedType
         val aType = parameterizedType.getActualTypeArguments()?.get(0)
+        [suppress("UNCHECKED_CAST")]
         val keyValues = getKeyValues(set, aType as Class<T>, table)
         if (lastKeyValues == null || !(lastKeyValues?.equals(keyValues) ?: false)) {
             primaryCount++

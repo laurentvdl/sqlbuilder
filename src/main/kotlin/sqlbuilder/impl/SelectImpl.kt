@@ -125,20 +125,20 @@ class SelectImpl(val backend: Backend) : Select {
         return this
     }
 
-    override fun <T> excludeFields(vararg excludes: String): Select {
+    override fun excludeFields(vararg excludes: String): Select {
         this.excludeFields = excludes
         return this
     }
 
-    override fun <T> includeFields(vararg includes: String): Select {
+    override fun includeFields(vararg includes: String): Select {
         this.includeFields = includes
         return this
     }
 
     override fun <T> selectBean(beanClass: Class<T>): T {
         val result = selectBeans(beanClass)
-        if (!result.empty) {
-            if (result.size > 1) {
+        if (!result.isEmpty()) {
+            if (result.size() > 1) {
                 throw IncorrectResultSizeException("more than 1 result")
             }
             return result.get(0)
@@ -175,7 +175,7 @@ class SelectImpl(val backend: Backend) : Select {
                 if (mappedColumn == null || mappedColumn !is String) {
                     fieldName
                 } else {
-                    mappedColumn as String
+                    mappedColumn
                 }
             }
         }
@@ -186,6 +186,7 @@ class SelectImpl(val backend: Backend) : Select {
         execute(fields, beanHandler)
 
         if (beanHandler is ListRowHandler<*>) {
+            [suppress("UNCHECKED_CAST")]
             return beanHandler.list as List<T>
         } else {
             throw IllegalStateException("A RowHandler of type <ListRowHandler> is required for selectBeans()")
@@ -258,6 +259,7 @@ class SelectImpl(val backend: Backend) : Select {
         return rowHandler.result
     }
 
+    [suppress("UNCHECKED_CAST")]
     public fun execute(fields: List<String>?,
                        rowHandler: RowHandler) {
         val sqlBuffer = StringBuilder(sql ?: "")

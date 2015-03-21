@@ -132,7 +132,7 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         return DriverManager.getConnection(configProvider.url, properties)
     }
 
-    SuppressWarnings("unchecked")
+    [suppress("UNCHECKED_CAST")]
     throws(javaClass<SQLException>())
     override fun <T> unwrap(iface: Class<T>): T {
         if (isWrapperFor(iface)) {

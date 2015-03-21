@@ -33,8 +33,8 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
         return instance
     }
 
-    protected fun putById(`type`: Class<*>, vararg ids: Any) {
-        beans.put(MappingKey(`type`, ids), Object())
+    protected fun putById(type: Class<*>, vararg ids: Any) {
+        beans.put(MappingKey(type, ids), Object())
     }
 
     protected open fun addPrimaryBean(instance: T) {
@@ -70,11 +70,11 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
 
     SuppressWarnings("unchecked")
     throws(javaClass<SQLException>())
-    protected fun <S> getColumnFromTable(set: ResultSet, table: String, column: String, propertyType: Class<S>): S? {
+    protected fun <S> getColumnFromTable(set: ResultSet, table: String, column: String, propertyType: Class<S>): S {
         createColumnToIndexCache(set)
         val index = getColumnIndex(table, column)
         if (index == null) return null
-        return set.getObject(propertyType, index) as? S
+        return set.getObject(propertyType, index)
     }
 
     protected fun getColumnIndex(table: String?, column: String): Int? {
@@ -101,7 +101,6 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
     /**
      * Map primary bean and add to resultlist in unique fashion
      * @param set active ResultSet
-     * @param sqlConverter helper for ResultSet
      * @param primaryType type of primary bean
      * @param table table containing primary bean columns
      * @return newly mapped object or cached value if the primary result is not unique
@@ -132,6 +131,7 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
             var inResultSet = keyValues.all { it != null }
             if (inResultSet) {
                 // look in cache first
+                [suppress("UNCHECKED_CAST")]
                 var instance = getById(targetType, *(keyValues as List<Any>).copyToArray())
                 if (instance == null) {
                     // create new instance
@@ -186,7 +186,6 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
     /**
      * Automated joiner, using reflection to detect joined tables, relation cardinality and List initialization.
      * @param set active ResultSet
-     * @param sqlConverter helper for ResultSet
      * @param owner Object from which we join, which holds the specified property (can be null)
      * @param property attribute in owner that receives the joined result
      * @param targetType type of the joined result
@@ -216,6 +215,7 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
                 val isSet = javaClass<Set<*>>().isAssignableFrom(relationField.getType()!!)
 
                 // look in cache first
+                [suppress("UNCHECKED_CAST")]
                 var instance = getById(targetType, *(keyValues as List<Any>).copyToArray())
                 if (instance == null) {
                     // create new instance
@@ -223,6 +223,7 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
                     putById(instance, *keyValues.copyToArray())
                 }
                 if (isList) {
+                    [suppress("UNCHECKED_CAST")]
                     var relationList = relationField.get(owner) as MutableList<W>?
                     if (relationList == null) {
                         relationList = ArrayList<W>()
@@ -231,6 +232,7 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
                     if (!relationList!!.contains(instance)) relationList!!.add(instance)
                 } else
                     if (isSet) {
+                        [suppress("UNCHECKED_CAST")]
                         val relationSet = relationField.get(owner) as MutableSet<W>? ?:
                             run<MutableSet<W>> {
                                 val setValue = HashSet<W>()
