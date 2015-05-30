@@ -5,7 +5,7 @@ import java.lang.reflect.Field
 /**
  * @author Laurent Van der Linden
  */
-public trait MetaResolver {
+public interface MetaResolver {
     fun <T> getProperties(beanClass: Class<T>, mutators: Boolean): List<PropertyReference>
 
     fun <T> getTableName(beanClass: Class<T>): String

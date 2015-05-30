@@ -85,7 +85,7 @@ class SelectImpl(val backend: Backend) : Select {
     }
 
     override fun orderBy(column: String, ascending: Boolean): Select {
-        if (column.matches("^(\\w|_|\\.)+$")) {
+        if (column.matches("^(\\w|_|\\.)+$".toRegex())) {
             orderBy = column
             orderAscending = ascending
         } else {
@@ -186,7 +186,7 @@ class SelectImpl(val backend: Backend) : Select {
         execute(fields, beanHandler)
 
         if (beanHandler is ListRowHandler<*>) {
-            [suppress("UNCHECKED_CAST")]
+            @suppress("UNCHECKED_CAST")
             return beanHandler.list as List<T>
         } else {
             throw IllegalStateException("A RowHandler of type <ListRowHandler> is required for selectBeans()")
@@ -259,7 +259,7 @@ class SelectImpl(val backend: Backend) : Select {
         return rowHandler.result
     }
 
-    [suppress("UNCHECKED_CAST")]
+    @suppress("UNCHECKED_CAST")
     public fun execute(fields: List<String>?,
                        rowHandler: RowHandler) {
         val sqlBuffer = StringBuilder(sql ?: "")

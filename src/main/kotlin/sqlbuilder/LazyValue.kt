@@ -5,7 +5,7 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-public trait LazyValue {
-    throws(javaClass<Exception>())
+public interface LazyValue {
+    throws(Exception::class)
     public fun eval(): Any
 }

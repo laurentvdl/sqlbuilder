@@ -13,11 +13,11 @@ public abstract class JoiningPagedRowHandler<T>(private val offset: Int, private
     private var skip: Boolean = false
     private var lastKeyValues: List<Any?>? = null
 
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     override fun handle(set: ResultSet, row: Int): Boolean {
         val parameterizedType = javaClass.getGenericSuperclass() as ParameterizedType
         val aType = parameterizedType.getActualTypeArguments()?.get(0)
-        [suppress("UNCHECKED_CAST")]
+        @suppress("UNCHECKED_CAST")
         val keyValues = getKeyValues(set, aType as Class<T>, table)
         if (lastKeyValues == null || !(lastKeyValues?.equals(keyValues) ?: false)) {
             primaryCount++
@@ -44,6 +44,6 @@ public abstract class JoiningPagedRowHandler<T>(private val offset: Int, private
      * @param i resultSet index
      * @throws SQLException
      */
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     public abstract fun handleInPage(set: ResultSet, i: Int)
 }

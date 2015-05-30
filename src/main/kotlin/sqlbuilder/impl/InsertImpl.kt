@@ -83,7 +83,7 @@ class InsertImpl(val backend: Backend): Insert {
                 val sql = StringBuilder("insert into ").append(entity).append("(")
                 properties.map { it.name }.joinTo(sql, ",")
                 sql.append(") values(")
-                for (i in 0..properties.size - 1) {
+                for (i in 0..properties.size() - 1) {
                     if (i > 0) sql.append(",")
                     sql.append("?")
                 }
@@ -99,7 +99,7 @@ class InsertImpl(val backend: Backend): Insert {
                     backend.checkNullability(entity!!, bean, sqlCon, properties)
                 }
 
-                for ((index,property) in properties.withIndices()) {
+                for ((index,property) in properties.withIndex()) {
                     logger.debug("setInsertParameter " + property.name + " <" + property.classType.getName() + ">")
                     SqlConverter.setParameter(cachedStatement!!, values[property], index + 1, property.classType, null)
                 }

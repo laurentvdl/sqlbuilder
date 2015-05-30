@@ -99,10 +99,10 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         }
     }
 
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     override fun getConnection(): Connection {
         loadDriver()
-        return Proxy.newProxyInstance(javaClass.getClassLoader(), array<Class<*>>(javaClass<Connection>()), obtainConnection()) as Connection
+        return Proxy.newProxyInstance(javaClass.getClassLoader(), arrayOf(javaClass<Connection>()), obtainConnection()) as Connection
     }
 
     private fun loadDriver() {
@@ -115,7 +115,7 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
 
     }
 
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     protected fun newFysicalConnection(): Connection {
         val properties = configProvider.properties ?: Properties()
 
@@ -132,8 +132,8 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         return DriverManager.getConnection(configProvider.url, properties)
     }
 
-    [suppress("UNCHECKED_CAST")]
-    throws(javaClass<SQLException>())
+    @suppress("UNCHECKED_CAST")
+    throws(SQLException::class)
     override fun <T> unwrap(iface: Class<T>): T {
         if (isWrapperFor(iface)) {
             return this as T
@@ -142,7 +142,7 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         }
     }
 
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     override fun isWrapperFor(iface: Class<*>): Boolean {
         return iface == javaClass
     }

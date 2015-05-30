@@ -48,7 +48,7 @@ class DeleteImpl(private val backend: Backend): Delete {
                 logger.info(sqlString)
                 val ps = con.prepareStatement(sqlString)!!
 
-                for ((index,key) in keyProperties.withIndices()) {
+                for ((index,key) in keyProperties.withIndex()) {
                     SqlConverter.setParameter(ps, key.get(bean), index + 1, key.classType, null)
                 }
                 return ps.executeUpdate()

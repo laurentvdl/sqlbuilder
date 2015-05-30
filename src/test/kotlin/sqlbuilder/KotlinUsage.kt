@@ -50,7 +50,7 @@ class KotlinUsage {
 
     Test fun selectBeans() {
         val users = sqlBuilder.select().from("users").selectBeans(javaClass<User>())
-        assertEquals(2, users.size, "row count")
+        assertEquals(2, users.size(), "row count")
         assertEquals(1L, users[0].id)
         assertEquals(users[0].username, "test a")
     }
@@ -72,7 +72,7 @@ class KotlinUsage {
                         return true
                     }
                 })
-        assertEquals(2, usersWithFiles[0].files?.size, "first user should have 2 files")
+        assertEquals(2, usersWithFiles[0].files?.size(), "first user should have 2 files")
     }
 
     Test fun criteria() {

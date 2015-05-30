@@ -5,7 +5,7 @@ package sqlbuilder.meta
  *
  * @author Laurent Van der Linden
  */
-public trait PropertyReference {
+public interface PropertyReference {
     val name: String
 
     fun set(bean: Any, value: Any?)

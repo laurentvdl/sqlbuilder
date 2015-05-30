@@ -7,6 +7,6 @@ import sqlbuilder.meta.PropertyReference
  *
  * @author Laurent Van der Linden
  */
-trait PropertiesHandler {
+interface PropertiesHandler {
     var properties: List<PropertyReference>?
 }

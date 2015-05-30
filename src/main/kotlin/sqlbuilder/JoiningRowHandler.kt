@@ -23,7 +23,7 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
 
     override var result: MutableList<T> = list
 
-    [suppress("UNCHECKED_CAST")]
+    @suppress("UNCHECKED_CAST")
     protected fun <S> getById(beanClass: Class<S>, vararg ids: Any): S {
         return beans.get(MappingKey(beanClass, ids)) as S
     }
@@ -50,15 +50,15 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
      * @throws SQLException
      * @return same instance populated
      */
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     protected open fun <S> mapSetToBean(set: ResultSet, table: String, instance: S, mappings: Map<String, String>? = null): S {
         createColumnToIndexCache(set)
         var propertyReferences = propertyReferenceCache.get(instance.javaClass)
         if (propertyReferences == null) {
             propertyReferences = metaResolver!!.getProperties(instance.javaClass, true)
-            propertyReferenceCache.put(instance.javaClass, propertyReferences!!)
+            propertyReferenceCache.put(instance.javaClass, propertyReferences)
         }
-        for (pr in propertyReferences!!) {
+        for (pr in propertyReferences) {
             val property = mappings?.get(pr.name) ?: pr.name
             val index = getColumnIndex(table, property)
             if (index != null) {
@@ -69,7 +69,7 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
     }
 
     SuppressWarnings("unchecked")
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     protected fun <S> getColumnFromTable(set: ResultSet, table: String, column: String, propertyType: Class<S>): S {
         createColumnToIndexCache(set)
         val index = getColumnIndex(table, column)
@@ -85,7 +85,7 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
         }
     }
 
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     private fun createColumnToIndexCache(set: ResultSet) {
         val metaData = set.getJdbcResultSet().getMetaData()
         val columnCount = metaData.getColumnCount()
@@ -131,8 +131,8 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
             var inResultSet = keyValues.all { it != null }
             if (inResultSet) {
                 // look in cache first
-                [suppress("UNCHECKED_CAST")]
-                var instance = getById(targetType, *(keyValues as List<Any>).copyToArray())
+                @suppress("UNCHECKED_CAST")
+                var instance = getById(targetType, *(keyValues as List<Any>).toTypedArray())
                 if (instance == null) {
                     // create new instance
                     instance = mapSetToBean(set, table, targetType.newInstance())
@@ -215,24 +215,24 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
                 val isSet = javaClass<Set<*>>().isAssignableFrom(relationField.getType()!!)
 
                 // look in cache first
-                [suppress("UNCHECKED_CAST")]
-                var instance = getById(targetType, *(keyValues as List<Any>).copyToArray())
+                @suppress("UNCHECKED_CAST")
+                var instance = getById(targetType, *(keyValues as List<Any>).toTypedArray())
                 if (instance == null) {
                     // create new instance
                     instance = mapSetToBean(set, table, targetType.newInstance())
-                    putById(instance, *keyValues.copyToArray())
+                    putById(instance, *keyValues.toTypedArray())
                 }
                 if (isList) {
-                    [suppress("UNCHECKED_CAST")]
+                    @suppress("UNCHECKED_CAST")
                     var relationList = relationField.get(owner) as MutableList<W>?
                     if (relationList == null) {
                         relationList = ArrayList<W>()
                         relationField.set(owner, relationList)
                     }
-                    if (!relationList!!.contains(instance)) relationList!!.add(instance)
+                    if (!relationList.contains(instance)) relationList.add(instance)
                 } else
                     if (isSet) {
-                        [suppress("UNCHECKED_CAST")]
+                        @suppress("UNCHECKED_CAST")
                         val relationSet = relationField.get(owner) as MutableSet<W>? ?:
                             run<MutableSet<W>> {
                                 val setValue = HashSet<W>()

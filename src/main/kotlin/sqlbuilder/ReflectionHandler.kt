@@ -7,6 +7,6 @@ import sqlbuilder.meta.MetaResolver
  *
  * @author Laurent Van der Linden
  */
-trait ReflectionHandler {
+interface ReflectionHandler {
     var metaResolver: MetaResolver?
 }

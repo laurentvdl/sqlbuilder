@@ -2,7 +2,7 @@ package sqlbuilder.pool
 
 import java.util.Properties
 
-trait ConnectionConfigProvider {
+interface ConnectionConfigProvider {
     val username: String?
     val password: String?
     val url: String

@@ -1,6 +1,6 @@
 package sqlbuilder.pool
 
-public trait Drivers {
+public interface Drivers {
     companion object {
         public val MYSQL: String = "com.mysql.jdbc.Driver"
         public val H2: String = "org.h2.Driver"

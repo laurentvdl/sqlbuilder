@@ -22,7 +22,7 @@ public abstract class BeanListRowHandler<T> : ListRowHandler<T> {
     }
 
 
-    [throws(javaClass<SQLException>())]
+    throws(SQLException::class)
     abstract fun mapSetToListItem(set: ResultSet): T
 
 }

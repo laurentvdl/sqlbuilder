@@ -5,7 +5,7 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-trait Insert {
+interface Insert {
     fun into(entity: String): Insert
 
     fun batch(): Insert

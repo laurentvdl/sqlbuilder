@@ -6,7 +6,7 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-trait Delete {
+interface Delete {
     fun from(entity: String): Delete
 
     fun deleteBean(bean: Any): Int
