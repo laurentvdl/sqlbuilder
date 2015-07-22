@@ -31,7 +31,7 @@ public class MapRowHandler() : CachedRowHandler<List<RowMap>> {
 
     }
 
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     protected fun handleColumn(set: ResultSet, rowMap: RowMap, columnName: String?, column: Int) {
         if (columnName == null) {
             throw NullPointerException("no column name found for index $column")

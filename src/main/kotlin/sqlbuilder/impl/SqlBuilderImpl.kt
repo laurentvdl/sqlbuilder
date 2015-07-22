@@ -73,7 +73,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
         return bean
     }
 
-    throws(javaClass<PersistenceException>())
+    throws(PersistenceException::class )
     override fun getSqlConnection(): Connection {
         try {
             var connection = txConnections.get()
@@ -107,7 +107,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
                 connection!!.setAutoCommit(false)
                 txConnections.set(connection)
             }
-            connection!!.setReadOnly(readonly)
+            connection.setReadOnly(readonly)
         } catch (e: SQLException) {
             throw PersistenceException(e.getMessage(), e)
         }
@@ -160,9 +160,9 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
             var specificCache = caches.get(cacheId)
             if (specificCache == null) {
                 specificCache = ConcurrentHashMap<CacheableQuery, SoftReference<Any>>()
-                caches.put(cacheId, specificCache!!)
+                caches.put(cacheId, specificCache)
             }
-            return specificCache!!
+            return specificCache
         }
         return globalCache
     }
@@ -180,7 +180,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
         return txConnections.get() != null
     }
 
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     override fun checkNullability(entity: String, bean: Any, sqlCon: Connection, getters: List<PropertyReference>) {
         val dotIdx = entity.indexOf('.')
         val schema: String?
@@ -201,7 +201,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
         }.filterNotNull()
 
         val missingProperties = nonNullColumns.filter { nonNull ->
-            getters.firstOrNull { it.name.equalsIgnoreCase(nonNull) } == null
+            getters.firstOrNull { it.name.equals(nonNull, ignoreCase = true) } == null
         }
 
         if (!missingProperties.isEmpty()) {

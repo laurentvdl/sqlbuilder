@@ -9,14 +9,14 @@ import java.sql.SQLException
 /**
  * @author Laurent Van der Linden
  */
-public trait Backend {
+public interface Backend {
     public fun getSqlConnection(): Connection
 
     public fun closeConnection(connection: Connection)
 
     public fun getCache(cacheId: String?): MutableMap<CacheableQuery, SoftReference<Any>>
 
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     public fun checkNullability(entity: String, bean: Any, sqlCon: Connection, getters: List<PropertyReference>)
 
     public fun isInTransaction(): Boolean

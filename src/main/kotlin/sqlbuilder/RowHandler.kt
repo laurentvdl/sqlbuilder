@@ -2,7 +2,7 @@ package sqlbuilder
 
 import java.sql.SQLException
 
-public trait RowHandler {
-    throws(javaClass<SQLException>())
+public interface RowHandler {
+    throws(SQLException::class)
     public fun handle(set: ResultSet, row: Int): Boolean
 }

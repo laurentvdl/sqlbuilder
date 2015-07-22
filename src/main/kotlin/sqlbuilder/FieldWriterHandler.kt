@@ -10,7 +10,7 @@ import java.sql.SQLException
  * @author Laurent Van der Linden
  */
 public class FieldWriterHandler(private val writer: Writer) : RowHandler {
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     override fun handle(set: ResultSet, row: Int): Boolean {
         try {
             set.getJdbcResultSet().getCharacterStream(1)?.copyTo(writer, 16384)

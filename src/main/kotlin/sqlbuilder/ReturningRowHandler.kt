@@ -5,6 +5,6 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-trait ReturningRowHandler<R> : RowHandler {
+interface ReturningRowHandler<R> : RowHandler {
     val result: R
 }

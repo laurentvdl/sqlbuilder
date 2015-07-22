@@ -13,8 +13,8 @@ class ResultSet(private val target: java.sql.ResultSet) : Closeable {
         return target
     }
 
-    [suppress("UNCHECKED_CAST", "PLATFORM_CLASS_MAPPED_TO_KOTLIN")]
-    throws(javaClass<SQLException>())
+    @suppress("UNCHECKED_CAST", "PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+    throws(SQLException::class)
     public fun <T> getObject(targetType: Class<T>, index: Int): T {
         when {
             targetType == javaClass<String>() -> {
@@ -102,12 +102,12 @@ class ResultSet(private val target: java.sql.ResultSet) : Closeable {
         throw PersistenceException("unknown bean property, unable to find matching SQL variant: " + targetType.getName())
     }
 
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     public fun next(): Boolean {
         return target.next()
     }
 
-    throws(javaClass<SQLException>())
+    throws(SQLException::class)
     override fun close() {
         target.close()
     }

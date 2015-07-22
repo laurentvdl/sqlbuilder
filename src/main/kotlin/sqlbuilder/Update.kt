@@ -5,7 +5,7 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-trait Update {
+interface Update {
     fun entity(entity: String): Update
 
     fun checkNullability(check: Boolean): Update

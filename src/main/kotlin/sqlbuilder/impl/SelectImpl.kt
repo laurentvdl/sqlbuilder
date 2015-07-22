@@ -60,6 +60,8 @@ class SelectImpl(val backend: Backend) : Select {
     private var cursorType = ResultSet.TYPE_FORWARD_ONLY
     private var cursorConcurrency = ResultSet.CONCUR_READ_ONLY
 
+    private val columnPattern = "^(\\w|_|\\.)+$".toRegex()
+
     override fun from(entity: String): Select {
         this.entity = entity
         return this
@@ -85,7 +87,7 @@ class SelectImpl(val backend: Backend) : Select {
     }
 
     override fun orderBy(column: String, ascending: Boolean): Select {
-        if (column.matches("^(\\w|_|\\.)+$")) {
+        if (column.matches(columnPattern)) {
             orderBy = column
             orderAscending = ascending
         } else {
@@ -186,7 +188,7 @@ class SelectImpl(val backend: Backend) : Select {
         execute(fields, beanHandler)
 
         if (beanHandler is ListRowHandler<*>) {
-            [suppress("UNCHECKED_CAST")]
+            @suppress("UNCHECKED_CAST")
             return beanHandler.list as List<T>
         } else {
             throw IllegalStateException("A RowHandler of type <ListRowHandler> is required for selectBeans()")
@@ -212,9 +214,7 @@ class SelectImpl(val backend: Backend) : Select {
     override fun <T> selectField(soleField: String, requiredType: Class<T>, defaultValue: T): T {
         val handler = SingleFieldRowHandler(requiredType)
         execute(listOf(soleField), handler)
-        val value = handler.result
-        if (value == null) return defaultValue
-        return value
+        return handler.result ?: defaultValue
     }
 
     SuppressWarnings("unchecked")
@@ -259,7 +259,7 @@ class SelectImpl(val backend: Backend) : Select {
         return rowHandler.result
     }
 
-    [suppress("UNCHECKED_CAST")]
+    @suppress("UNCHECKED_CAST")
     public fun execute(fields: List<String>?,
                        rowHandler: RowHandler) {
         val sqlBuffer = StringBuilder(sql ?: "")

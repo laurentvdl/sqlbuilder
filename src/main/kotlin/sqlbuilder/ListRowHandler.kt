@@ -7,6 +7,6 @@ import java.sql.SQLException
  *
  * @author Laurent Van der Linden
  */
-public trait ListRowHandler<T> : ReturningRowHandler<MutableList<T>> {
+public interface ListRowHandler<T> : ReturningRowHandler<MutableList<T>> {
     val list: MutableList<T>
 }

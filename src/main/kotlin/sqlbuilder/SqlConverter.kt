@@ -17,7 +17,7 @@ public class SqlConverter() {
     companion object {
         private val logger = LoggerFactory.getLogger(javaClass)
 
-        throws(javaClass<SQLException>())
+        throws(SQLException::class)
         fun setParameter(ps: PreparedStatement, param: Any?, index: Int, `type`: Class<*>? = null, sqlType: Int? = null) {
             var convertedParam = param
 
@@ -82,59 +82,59 @@ public class SqlConverter() {
             } else {
                 if (convertedParam is LazyValue) {
                     try {
-                        convertedParam = (convertedParam as LazyValue).eval()
+                        convertedParam = convertedParam.eval()
                     } catch (e: Exception) {
                         throw PersistenceException("unable to eval lazy value: " + convertedParam, e)
                     }
                 }
                 when (convertedParam) {
                     is BigDecimal -> {
-                        ps.setBigDecimal(index, convertedParam as BigDecimal)
+                        ps.setBigDecimal(index, convertedParam)
                     }
                     is Int -> {
-                        ps.setInt(index, (convertedParam as Int))
+                        ps.setInt(index, convertedParam)
                     }
                     is Long -> {
-                        ps.setLong(index, (convertedParam as Long))
+                        ps.setLong(index, convertedParam)
                     }
                     is Short -> {
-                        ps.setShort(index, (convertedParam as Short))
+                        ps.setShort(index, convertedParam)
                     }
                     is Double -> {
-                        ps.setDouble(index, (convertedParam as Double))
+                        ps.setDouble(index, convertedParam)
                     }
                     is Float -> {
-                        ps.setFloat(index, (convertedParam as Float))
+                        ps.setFloat(index, convertedParam)
                     }
                     is Timestamp -> {
-                        ps.setTimestamp(index, convertedParam as Timestamp)
+                        ps.setTimestamp(index, convertedParam)
                     }
                     is java.util.Date -> {
-                        ps.setDate(index, Date((convertedParam as java.util.Date).getTime()))
+                        ps.setDate(index, Date(convertedParam.getTime()))
                     }
                     is String -> {
-                        ps.setString(index, convertedParam as String)
+                        ps.setString(index, convertedParam)
                     }
                     is ByteArray -> {
-                        ps.setBytes(index, convertedParam as ByteArray)
+                        ps.setBytes(index, convertedParam)
                     }
                     is InputStream -> {
-                        ps.setBinaryStream(index, convertedParam as InputStream)
+                        ps.setBinaryStream(index, convertedParam)
                     }
                     is Reader -> {
-                        ps.setCharacterStream(index, convertedParam as Reader)
+                        ps.setCharacterStream(index, convertedParam)
                     }
                     is Boolean -> {
-                        ps.setBoolean(index, (convertedParam as Boolean))
+                        ps.setBoolean(index, convertedParam)
                     }
                     is Enum<*> -> {
-                        ps.setInt(index, (convertedParam as Enum<*>).ordinal())
+                        ps.setInt(index, convertedParam.ordinal())
                     }
                     is Char -> {
-                        ps.setString(index, convertedParam!!.toString())
+                        ps.setString(index, convertedParam.toString())
                     }
                     else -> {
-                        throw PersistenceException("unknown param type " + convertedParam?.javaClass)
+                        throw PersistenceException("unknown param type " + convertedParam.javaClass)
                     }
                 }
             }

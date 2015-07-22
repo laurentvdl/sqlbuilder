@@ -109,13 +109,13 @@ public class StaticJavaResolver() : MetaResolver {
         } catch (ignore: IllegalAccessException) {
         }
 
-        return array("id")
+        return arrayOf("id")
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(javaClass)
 
-        [suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")]
+        @suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
         public fun isSqlType(fieldType: Class<*>): Boolean {
             val isSqlType = javaClass<String>() == fieldType ||
                     javaClass<Int>() == fieldType ||

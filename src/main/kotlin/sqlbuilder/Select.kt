@@ -9,7 +9,7 @@ import java.io.Writer
  *
  * @author Laurent Van der Linden
  */
-trait Select {
+interface Select {
     /**
      * if your bean does not have a static entity reference like<br/>
      * <code>final static String TABLE = "schema.table";</code><br/>
