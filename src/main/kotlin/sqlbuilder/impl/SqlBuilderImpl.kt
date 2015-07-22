@@ -73,7 +73,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
         return bean
     }
 
-    throws(PersistenceException::class )
+    throws(PersistenceException::class)
     override fun getSqlConnection(): Connection {
         try {
             var connection = txConnections.get()
