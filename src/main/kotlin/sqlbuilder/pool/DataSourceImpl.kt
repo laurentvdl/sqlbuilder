@@ -75,7 +75,7 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         }
         if (idleConnections.isEmpty() && activeConnections.isEmpty()) {
             // not a single connection in use, we can free our Timer thread
-            timer!!.cancel()
+            timer?.cancel()
             timer = null
         }
     }
@@ -102,7 +102,7 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
     throws(SQLException::class)
     override fun getConnection(): Connection {
         loadDriver()
-        return Proxy.newProxyInstance(javaClass.getClassLoader(), arrayOf(javaClass<Connection>()), obtainConnection()) as Connection
+        return Proxy.newProxyInstance(javaClass.getClassLoader(), arrayOf<Class<*>>(javaClass<Connection>()), obtainConnection()) as Connection
     }
 
     private fun loadDriver() {
@@ -142,7 +142,7 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         }
     }
 
-    throws(SQLException::class)
+    throws(SQLException::class )
     override fun isWrapperFor(iface: Class<*>): Boolean {
         return iface == javaClass
     }
@@ -150,6 +150,19 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
     protected fun obtainConnection(): TransactionalConnection {
         val connection = synchronized(lock) {
             if (!active) throw IllegalStateException("datasource is inactive")
+
+            if (timer == null) {
+                val timer = Timer(configProvider.url + " cleaner", true)
+                timer.schedule(object : TimerTask() {
+                    override fun run() {
+                        cleanIdles()
+                        findZombies()
+                    }
+                }, cleanupDelay.toLong(), cleanupDelay.toLong())
+
+                this.timer = timer
+            }
+
             val connection: TransactionalConnection
             if (idleConnections.size() > 0) {
                 connection = idleConnections.remove(0)
@@ -186,17 +199,6 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
             activeConnections.remove(connection)
             if (active) {
                 idleConnections.add(connection)
-                if (timer == null) {
-                    val timer = Timer(configProvider.url + " cleaner", true)
-                    timer.schedule(object : TimerTask() {
-                        override fun run() {
-                            cleanIdles()
-                            findZombies()
-                        }
-                    }, cleanupDelay.toLong(), cleanupDelay.toLong())
-
-                    this.timer = timer
-                }
             } else {
                 try {
                     connection.target.close()
@@ -206,17 +208,6 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
             }
         }
     }
-
-    public fun killConnection(connection: TransactionalConnection) {
-        synchronized(lock) {
-            activeConnections.remove(connection)
-            try {
-                connection.target.close()
-            } catch (ignore: Exception) {
-            }
-        }
-    }
-
 
     override fun getConnection(username: String?, password: String?): Connection? {
         return getConnection()
@@ -239,10 +230,6 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
             idleConnections.clear()
         }
         logger.info("stopped datasource ${configProvider.url}")
-    }
-
-    private fun getDefaultPlugin(): IdentityPlugin? {
-        return configProvider.identityPlugin
     }
 
     override fun getParentLogger(): Logger? {
