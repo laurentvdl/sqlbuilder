@@ -1,4 +1,4 @@
-package sqlbuilder
+package sqlbuilder.rowhandler
 
 import sqlbuilder.meta.PropertyReference
 
@@ -7,6 +7,7 @@ import java.util.HashMap
 import java.util.regex.Pattern
 import sqlbuilder.meta.MetaResolver
 import org.slf4j.LoggerFactory
+import sqlbuilder.*
 
 /**
  * Used for mapping custom query results to a bean.
@@ -14,8 +15,8 @@ import org.slf4j.LoggerFactory
  *
  * @author Laurent Van der Linden
  */
-public class DynamicBeanRowHandler<T>(private val beanClass: Class<T>) : ListRowHandler<T>, ReflectionHandler, PropertiesHandler, BeanListRowHandler<T>() {
-    private val trace = LoggerFactory.getLogger("sqlbuildertrace")!!
+public class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>) : ListRowHandler<T>, ReflectionHandler, PropertiesHandler, BeanListRowHandler<T>() {
+    private val trace = LoggerFactory.getLogger("sqlbuildertrace")
 
     var mappings: Map<Any, String>? = null
 
@@ -37,11 +38,11 @@ public class DynamicBeanRowHandler<T>(private val beanClass: Class<T>) : ListRow
 
     override fun mapSetToListItem(set: ResultSet): T {
         try {
-            val meta = set.getJdbcResultSet().getMetaData()
-            val columns = meta.getColumnCount()
+            val meta = set.getJdbcResultSet().metaData
+            val columns = meta.columnCount
             val bean = beanClass.newInstance()
             for (index in 1..columns) {
-                if (propertyCache.size() < index ) {
+                if (propertyCache.size < index ) {
                     val cName = meta.getColumnLabel(index)!!.toLowerCase()
                     val mappedColumn = mappings?.get(cName) ?: mappings?.get(index) ?: cName
                     val prop = refCache.get(mappedColumn.toLowerCase())
@@ -51,20 +52,18 @@ public class DynamicBeanRowHandler<T>(private val beanClass: Class<T>) : ListRow
                     if (prop != null) {
                         propertyCache.add(prop)
                     } else {
-                        trace.warn("cannot set '$cName' on <${beanClass.getName()}> $refCache")
+                        trace.warn("cannot set '$cName' on <${beanClass.name}> $refCache")
                         propertyCache.add(null)
                     }
                 }
 
                 val prop = propertyCache.get(index - 1)
-                if (prop != null) {
-                    prop.set(bean, set.getObject(prop.classType, index))
-                }
+                prop?.set(bean, set.getObject(prop.classType, index))
             }
 
             return bean
         } catch (e: Exception) {
-            throw PersistenceException(e.getMessage(), e)
+            throw PersistenceException(e.message, e)
         }
 
     }

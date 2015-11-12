@@ -1,5 +1,7 @@
-package sqlbuilder
+package sqlbuilder.rowhandler
 
+import sqlbuilder.ResultSet
+import sqlbuilder.ReturningRowHandler
 import java.util.ArrayList
 
 /**
@@ -14,7 +16,10 @@ public class SingleFieldListRowHandler<T>(private val requiredType: Class<T>) : 
     override var result: List<T> = list
 
     override fun handle(set: ResultSet, row: Int): Boolean {
-        list.add(set.getObject(requiredType, 1))
+        val value = set.getObject(requiredType, 1)
+        if (value != null) {
+            list.add(value)
+        }
         return true
     }
 }

@@ -1,12 +1,15 @@
-package sqlbuilder
+package sqlbuilder.rowhandler
 
+import sqlbuilder.PersistenceException
+import sqlbuilder.ResultSet
 import sqlbuilder.meta.PropertyReference
 import sqlbuilder.meta.MetaResolver
 
 /**
  * @author Laurent Van der Linden
  */
-public open class ReflectiveBeanListRowHandler<T>(protected var beanClass: Class<T>) : BeanListRowHandler<T>(), ReflectionHandler, PropertiesHandler {
+public open class ReflectiveBeanListRowHandler<T : Any>(protected var beanClass: Class<T>) : BeanListRowHandler<T>(),
+        ReflectionHandler, PropertiesHandler {
     override var properties: List<PropertyReference>? = null
     override var metaResolver: MetaResolver? = null
 
@@ -20,7 +23,7 @@ public open class ReflectiveBeanListRowHandler<T>(protected var beanClass: Class
 
             return bean
         } catch (e: Throwable) {
-            throw PersistenceException(e.getMessage(), e)
+            throw PersistenceException(e.message, e)
         }
     }
 }

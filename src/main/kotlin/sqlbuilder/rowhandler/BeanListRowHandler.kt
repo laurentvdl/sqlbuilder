@@ -1,13 +1,11 @@
-package sqlbuilder
+package sqlbuilder.rowhandler
 
-import sqlbuilder.meta.PropertyReference
-
-import java.util.ArrayList
-import sqlbuilder.meta.MetaResolver
+import sqlbuilder.ResultSet
 import java.sql.SQLException
+import java.util.*
 
 public abstract class BeanListRowHandler<T> : ListRowHandler<T> {
-    override var list = ArrayList<T>()
+    var list = ArrayList<T>()
 
     override val result: MutableList<T> = list
 
@@ -22,7 +20,7 @@ public abstract class BeanListRowHandler<T> : ListRowHandler<T> {
     }
 
 
-    @throws(SQLException::class)
+    @Throws(SQLException::class)
     abstract fun mapSetToListItem(set: ResultSet): T
 
 }

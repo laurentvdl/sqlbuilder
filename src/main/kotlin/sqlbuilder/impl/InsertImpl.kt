@@ -70,11 +70,11 @@ class InsertImpl(val backend: Backend): Insert {
                 .exclude(excludeFields)
                 .include(includeFields)
 
-        val values = allProperties.mapNotNull { getter ->
+        val values = allProperties.filterNotNull().map { getter ->
             Pair(getter, getter.get(bean))
-        }.toMap().filter { it.value != null }
+        }.filter({ it.second != null }).toMap()
 
-        val properties = allProperties filter {
+        val properties = allProperties.filter {
             values.containsKey(it)
         }
 
@@ -83,7 +83,7 @@ class InsertImpl(val backend: Backend): Insert {
                 val sql = StringBuilder("insert into ").append(entity).append("(")
                 properties.map { it.name }.joinTo(sql, ",")
                 sql.append(") values(")
-                for (i in 0..properties.size() - 1) {
+                for (i in 0..properties.size - 1) {
                     if (i > 0) sql.append(",")
                     sql.append("?")
                 }
@@ -99,9 +99,12 @@ class InsertImpl(val backend: Backend): Insert {
                     backend.checkNullability(entity!!, bean, sqlCon, properties)
                 }
 
+                val sqlConverter = SqlConverter(backend.configuration)
+
+
                 for ((index,property) in properties.withIndex()) {
                     logger.debug("setInsertParameter " + property.name + " <" + property.classType.getName() + ">")
-                    SqlConverter.setParameter(cachedStatement!!, values[property], index + 1, property.classType, null)
+                    sqlConverter.setParameter(cachedStatement!!, values[property], index + 1, property.classType, null)
                 }
 
                 cachedStatement!!.executeUpdate();
@@ -128,7 +131,7 @@ class InsertImpl(val backend: Backend): Insert {
             }
             return 0
         } catch (sqlx: SQLException) {
-            throw PersistenceException("insert <$sqlString> failed with parameters ${values.values()}", sqlx)
+            throw PersistenceException("insert <$sqlString> failed with parameters ${values.values}", sqlx)
         } finally {
             backend.closeConnection(sqlCon)
         }

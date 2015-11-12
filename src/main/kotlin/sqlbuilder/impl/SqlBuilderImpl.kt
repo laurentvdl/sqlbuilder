@@ -1,7 +1,6 @@
 package sqlbuilder.impl
 
 import sqlbuilder.usea
-import kotlin.jdbc.map
 import javax.sql.DataSource
 import sqlbuilder.SqlBuilder
 import sqlbuilder.Backend
@@ -19,6 +18,7 @@ import java.sql.ResultSet
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import sqlbuilder.meta.PropertyReference
+import java.util.*
 
 public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -27,7 +27,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
     private val caches = ConcurrentHashMap<String, MutableMap<CacheableQuery, SoftReference<Any>>>()
     private val globalCache = ConcurrentHashMap<CacheableQuery, SoftReference<Any>>()
 
-    override var configuration: Configuration = Configuration()
+    override var configuration: Configuration = DefaultConfiguration()
 
     override fun select(): Select {
         return SelectImpl(this)
@@ -45,10 +45,10 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
         return UpdateImpl(this)
     }
 
-    override fun <T> save(bean: T, vararg excludedFields: String): T {
+    override fun <T : Any> save(bean: T, vararg excludedFields: String): T {
         val metaResolver = configuration.metaResolver
         val keys = metaResolver.getKeys(bean.javaClass)
-        if (keys.size() == 1 && keys[0] == "id") {
+        if (keys.size == 1 && keys[0] == "id") {
             val idField = metaResolver.findField("id", bean.javaClass)
             if (idField == null) throw IllegalArgumentException("bean <${bean.javaClass}> has no id field")
             idField.setAccessible(true)
@@ -73,7 +73,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
         return bean
     }
 
-    throws(PersistenceException::class)
+    @Throws(PersistenceException::class)
     override fun getSqlConnection(): Connection {
         try {
             var connection = txConnections.get()
@@ -82,7 +82,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
             }
             return connection!!
         } catch (e: SQLException) {
-            throw PersistenceException(e.getMessage(), e)
+            throw PersistenceException(e.message, e)
         }
 
     }
@@ -109,7 +109,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
             }
             connection.setReadOnly(readonly)
         } catch (e: SQLException) {
-            throw PersistenceException(e.getMessage(), e)
+            throw PersistenceException(e.message, e)
         }
 
     }
@@ -180,7 +180,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
         return txConnections.get() != null
     }
 
-    throws(SQLException::class)
+    @Throws(SQLException::class)
     override fun checkNullability(entity: String, bean: Any, sqlCon: Connection, getters: List<PropertyReference>) {
         val dotIdx = entity.indexOf('.')
         val schema: String?
@@ -194,10 +194,14 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
         }
         logger.trace("checking nullability for {}.{}", schema, table)
 
-        val nonNullColumns = sqlCon.getMetaData()?.getColumns(null, schema, table, null)!!.usea { cRs: ResultSet ->
-            cRs.map { set ->
-                if (cRs.getInt(11) != 1) cRs.getString(4)!! else null
+        val nonNullColumns = sqlCon.metaData?.getColumns(null, schema, table, null)!!.usea { cRs: ResultSet ->
+            val columns = ArrayList<String>()
+            while (cRs.next()) {
+                if (cRs.getInt(11) != 1) {
+                    columns.add(cRs.getString(4))
+                }
             }
+            columns
         }.filterNotNull()
 
         val missingProperties = nonNullColumns.filter { nonNull ->

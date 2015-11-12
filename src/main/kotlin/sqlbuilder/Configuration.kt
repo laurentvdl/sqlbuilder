@@ -1,29 +1,27 @@
 package sqlbuilder
 
+import sqlbuilder.mapping.ToObjectMapper
+import sqlbuilder.mapping.ToSQLMapper
 import sqlbuilder.meta.MetaResolver
-import sqlbuilder.meta.StaticJavaResolver
 
 /**
  * Configuration container for all pluggable aspects of a SqlBuilder instance.
- * User: Laurent Van der Linden
+ * @author Laurent Van der Linden
  */
-public class Configuration() {
-    var metaResolver: MetaResolver = StaticJavaResolver()
-    var escapeCharacter: Char? = null
+public interface Configuration {
+    val metaResolver: MetaResolver
 
-    public fun setEscapeCharacter(escapeCharacter: Char): Configuration {
-        this.escapeCharacter = escapeCharacter
-        return this
-    }
+    fun escapeEntity(entity: String?): String?
 
-    public fun escapeEntity(entity: String?): String? {
-        if (entity != null) {
-            if (escapeCharacter != null) {
-                if (entity.charAt(0) != escapeCharacter) {
-                    return escapeCharacter.toString() + entity + escapeCharacter.toString()
-                }
-            }
-        }
-        return entity
-    }
+    fun objectMapperForType(targetType: Class<*>): ToObjectMapper?
+
+    fun sqlMapperForType(targetType: Class<*>): ToSQLMapper?
+
+    fun registerToObjectMapper(toObjectMapper: ToObjectMapper): Configuration
+
+    fun unregisterToObjectMapper(toObjectMapper: ToObjectMapper): Configuration
+
+    fun registerToSQLMapper(toSQLMapper: ToSQLMapper): Configuration
+
+    fun unregisterToSQLMapper(toSQLMapper: ToSQLMapper): Configuration
 }

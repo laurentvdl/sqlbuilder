@@ -46,17 +46,20 @@ class DeleteImpl(private val backend: Backend): Delete {
             try {
                 val sqlString = sql.toString()
                 logger.info(sqlString)
+
+                val sqlConverter = SqlConverter(backend.configuration)
+
                 val ps = con.prepareStatement(sqlString)!!
 
                 for ((index,key) in keyProperties.withIndex()) {
-                    SqlConverter.setParameter(ps, key.get(bean), index + 1, key.classType, null)
+                    sqlConverter.setParameter(ps, key.get(bean), index + 1, key.classType, null)
                 }
                 return ps.executeUpdate()
             } finally {
                 backend.closeConnection(con)
             }
         } catch (e: SQLException) {
-            throw PersistenceException("delete <" + sql + "> failed", e)
+            throw PersistenceException("delete <$sql> failed", e)
         }
 
     }

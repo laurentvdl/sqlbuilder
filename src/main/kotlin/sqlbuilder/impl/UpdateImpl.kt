@@ -51,7 +51,7 @@ class UpdateImpl(private val backend: Backend): Update {
         if (entity == null) entity = metaResolver.getTableName(bean.javaClass)
         entity = backend.configuration.escapeEntity(entity)
 
-        if (keys.size() == 0) {
+        if (keys.size == 0) {
             throw PersistenceException("cannot update bean without a list of keys")
         }
 
@@ -76,6 +76,8 @@ class UpdateImpl(private val backend: Backend): Update {
             val sqlString = sql.toString()
             logger.info(sqlString)
 
+            val sqlConverter = SqlConverter(backend.configuration)
+
             try {
                 if (checkNullability) {
                     backend.checkNullability(entity!!, bean, sqlCon, getters)
@@ -84,14 +86,14 @@ class UpdateImpl(private val backend: Backend): Update {
                 sqlCon.prepareStatement(sqlString)!!.usea { ps: PreparedStatement ->
                     for ((index, getter) in valueProperties.withIndex()) {
                         try {
-                            SqlConverter.setParameter(ps, getter.get(bean), index + 1, getter.classType, null)
+                            sqlConverter.setParameter(ps, getter.get(bean), index + 1, getter.classType, null)
                         } catch (e: IllegalArgumentException) {
                             throw PersistenceException("unable to get " + getter.name, e)
                         }
                     }
 
                     for ((index, getter) in keyProperties.withIndex()) {
-                        SqlConverter.setParameter(ps, getter.get(bean), valueProperties.size() + index + 1, getter.classType, null)
+                        sqlConverter.setParameter(ps, getter.get(bean), valueProperties.size + index + 1, getter.classType, null)
                     }
 
                     updates = ps.executeUpdate()
@@ -137,6 +139,9 @@ class UpdateImpl(private val backend: Backend): Update {
      */
     public override fun updateStatement(sql: String, parameters: Array<out Any>?, types: IntArray?): Int {
         logger.info(sql)
+
+        val sqlConverter = SqlConverter(backend.configuration)
+
         val connection = backend.getSqlConnection()
         try {
             try {
@@ -145,7 +150,7 @@ class UpdateImpl(private val backend: Backend): Update {
                     if (parameters != null) {
                         for ((index, parameter) in parameters.withIndex()) {
                             val parameterType = if (types == null) null else types[index]
-                            SqlConverter.setParameter(ps, parameters[index], index + 1, null, parameterType)
+                            sqlConverter.setParameter(ps, parameters[index], index + 1, null, parameterType)
                         }
                     }
 
@@ -175,7 +180,7 @@ class UpdateImpl(private val backend: Backend): Update {
 
 
         } catch (e: SQLException) {
-            throw PersistenceException(e.getMessage(), e)
+            throw PersistenceException(e.message, e)
         } finally {
             backend.closeConnection(connection)
         }

@@ -13,11 +13,11 @@ public class RowMap() {
 
     public fun get(key: String?): Any? {
         if (key == null) throw NullPointerException("key cannot be null")
-        return named.get(key.toLowerCase())
+        return named[key.toLowerCase()]
     }
 
     public fun get(index: Int): Any? {
-        return indexed.get(index)
+        return indexed[index]
     }
 
     public fun put(index: Int, value: Any?): RowMap {
@@ -40,7 +40,7 @@ public class RowMap() {
     }
 
     public fun size(): Int {
-        return named.size()
+        return named.size
     }
 
 

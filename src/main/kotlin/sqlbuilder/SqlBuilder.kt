@@ -18,7 +18,7 @@ public interface SqlBuilder {
      * @param <T> type of the bean
      * @return the same bean with the id set
      */
-    public fun <T> save(bean: T, vararg excludedFields: String): T
+    public fun <T : Any> save(bean: T, vararg excludedFields: String): T
     public fun startTransaction()
     public fun startTransaction(isolationLevel: Int, readonly: Boolean)
     public fun commitTransaction()

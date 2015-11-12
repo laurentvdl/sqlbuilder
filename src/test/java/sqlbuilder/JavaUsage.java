@@ -1,12 +1,18 @@
 package sqlbuilder;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import sqlbuilder.impl.SqlBuilderImpl;
+import sqlbuilder.rowhandler.BeanListRowHandler;
+import sqlbuilder.rowhandler.JoiningPagedRowHandler;
+import sqlbuilder.rowhandler.JoiningRowHandler;
 import sqlbuilder.javabeans.Attribute;
 import sqlbuilder.javabeans.File;
 import sqlbuilder.javabeans.User;
+import sqlbuilder.mapping.ToObjectMapper;
+import sqlbuilder.mapping.ToObjectMappingParameters;
 import sqlbuilder.pool.DataSourceImpl;
 import sqlbuilder.pool.DefaultConfig;
 import sqlbuilder.pool.Drivers;
@@ -16,8 +22,7 @@ import java.util.AbstractMap;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * Test the API using Java code
@@ -43,12 +48,12 @@ public class JavaUsage {
             sqlBuilder.insert().getKeys(true).into("users").insertBean(new User("javauser b", 2014, 'F'))
         );
 
-        final Long fileId = sqlBuilder.insert().getKeys(true).insertBean(new File(1l, "profile"));
+        final Long fileId = sqlBuilder.insert().getKeys(true).insertBean(new File(1L, "profile"));
         sqlBuilder.insert().insertBean(new Attribute(fileId, "size", "2kb"));
         sqlBuilder.insert().insertBean(new Attribute(fileId, "color", "green"));
 
-        sqlBuilder.insert().getKeys(true).insertBean(new File(2l, "profile"));
-        sqlBuilder.insert().getKeys(true).insertBean(new File(2l, "avatar"));
+        sqlBuilder.insert().getKeys(true).insertBean(new File(2L, "profile"));
+        sqlBuilder.insert().getKeys(true).insertBean(new File(2L, "avatar"));
     }
 
     @Test
@@ -132,7 +137,7 @@ public class JavaUsage {
             });
 
         assertEquals(1, allUsersAndFiles.size());
-        assertEquals(2l, allUsersAndFiles.get(0).getId().longValue());
+        assertEquals(2L, allUsersAndFiles.get(0).getId().longValue());
         assertEquals(2, allUsersAndFiles.get(0).getFiles().size());
     }
 
@@ -157,6 +162,7 @@ public class JavaUsage {
     public void delete() {
         final User lastUser = sqlBuilder.select().where("id = 2").selectBean(User.class);
 
+        assertNotNull("user with id 2 not found", lastUser);
         sqlBuilder.delete().deleteBean(lastUser);
 
         assertEquals(1, sqlBuilder.select().selectBeans(User.class).size());
@@ -200,4 +206,38 @@ public class JavaUsage {
 		assertEquals(2, userEntries.size());
 		assertEquals("javauser a", userEntries.get(0).getValue());
 	}
+
+    @Test
+    public void customBooleanType() {
+        sqlBuilder.getConfiguration().registerToObjectMapper(new ToObjectMapper() {
+            @Nullable
+            @Override
+            public Object toObject(@NotNull ToObjectMappingParameters params) throws SQLException {
+                final String text = params.getResultSet().getString(params.getIndex());
+                if (text == null) {
+                    return null;
+                }
+                return "X".equalsIgnoreCase(text);
+            }
+
+            @Override
+            public boolean handles(@NotNull Class<?> targetType) {
+                return Boolean.class.equals(targetType);
+            }
+        });
+
+        assertEquals("X should mark the spot",
+                Boolean.TRUE,
+                sqlBuilder.select()
+                .sql("select 'X'")
+                .selectField(null, Boolean.class)
+        );
+
+        assertEquals("the truth is not out there",
+                null,
+                sqlBuilder.select()
+                .sql("select null")
+                .selectField(null, Boolean.class)
+        );
+    }
 }

@@ -7,6 +7,7 @@ import sqlbuilder.pool.Drivers
 import org.junit.Before
 import kotlin.test.*
 import sqlbuilder.impl.SqlBuilderImpl
+import sqlbuilder.rowhandler.JoiningRowHandler
 
 class KotlinUsage {
     private val sqlBuilder = SqlBuilderImpl(DataSourceImpl(
@@ -15,7 +16,7 @@ class KotlinUsage {
             )
     ))
 
-    Before fun setup() {
+    @Before fun setup() {
         Setup.createTables(sqlBuilder)
 
         assertEquals(1L, sqlBuilder.insert().getKeys(true).into("users").insertBean(with(User()) {
@@ -48,41 +49,41 @@ class KotlinUsage {
         })
     }
 
-    Test fun selectBeans() {
-        val users = sqlBuilder.select().from("users").selectBeans(javaClass<User>())
-        assertEquals(2, users.size(), "row count")
+    @Test fun selectBeans() {
+        val users = sqlBuilder.select().from("users").selectBeans(User::class.java)
+        assertEquals(2, users.size, "row count")
         assertEquals(1L, users[0].id)
         assertEquals(users[0].username, "test a")
     }
 
-    Test fun selectMap() {
+    @Test fun selectMap() {
         val usersAsMaps = sqlBuilder.select().from("users").selectMaps("*")
         assertEquals(1L, usersAsMaps[0].get("id"))
         assertEquals(1L, usersAsMaps[0].get(0))
     }
 
-    Test fun joinHandler() {
+    @Test fun joinHandler() {
         val usersWithFiles = sqlBuilder.select()
                 .sql("select * from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
                 .select(object : JoiningRowHandler<User>() {
                     override fun handle(set: ResultSet, row: Int): Boolean {
-                        val user = mapPrimaryBean(set, javaClass<User>(), "users")
-                        val file = joinList(set, user, User::files, javaClass<File>(), "files")
-                        joinSet(set, file, File::attributes, javaClass<Attribute>(), "attributes")
+                        val user = mapPrimaryBean(set, User::class.java, "users")
+                        val file = joinList(set, user, User::files, File::class.java, "files")
+                        joinSet(set, file, File::attributes, Attribute::class.java, "attributes")
                         return true
                     }
                 })
-        assertEquals(2, usersWithFiles[0].files?.size(), "first user should have 2 files")
+        assertEquals(2, usersWithFiles.first().files?.size, "first user should have 2 files")
     }
 
-    Test fun criteria() {
+    @Test fun criteria() {
         val filteredCount = sqlBuilder.select()
                 .from("users")
                 .where()
                 .and("username like ?", "%a")
                 .and("username like ?", "test%")
                 .endWhere()
-                .selectField("count(*)", javaClass<Long>())
+                .selectField("count(*)", Long::class.java)
 
         assertEquals(1L, filteredCount, "expecting x users starting matching wildcard")
     }

@@ -1,4 +1,7 @@
-package sqlbuilder
+package sqlbuilder.rowhandler
+
+import sqlbuilder.OptionalReturningRowHandler
+import sqlbuilder.ResultSet
 
 /**
  * Useful for mapping a single column (like count(*)).
@@ -6,8 +9,8 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-public class SingleFieldRowHandler<T>(private val requiredType: Class<T>) : CachedRowHandler<T> {
-    override var result: T = null
+public class SingleFieldRowHandler<T : Any?>(private val requiredType: Class<T>) : OptionalReturningRowHandler<T> {
+    override var result: T? = null
 
     override fun handle(set: ResultSet, row: Int): Boolean {
         result = set.getObject(requiredType, 1)

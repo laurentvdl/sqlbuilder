@@ -6,14 +6,14 @@ import java.lang.reflect.Field
  * @author Laurent Van der Linden
  */
 public interface MetaResolver {
-    fun <T> getProperties(beanClass: Class<T>, mutators: Boolean): List<PropertyReference>
+    fun getProperties(beanClass: Class<*>, mutators: Boolean): List<PropertyReference>
 
-    fun <T> getTableName(beanClass: Class<T>): String
+    fun getTableName(beanClass: Class<*>): String
 
     /**
      * Find a field in a type or its super type
      */
-    fun <T> findField(name: String, fieldType: Class<in T>): Field?
+    fun findField(name: String, fieldType: Class<*>): Field?
 
-    fun <T> getKeys(beanClass: Class<T>): Array<String>
+    fun getKeys(beanClass: Class<*>): Array<String>
 }

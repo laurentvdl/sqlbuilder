@@ -95,9 +95,9 @@ interface Select {
      */
     fun cache(cacheStrategy: CacheStrategy): Select
 
-    fun <T> selectBean(beanClass: Class<T>): T
+    fun <T : Any> selectBean(beanClass: Class<T>): T?
 
-    fun <T> selectBeans(beanClass: Class<T>): List<T>
+    fun <T : Any> selectBeans(beanClass: Class<T>): List<T>
 
     fun excludeFields(vararg excludes: String): Select
 
@@ -107,13 +107,13 @@ interface Select {
      * Select first/only occurrence of a single field and return null if no result.
      * @return result or defaultValue
      */
-    fun <T> selectField(soleField: String, requiredType: Class<T>): T
+    fun <T : Any> selectField(soleField: String?, requiredType: Class<T>): T?
 
     /**
      * Select first/only occurrence of a single field and return default value if no result.
      * @return result or defaultValue
      */
-    fun <T> selectField(soleField: String, requiredType: Class<T>, defaultValue: T): T
+    fun <T : Any> selectField(soleField: String?, requiredType: Class<T>, defaultValue: T): T
 
     /**
      * Select all occurrences of a single field.
@@ -121,7 +121,7 @@ interface Select {
      * @param requiredType
      * @return
      */
-    fun <T> selectAllField(soleField: String, requiredType: Class<T>): List<T>
+    fun <T : Any> selectAllField(soleField: String?, requiredType: Class<T>): List<T>
 
     /**
      * Select the result as a single Map.
@@ -152,9 +152,14 @@ interface Select {
     fun selectFieldToStream(field: String, writer: Writer)
 
     /**
-     * Run select statement with custom ReturningRowHandler returning results of type R.
+     * Run select statement with custom ReturningRowHandler returning results of type R which cannot be null.
      */
-    fun <R> select(rowHandler: ReturningRowHandler<R>): R
+    fun <T : Any> select(rowHandler: ReturningRowHandler<T>): T
+
+    /**
+     * Run select statement with custom ReturningRowHandler returning results of type R which can be null.
+     */
+    fun <T : Any> select(rowHandler: OptionalReturningRowHandler<T>): T?
 
     fun sql(sql: String, vararg parameters: Any): Select
 

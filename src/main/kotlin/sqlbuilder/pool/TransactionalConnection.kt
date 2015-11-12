@@ -25,9 +25,13 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
                 datasource.freeConnection(this)
             } else {
                 try {
-                    method.invoke(target, *args)
+                    if (args == null) {
+                        method.invoke(target)
+                    } else {
+                        method.invoke(target, *args)
+                    }
                 } catch (e: InvocationTargetException) {
-                    throw e.getCause()!!
+                    throw e.cause!!
                 }
 
             }
@@ -54,9 +58,9 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
     try {
       target.setClientInfo("clientUser", name);
     } catch (e: Exception) {
-        logger.warn("unable to set clientUser to $name: ${e.getMessage()}");
+        logger.warn("unable to set clientUser to $name: ${e.message}");
     } catch (e: Error) {
-      logger.warn("unable to set clientUser to $name: ${e.getMessage()}");
+      logger.warn("unable to set clientUser to $name: ${e.message}");
     }
   }
 

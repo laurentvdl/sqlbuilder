@@ -8,8 +8,8 @@ import java.sql.SQLException
  * @author Laurent Van der Linden.
  */
 public class DataSourceTest {
-    Test(expected = JdbcSQLException::class)
-    throws(SQLException::class, InterruptedException::class)
+    @Test(expected = JdbcSQLException::class)
+    @Throws(SQLException::class, InterruptedException::class)
     public fun idleCleanup() {
         val dataSource = DataSourceImpl(DefaultConfig(null, null, "jdbc:h2:mem:test", Drivers.H2))
         dataSource.idleTimeout = 30

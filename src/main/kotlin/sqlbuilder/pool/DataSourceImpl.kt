@@ -64,11 +64,11 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         val currentTs = System.currentTimeMillis()
         synchronized(lock) {
             var x = 0
-            while (x < idleConnections.size()) {
+            while (x < idleConnections.size) {
                 val connection = idleConnections.get(x)
                 if (currentTs - connection.lastModified > idleTimeout) {
                     connection.close(false)
-                    idleConnections.remove(x--)
+                    idleConnections.removeAt(x--)
                 }
                 x++
             }
@@ -84,12 +84,12 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         val currentTs = System.currentTimeMillis()
         synchronized(lock) {
             var x = 0
-            while (x < activeConnections.size()) {
+            while (x < activeConnections.size) {
                 val connection = activeConnections.get(x)
                 val diff = currentTs - connection.lastModified
                 if (diff > zombieTimeout) {
                     connection.close(true)
-                    activeConnections.remove(x--)
+                    activeConnections.removeAt(x--)
                     logger.error("removed zombie (after $diff millis) that was obtained from: ${connection.callStack}")
                     // once it hits the fan, enable debugging
                     recordStacks = true
@@ -99,10 +99,10 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         }
     }
 
-    throws(SQLException::class)
+    @Throws(SQLException::class)
     override fun getConnection(): Connection {
         loadDriver()
-        return Proxy.newProxyInstance(javaClass.getClassLoader(), arrayOf<Class<*>>(javaClass<Connection>()), obtainConnection()) as Connection
+        return Proxy.newProxyInstance(javaClass.getClassLoader(), arrayOf<Class<*>>(Connection::class.java), obtainConnection()) as Connection
     }
 
     private fun loadDriver() {
@@ -115,7 +115,7 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
 
     }
 
-    throws(SQLException::class)
+    @Throws(SQLException::class)
     protected fun newFysicalConnection(): Connection {
         val properties = configProvider.properties ?: Properties()
 
@@ -132,8 +132,8 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         return DriverManager.getConnection(configProvider.url, properties)
     }
 
-    @suppress("UNCHECKED_CAST")
-    throws(SQLException::class)
+    @Suppress("UNCHECKED_CAST")
+    @Throws(SQLException::class)
     override fun <T> unwrap(iface: Class<T>): T {
         if (isWrapperFor(iface)) {
             return this as T
@@ -142,7 +142,7 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         }
     }
 
-    throws(SQLException::class )
+    @Throws(SQLException::class )
     override fun isWrapperFor(iface: Class<*>): Boolean {
         return iface == javaClass
     }
@@ -164,8 +164,8 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
             }
 
             val connection: TransactionalConnection
-            if (idleConnections.size() > 0) {
-                connection = idleConnections.remove(0)
+            if (idleConnections.size > 0) {
+                connection = idleConnections.removeAt(0)
                 connection.ping()
             } else {
                 try {
@@ -177,7 +177,7 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
                         connection.callStack = writer.toString()
                     }
                 } catch (e: SQLException) {
-                    throw PersistenceException(e.getMessage(), e)
+                    throw PersistenceException(e.message, e)
                 }
 
             }
@@ -213,7 +213,7 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         return getConnection()
     }
 
-    PreDestroy
+    @PreDestroy
     public fun stop() {
         synchronized(lock) {
             active = false

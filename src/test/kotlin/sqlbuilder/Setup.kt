@@ -1,9 +1,7 @@
 package sqlbuilder
 
-import kotlin.platform.platformStatic
-
 object Setup {
-    platformStatic fun createTables(sqlBuilder: SqlBuilder) {
+    @JvmStatic fun createTables(sqlBuilder: SqlBuilder) {
         sqlBuilder.update().updateStatement("drop table users if exists")
         sqlBuilder.update().updateStatement("""
         create table if not exists users (

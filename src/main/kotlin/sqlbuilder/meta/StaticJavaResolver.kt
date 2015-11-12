@@ -7,7 +7,6 @@ import java.sql.Timestamp
 import java.util.Date
 import java.util.HashSet
 import java.util.LinkedList
-import java.lang
 import org.slf4j.LoggerFactory
 
 /**
@@ -23,18 +22,18 @@ import org.slf4j.LoggerFactory
  * @author Laurent Van der Linden
  */
 public class StaticJavaResolver() : MetaResolver {
-    override fun <T> getTableName(beanClass: Class<T>): String {
+    override fun getTableName(beanClass: Class<*>): String {
         try {
             val field = findField("TABLE", beanClass)
-            if (field != null && field.getType() == javaClass<String>()) {
+            if (field != null && field.type == String::class.java) {
                 return field.get(null) as String
             }
         } catch (ignore: IllegalAccessException) {}
 
-        return beanClass.getSimpleName().toLowerCase()
+        return beanClass.simpleName.toLowerCase()
     }
 
-    override fun <T> getProperties(beanClass: Class<T>, mutators: Boolean): MutableList<PropertyReference> {
+    override fun getProperties(beanClass: Class<*>, mutators: Boolean): List<PropertyReference> {
         val prefix: String
         if (mutators) {
             prefix = "set"
@@ -43,10 +42,10 @@ public class StaticJavaResolver() : MetaResolver {
         }
         val result = LinkedList<PropertyReference>()
         val names = HashSet<String>()
-        val methods = beanClass.getMethods()
+        val methods = beanClass.methods
         for (method in methods) {
-            val name = method.getName()!!
-            val methodModifiers = method.getModifiers()
+            val name = method.name!!
+            val methodModifiers = method.modifiers
             if (name.startsWith(prefix) && !Modifier.isTransient(methodModifiers) && !Modifier.isStatic(methodModifiers)) {
                 val propertyName = name.substring(3, 4).toLowerCase() + name.substring(4)
                 val flatName = propertyName.toLowerCase().toLowerCase()
@@ -55,18 +54,18 @@ public class StaticJavaResolver() : MetaResolver {
                 if (privateField == null) {
                     accept = false
                 } else {
-                    val modifiers = privateField.getModifiers()
+                    val modifiers = privateField.modifiers
                     if (Modifier.isTransient(modifiers)) accept = false
                 }
                 if (accept) {
                     if (mutators) {
-                        val parameters = method.getParameterTypes()
-                        if (parameters != null && parameters.size() == 1 && (isSqlType(parameters[0]) || javaClass<Enum<*>>().isAssignableFrom(parameters[0]))) {
+                        val parameters = method.parameterTypes
+                        if (parameters != null && parameters.size == 1 && (isSqlType(parameters[0]) || Enum::class.java.isAssignableFrom(parameters[0]))) {
                             result.add(JavaGetterSetterPropertyReference(flatName, method, parameters[0]))
                             names.add(flatName)
                         }
                     } else {
-                        val returnType = method.getReturnType()
+                        val returnType = method.returnType
                         if (returnType != null && isSqlType(returnType)) {
                             result.add(JavaGetterSetterPropertyReference(flatName, method, returnType))
                             names.add(flatName)
@@ -75,34 +74,35 @@ public class StaticJavaResolver() : MetaResolver {
                 }
             }
         }
-        val fields = beanClass.getFields()
+        val fields = beanClass.fields
         for (field in fields) {
-            val modifiers = field.getModifiers()
-            val name = field.getName()!!
-            if (!names.contains(name) && Modifier.isPublic(modifiers) && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers) && !Modifier.isStatic(modifiers) && isSqlType(field.getType()!!) && !Modifier.isTransient(modifiers)) {
-                result.add(JavaFieldPropertyReference(name, field, field.getType()!!))
+            val modifiers = field.modifiers
+            val name = field.name!!
+            if (!names.contains(name) && Modifier.isPublic(modifiers) && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers) && !Modifier.isStatic(modifiers) && isSqlType(field.type!!) && !Modifier.isTransient(modifiers)) {
+                result.add(JavaFieldPropertyReference(name, field, field.type!!))
             }
         }
         return result
     }
 
-    override fun <T> findField(name: String, fieldType: Class<in T>): Field? {
+    override fun findField(name: String, fieldType: Class<*>): Field? {
         try {
             return fieldType.getDeclaredField(name)
         } catch (e: NoSuchFieldException) {
-            val superclass = fieldType.getSuperclass()!!
-            if (javaClass<Any>() != superclass) return findField(name, superclass)
+            val superclass = fieldType.superclass
+            if (Any::class.java != superclass) return findField(name, superclass)
         }
 
         return null
     }
 
-    override fun <T> getKeys(beanClass: Class<T>): Array<String> {
+    @Suppress("UNCHECKED_CAST")
+    override fun getKeys(beanClass: Class<*>): Array<String> {
         try {
             val field: Field?
             field = findField("KEYS", beanClass)
             if (field != null) {
-                if (field.getType() == javaClass<Array<String>>()) {
+                if (field.type == Array<String>::class.java) {
                     return field.get(null) as Array<String>
                 }
             }
@@ -113,30 +113,30 @@ public class StaticJavaResolver() : MetaResolver {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(javaClass)
+        private val logger = LoggerFactory.getLogger(StaticJavaResolver::class.java)
 
-        @suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+        @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
         public fun isSqlType(fieldType: Class<*>): Boolean {
-            val isSqlType = javaClass<String>() == fieldType ||
-                    javaClass<Int>() == fieldType ||
-                    javaClass<lang.Integer>() == fieldType ||
-                    javaClass<Short>() == fieldType ||
-                    javaClass<lang.Short>() == fieldType ||
-                    javaClass<Double>() == fieldType ||
-                    javaClass<Double>() == fieldType ||
-                    javaClass<Long>() == fieldType ||
-                    javaClass<lang.Long>() == fieldType ||
-                    javaClass<Float>() == fieldType ||
-                    javaClass<lang.Float>() == fieldType ||
-                    javaClass<Char>() == fieldType ||
-                    javaClass<Date>() == fieldType ||
-                    javaClass<java.sql.Date>() == fieldType ||
-                    javaClass<Timestamp>() == fieldType ||
-                    javaClass<BigDecimal>() == fieldType ||
-                    javaClass<ByteArray>() == fieldType ||
-                    javaClass<Boolean>() == fieldType ||
-                    javaClass<lang.Boolean>() == fieldType ||
-                    javaClass<Enum<*>>().isAssignableFrom(fieldType)
+            val isSqlType = String::class.java == fieldType ||
+                    Int::class.java == fieldType ||
+                    java.lang.Integer::class.java == fieldType ||
+                    Short::class.java == fieldType ||
+                    java.lang.Short::class.java == fieldType ||
+                    Double::class.java == fieldType ||
+                    Double::class.java == fieldType ||
+                    Long::class.java == fieldType ||
+                    java.lang.Long::class.java == fieldType ||
+                    Float::class.java == fieldType ||
+                    java.lang.Float::class.java == fieldType ||
+                    Char::class.java == fieldType ||
+                    Date::class.java == fieldType ||
+                    java.sql.Date::class.java == fieldType ||
+                    Timestamp::class.java == fieldType ||
+                    BigDecimal::class.java == fieldType ||
+                    ByteArray::class.java == fieldType ||
+                    Boolean::class.java == fieldType ||
+                    java.lang.Boolean::class.java == fieldType ||
+                    Enum::class.java.isAssignableFrom(fieldType)
             if (!isSqlType) {
                 logger.debug("$fieldType is not a Sql type")
             }

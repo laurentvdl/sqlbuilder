@@ -1,17 +1,15 @@
-package sqlbuilder
+package sqlbuilder.rowhandler
 
-import java.lang.reflect.Field
-import java.util.HashMap
-import sqlbuilder.JoiningRowHandler.MappingKey
-import sqlbuilder.meta.PropertyReference
-import java.sql.SQLException
+import sqlbuilder.ResultSet
+import sqlbuilder.RowHandler
 import sqlbuilder.meta.MetaResolver
-import java.util.HashSet
-import java.util.ArrayList
-import java.util.LinkedList
-import kotlin.reflect.KMutableMemberProperty
+import sqlbuilder.meta.PropertyReference
+import java.lang.reflect.Field
+import java.sql.SQLException
+import java.util.*
+import kotlin.reflect.KMutableProperty
 
-public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, ReflectionHandler {
+public abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, ReflectionHandler {
     private val beans = HashMap<MappingKey, Any>()
     private val propertyReferenceCache = HashMap<Class<*>, List<PropertyReference>>()
     private val columnToIndex: MutableMap<String, Int> = HashMap()
@@ -19,21 +17,21 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
 
     override var metaResolver: MetaResolver? = null
 
-    override val list: MutableList<T> = ArrayList()
+    val list: MutableList<T> = ArrayList()
 
     override var result: MutableList<T> = list
 
-    @suppress("UNCHECKED_CAST")
-    protected fun <S> getById(beanClass: Class<S>, vararg ids: Any): S {
-        return beans.get(MappingKey(beanClass, ids)) as S
+    @Suppress("UNCHECKED_CAST")
+    protected fun <S> getById(beanClass: Class<S>, ids: List<Any?>): S? {
+        return beans[MappingKey(beanClass, ids)] as S
     }
 
-    protected fun <S> putById(instance: S, vararg ids: Any): S {
+    protected fun <S : Any> putById(instance: S, ids: List<Any?>): S {
         beans.put(MappingKey(instance.javaClass, ids), instance)
         return instance
     }
 
-    protected fun putById(type: Class<*>, vararg ids: Any) {
+    protected fun putById(type: Class<*>, ids: List<Any>) {
         beans.put(MappingKey(type, ids), Object())
     }
 
@@ -50,13 +48,14 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
      * @throws SQLException
      * @return same instance populated
      */
-    throws(SQLException::class)
-    protected open fun <S> mapSetToBean(set: ResultSet, table: String, instance: S, mappings: Map<String, String>? = null): S {
+    @Throws(SQLException::class)
+    protected open fun <S : Any> mapSetToBean(set: ResultSet, table: String, instance: S, mappings: Map<String, String>? = null): S {
         createColumnToIndexCache(set)
-        var propertyReferences = propertyReferenceCache.get(instance.javaClass)
+        val javaClass = instance.javaClass
+        var propertyReferences = propertyReferenceCache[javaClass]
         if (propertyReferences == null) {
-            propertyReferences = metaResolver!!.getProperties(instance.javaClass, true)
-            propertyReferenceCache.put(instance.javaClass, propertyReferences)
+            propertyReferences = metaResolver!!.getProperties(javaClass, true)
+            propertyReferenceCache.put(javaClass, propertyReferences)
         }
         for (pr in propertyReferences) {
             val property = mappings?.get(pr.name) ?: pr.name
@@ -68,9 +67,9 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
         return instance
     }
 
-    SuppressWarnings("unchecked")
-    throws(SQLException::class)
-    protected fun <S> getColumnFromTable(set: ResultSet, table: String, column: String, propertyType: Class<S>): S {
+    @SuppressWarnings("unchecked")
+    @Throws(SQLException::class)
+    protected fun <S> getColumnFromTable(set: ResultSet, table: String, column: String, propertyType: Class<S>): S? {
         createColumnToIndexCache(set)
         val index = getColumnIndex(table, column)
         if (index == null) return null
@@ -85,10 +84,10 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
         }
     }
 
-    throws(SQLException::class)
+    @Throws(SQLException::class)
     private fun createColumnToIndexCache(set: ResultSet) {
-        val metaData = set.getJdbcResultSet().getMetaData()
-        val columnCount = metaData.getColumnCount()
+        val metaData = set.getJdbcResultSet().metaData
+        val columnCount = metaData.columnCount
         for (x in 1..columnCount) {
             val tableName = metaData.getTableName(x)
             if (tableName?.isEmpty() ?: true) {
@@ -98,6 +97,7 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
             }
         }
     }
+
     /**
      * Map primary bean and add to resultlist in unique fashion
      * @param set active ResultSet
@@ -115,24 +115,24 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
             putById(instance, keyValues)
         }
 
-        return instance
+        return instance!!
     }
 
     protected fun <T> getKeyValues(set: ResultSet, aType: Class<T>, table: String): List<Any?> {
-        return metaResolver!!.getKeys(aType).mapTo(LinkedList<Any>()) { key ->
-            getColumnFromTable(set, table, key, javaClass<Any>())
+        return metaResolver!!.getKeys(aType).mapTo(LinkedList<Any?>()) { key ->
+            getColumnFromTable(set, table, key, Any::class.java)
         }
     }
 
-    private fun <R,W> joinInstance(set: ResultSet, owner: R, targetType: Class<W>, table: String): W {
+    private fun <R, W : Any> joinInstance(set: ResultSet, owner: R, targetType: Class<W>, table: String): W? {
         if (owner != null) {
             val keyValues = getKeyValues(set, targetType, table)
 
             var inResultSet = keyValues.all { it != null }
             if (inResultSet) {
                 // look in cache first
-                @suppress("UNCHECKED_CAST")
-                var instance = getById(targetType, *(keyValues as List<Any>).toTypedArray())
+                @Suppress("UNCHECKED_CAST")
+                var instance = getById(targetType, keyValues as List<Any>)
                 if (instance == null) {
                     // create new instance
                     instance = mapSetToBean(set, table, targetType.newInstance())
@@ -145,15 +145,15 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
         return null
     }
 
-    protected fun <R,W> joinSet(set: ResultSet, owner: R, property: KMutableMemberProperty<R, MutableSet<W>?>,
-                           targetType: Class<W>, table: String): W {
+    protected fun <R, W : Any> joinSet(set: ResultSet, owner: R, property: KMutableProperty<MutableSet<W>?>,
+                                       targetType: Class<W>, table: String): W? {
         val instance = joinInstance(set, owner, targetType, table)
         if (instance != null) {
             val relationSet = run {
-                var embeddedSet = property.get(owner)
+                var embeddedSet = property.getter.call(owner)
                 if (embeddedSet == null) {
                     embeddedSet = HashSet<W>()
-                    property.set(owner, embeddedSet)
+                    property.setter.call(owner, embeddedSet)
                 }
                 embeddedSet
             }!!
@@ -164,15 +164,15 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
         return instance
     }
 
-    protected fun <R,W> joinList(set: ResultSet, owner: R, property: KMutableMemberProperty<R, MutableList<W>?>,
-                           targetType: Class<W>, table: String): W {
+    protected fun <R, W : Any> joinList(set: ResultSet, owner: R, property: KMutableProperty<MutableList<W>?>,
+                                        targetType: Class<W>, table: String): W? {
         val instance = joinInstance(set, owner, targetType, table)
         if (instance != null) {
             val relationList = run {
-                var embeddedSet = property.get(owner)
+                var embeddedSet = property.getter.call(owner)
                 if (embeddedSet == null) {
                     embeddedSet = ArrayList<W>()
-                    property.set(owner, embeddedSet)
+                    property.setter.call(owner, embeddedSet)
                 }
                 embeddedSet
             }!!
@@ -194,62 +194,59 @@ public abstract class JoiningRowHandler<T> : ListRowHandler<T>, RowHandler, Refl
      * @return the joined object that was attached to the owner
      * @throws SQLException
      */
-    protected fun <W> join(set: ResultSet, owner: Any?, property: String,
-                            targetType: Class<W>, table: String): W {
+    protected fun <W : Any> join(set: ResultSet, owner: Any?, property: String,
+                                 targetType: Class<W>, table: String): W? {
         if (owner != null) {
             val keyValues = getKeyValues(set, targetType, table)
 
-            var inResultSet = keyValues.all { it != null }
-            if (inResultSet) {
-                val cacheKey = BeanProperty(owner.javaClass, property)
-                val relationField = relationFieldCache.get(cacheKey)
-                        ?: run<Field> {
-                            val relationField = metaResolver!!.findField(property, owner.javaClass)
-                            if (relationField == null) throw IllegalArgumentException("${owner.javaClass} has no property named <$property>")
-                            relationField.setAccessible(true)
-                            relationFieldCache.put(cacheKey, relationField)
-                            relationField
-                        }
+            val cacheKey = BeanProperty(owner.javaClass, property)
+            val relationField = relationFieldCache.get(cacheKey)
+                    ?: run<Field> {
+                val relationField = metaResolver!!.findField(property, owner.javaClass)
+                if (relationField == null) throw IllegalArgumentException("${owner.javaClass} has no property named <$property>")
+                relationField.isAccessible = true
+                relationFieldCache.put(cacheKey, relationField)
+                relationField
+            }
 
-                val isList = javaClass<List<*>>().isAssignableFrom(relationField.getType()!!)
-                val isSet = javaClass<Set<*>>().isAssignableFrom(relationField.getType()!!)
+            val isList = List::class.java.isAssignableFrom(relationField.type!!)
+            val isSet = Set::class.java.isAssignableFrom(relationField.type!!)
 
-                // look in cache first
-                @suppress("UNCHECKED_CAST")
-                var instance = getById(targetType, *(keyValues as List<Any>).toTypedArray())
-                if (instance == null) {
-                    // create new instance
-                    instance = mapSetToBean(set, table, targetType.newInstance())
-                    putById(instance, *keyValues.toTypedArray<Any>())
+            // look in cache first
+            @Suppress("UNCHECKED_CAST")
+            var instance = getById(targetType, keyValues)
+            if (instance == null) {
+                // create new instance
+                instance = mapSetToBean(set, table, targetType.newInstance())
+                putById(instance, keyValues)
+            }
+            if (isList) {
+                @Suppress("UNCHECKED_CAST")
+                var relationList = relationField.get(owner) as MutableList<W>?
+                if (relationList == null) {
+                    relationList = ArrayList<W>()
+                    relationField.set(owner, relationList)
                 }
-                if (isList) {
-                    @suppress("UNCHECKED_CAST")
-                    var relationList = relationField.get(owner) as MutableList<W>?
-                    if (relationList == null) {
-                        relationList = ArrayList<W>()
-                        relationField.set(owner, relationList)
-                    }
-                    if (!relationList.contains(instance)) relationList.add(instance)
-                } else
-                    if (isSet) {
-                        @suppress("UNCHECKED_CAST")
-                        val relationSet = relationField.get(owner) as MutableSet<W>? ?:
+                if (!relationList.containsRaw(instance)) relationList.add(instance!!)
+            } else
+                if (isSet) {
+                    @Suppress("UNCHECKED_CAST")
+                    val relationSet = relationField.get(owner) as MutableSet<W>? ?:
                             run<MutableSet<W>> {
                                 val setValue = HashSet<W>()
                                 relationField.set(owner, setValue)
                                 setValue
                             }
-                        if (!relationSet.contains(instance)) relationSet.add(instance)
-                    } else {
-                        relationField.set(owner, instance)
-                    }
-                return instance
-            }
+                    if (!relationSet.containsRaw(instance)) relationSet.add(instance!!)
+                } else {
+                    relationField.set(owner, instance)
+                }
+            return instance!!
         }
-        return null as W
+        return null
     }
 
-    data class MappingKey(val aType: Class<*>, val keyValues: Array<out Any>)
+    data class MappingKey(val aType: Class<*>, val keyValues: List<*>)
 
     data class BeanProperty(val aType: Class<*>, val property: String)
 }

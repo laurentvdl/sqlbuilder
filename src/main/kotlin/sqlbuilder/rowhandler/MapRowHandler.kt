@@ -1,9 +1,13 @@
-package sqlbuilder
+package sqlbuilder.rowhandler
 
+import sqlbuilder.PersistenceException
+import sqlbuilder.ResultSet
+import sqlbuilder.ReturningRowHandler
+import sqlbuilder.RowMap
 import java.sql.SQLException
 import java.util.ArrayList
 
-public class MapRowHandler() : CachedRowHandler<List<RowMap>> {
+public class MapRowHandler() : ReturningRowHandler<List<RowMap>> {
     private var columnCount: Int = 0
     private var columnNames: List<String?>? = null
 
@@ -15,8 +19,8 @@ public class MapRowHandler() : CachedRowHandler<List<RowMap>> {
         try {
             if (columnNames == null) {
                 // cache meta data
-                val meta = set.getJdbcResultSet().getMetaData()
-                columnCount = meta.getColumnCount()
+                val meta = set.getJdbcResultSet().metaData
+                columnCount = meta.columnCount
                 columnNames = (1..columnCount).map { meta.getColumnName(it) }
             }
             val rowMap = RowMap()
@@ -26,12 +30,12 @@ public class MapRowHandler() : CachedRowHandler<List<RowMap>> {
             handleMap(rowMap)
             return true
         } catch (e: Throwable) {
-            throw PersistenceException(e.getMessage(), e)
+            throw PersistenceException(e.message, e)
         }
 
     }
 
-    throws(SQLException::class)
+    @Throws(SQLException::class)
     protected fun handleColumn(set: ResultSet, rowMap: RowMap, columnName: String?, column: Int) {
         if (columnName == null) {
             throw NullPointerException("no column name found for index $column")

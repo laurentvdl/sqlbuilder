@@ -7,7 +7,7 @@ public class Attribute {
     public final static String TABLE = "attributes";
 
     private Long id;
-    private Long fileid;
+    private long fileid;
     private String name;
     private String value;
 
@@ -44,11 +44,11 @@ public class Attribute {
         this.value = value;
     }
 
-    public Long getFileid() {
+    public long getFileid() {
         return fileid;
     }
 
-    public void setFileid(Long fileid) {
+    public void setFileid(long fileid) {
         this.fileid = fileid;
     }
 

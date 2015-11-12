@@ -1,4 +1,4 @@
-package sqlbuilder
+package sqlbuilder.rowhandler
 
 import sqlbuilder.meta.PropertyReference
 

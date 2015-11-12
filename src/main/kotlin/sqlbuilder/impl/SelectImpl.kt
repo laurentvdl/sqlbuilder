@@ -1,38 +1,15 @@
 package sqlbuilder.impl
 
-import sqlbuilder.exclude
-import sqlbuilder.Backend
-import sqlbuilder.Select
-import sqlbuilder.CacheStrategy
-import sqlbuilder.RowHandler
-import sqlbuilder.WhereGroup
 import java.io.File
-import sqlbuilder.ReflectionHandler
-import sqlbuilder.DynamicBeanRowHandler
-import sqlbuilder.ListRowHandler
-import sqlbuilder.RowMap
 import java.io.OutputStream
 import java.io.Writer
-import sqlbuilder.CachedRowHandler
 import java.sql.SQLException
-import sqlbuilder.Relation
 import java.sql.ResultSet
-import sqlbuilder.IncorrectResultSizeException
-import sqlbuilder.PersistenceException
-import sqlbuilder.BeanListRowHandler
-import sqlbuilder.SingleFieldRowHandler
-import sqlbuilder.FieldStreamHandler
-import sqlbuilder.FieldWriterHandler
 import java.util.ArrayList
-import sqlbuilder.CacheableQuery
-import sqlbuilder.SqlConverter
-import sqlbuilder.include
-import sqlbuilder.ReturningRowHandler
-import sqlbuilder.SingleFieldListRowHandler
 import sqlbuilder.meta.PropertyReference
-import sqlbuilder.PropertiesHandler
 import org.slf4j.LoggerFactory
-import sqlbuilder.ReflectiveBeanListRowHandler
+import sqlbuilder.*
+import sqlbuilder.rowhandler.*
 
 class SelectImpl(val backend: Backend) : Select {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -137,10 +114,10 @@ class SelectImpl(val backend: Backend) : Select {
         return this
     }
 
-    override fun <T> selectBean(beanClass: Class<T>): T {
+    override fun <T : Any> selectBean(beanClass: Class<T>): T? {
         val result = selectBeans(beanClass)
         if (!result.isEmpty()) {
-            if (result.size() > 1) {
+            if (result.size > 1) {
                 throw IncorrectResultSizeException("more than 1 result")
             }
             return result.get(0)
@@ -148,7 +125,7 @@ class SelectImpl(val backend: Backend) : Select {
         return null
     }
 
-    override fun <T> selectBeans(beanClass: Class<T>): List<T> {
+    override fun <T : Any> selectBeans(beanClass: Class<T>): List<T> {
         val metaResolver = backend.configuration.metaResolver
 
         if (entity == null) {
@@ -188,14 +165,14 @@ class SelectImpl(val backend: Backend) : Select {
         execute(fields, beanHandler)
 
         if (beanHandler is ListRowHandler<*>) {
-            @suppress("UNCHECKED_CAST")
-            return beanHandler.list as List<T>
+            @Suppress("UNCHECKED_CAST")
+            return beanHandler.result as List<T>
         } else {
             throw IllegalStateException("A RowHandler of type <ListRowHandler> is required for selectBeans()")
         }
     }
 
-    private fun <T> getRowHandler(beanClass: Class<T>): RowHandler {
+    private fun <T : Any> getRowHandler(beanClass: Class<T>): RowHandler {
         if (rowHandler != null) {
             return rowHandler!!
         } else {
@@ -207,28 +184,30 @@ class SelectImpl(val backend: Backend) : Select {
         }
     }
 
-    override fun <T> selectField(soleField: String, requiredType: Class<T>): T {
-        return selectField(soleField, requiredType, null as T)
-    }
-
-    override fun <T> selectField(soleField: String, requiredType: Class<T>, defaultValue: T): T {
+    override fun <T : Any> selectField(soleField: String?, requiredType: Class<T>): T? {
         val handler = SingleFieldRowHandler(requiredType)
-        execute(listOf(soleField), handler)
-        return handler.result ?: defaultValue
-    }
-
-    SuppressWarnings("unchecked")
-    override fun <T> selectAllField(soleField: String, requiredType: Class<T>): List<T> {
-        val handler = SingleFieldListRowHandler(requiredType)
-        execute(listOf(soleField), handler)
+        execute(if (soleField == null) null else listOf(soleField), handler)
         return handler.result
     }
 
-    SuppressWarnings("unchecked")
+    override fun <T : Any> selectField(soleField: String?, requiredType: Class<T>, defaultValue: T): T {
+        val handler = SingleFieldRowHandler(requiredType)
+        execute(if (soleField == null) null else listOf(soleField), handler)
+        return handler.result ?: defaultValue
+    }
+
+    @SuppressWarnings("unchecked")
+    override fun <T : Any> selectAllField(soleField: String?, requiredType: Class<T>): List<T> {
+        val handler = SingleFieldListRowHandler(requiredType)
+        execute(if (soleField == null) null else listOf(soleField), handler)
+        return handler.result
+    }
+
+    @SuppressWarnings("unchecked")
     override fun selectMap(vararg fields: String): RowMap? {
         val list = selectMaps(*fields)
         if (list.isNotEmpty()) {
-            if (list.size() > 1) {
+            if (list.size > 1) {
                 throw IncorrectResultSizeException("more than 1 result")
             }
             return list.get(0)
@@ -237,7 +216,7 @@ class SelectImpl(val backend: Backend) : Select {
     }
 
     override fun selectMaps(vararg fields: String): List<RowMap> {
-        val beanHandler = sqlbuilder.MapRowHandler()
+        val beanHandler = MapRowHandler()
         val list: List<String> = fields.toList()
 
         execute(list, beanHandler)
@@ -253,17 +232,81 @@ class SelectImpl(val backend: Backend) : Select {
         execute(listOf(field), FieldWriterHandler(writer))
     }
 
-    override fun <T> select(rowHandler: ReturningRowHandler<T>): T {
+    override fun <T : Any> select(rowHandler: ReturningRowHandler<T>): T {
         injectRowHandler(rowHandler, null)
-        execute(null, rowHandler)
-        return rowHandler.result
+        return from(execute(null, rowHandler))!!
     }
 
-    @suppress("UNCHECKED_CAST")
-    public fun execute(fields: List<String>?,
-                       rowHandler: RowHandler) {
+    override fun <T : Any> select(rowHandler: OptionalReturningRowHandler<T>): T? {
+        injectRowHandler(rowHandler, null)
+        return from(execute(null, rowHandler))
+    }
+
+    public fun execute(fields: List<String>?, rowHandler: RowHandler): RowHandler {
+        val (sql,whereParameters) = prepareSql(this.sql, fields)
+
+        if (cacheStrategy != null) {
+            if (rowHandler is ReturningRowHandler<*>) {
+                val cachedResult = cacheStrategy!!.get(CacheableQuery(sql, whereParameters, offset, rows))
+                if (cachedResult != null) {
+                    return CachedRowHandler(cachedResult)
+                }
+            }
+        }
+        val con = backend.getSqlConnection()
+        try {
+            logger.info(sql)
+
+            val sqlConverter = SqlConverter(backend.configuration)
+
+            val ps = con.prepareStatement(sql, cursorType, cursorConcurrency)!!
+            if (fetchSize != null) ps.fetchSize = fetchSize!!
+            try {
+                val parameterCount = ps.parameterMetaData.parameterCount
+                whereParameters.withIndex().forEach { pair ->
+                    if (pair.index < parameterCount) {
+                        sqlConverter.setParameter(ps, pair.value, pair.index + 1)
+                    }
+                }
+
+                sqlbuilder.ResultSet(ps.executeQuery(), backend.configuration).use { set ->
+                    var row = 0
+                    var continueCursorLoop = true
+                    while (continueCursorLoop && set.next() && (offset == null || rows == null || rows!! + offset!! > row)) {
+                        if (offset == null || (offset != null && offset!! <= row)) {
+                            continueCursorLoop = rowHandler.handle(set, row)
+                        }
+                        row++
+                    }
+                }
+
+                if (cacheStrategy != null) {
+                    if (rowHandler is ReturningRowHandler<*>) {
+                        cacheStrategy!!.put(CacheableQuery(sql, whereParameters, offset, rows), rowHandler.result!!)
+                    }
+                    if (rowHandler is OptionalReturningRowHandler<*>) {
+                        if (rowHandler.result != null) {
+                            cacheStrategy!!.put(CacheableQuery(sql, whereParameters, offset, rows), rowHandler.result!!)
+                        }
+                    }
+                }
+            } finally {
+                ps.close()
+            }
+        } catch (e: SQLException) {
+            throw PersistenceException("<$sql> failed with parameters $whereParameters", e)
+        } finally {
+            this.sql = null
+            this.offset = null
+            this.backend.closeConnection(con)
+        }
+
+        return rowHandler
+    }
+
+    private fun prepareSql(suppliedSql: String?, fields: List<String>?): PreparedSql {
         val sqlBuffer = StringBuilder(sql ?: "")
-        if (sql == null) {
+        if (suppliedSql == null) {
             sqlBuffer.append("select ")
             if (selectOption != null) sqlBuffer.append(selectOption).append(' ')
             if (fields != null && fields.isNotEmpty()) {
@@ -278,7 +321,7 @@ class SelectImpl(val backend: Backend) : Select {
         } else {
             whereParameters = parameters!!.toArrayList()
         }
-        if (whereGroup.getNestedConditions().size() > 0) {
+        if (whereGroup.getNestedConditions().size > 0) {
             sqlBuffer.append(" where ")
             whereGroup.toSql(sqlBuffer, whereParameters)
         }
@@ -287,53 +330,8 @@ class SelectImpl(val backend: Backend) : Select {
             sqlBuffer.append(" order by ").append(orderBy).append(if (orderAscending) " asc" else " desc")
         }
         if (suffix != null) sqlBuffer.append(" ").append(suffix)
-        this.sql = sqlBuffer.toString()
 
-        if (cacheStrategy != null && rowHandler is CachedRowHandler<*>) {
-            val cachedResult = cacheStrategy!!.get(CacheableQuery(sql!!, whereParameters, offset, rows))
-            if (cachedResult != null) {
-                (rowHandler as CachedRowHandler<Any>).result = cachedResult
-                return
-            }
-        }
-        val con = backend.getSqlConnection()
-        try {
-            logger.info(sql)
-            val ps = con.prepareStatement(sql, cursorType, cursorConcurrency)!!
-            if (fetchSize != null) ps.setFetchSize(fetchSize!!)
-            try {
-                val parameterCount = ps.getParameterMetaData().getParameterCount()
-                whereParameters.withIndex().forEach { pair ->
-                    if (pair.index < parameterCount) {
-                        SqlConverter.setParameter(ps, pair.value, pair.index + 1)
-                    }
-                }
-
-                sqlbuilder.ResultSet(ps.executeQuery()).use { set ->
-                    var row = 0
-                    var continueCursorLoop = true
-                    while (continueCursorLoop && set.next() && (offset == null || rows == null || rows!! + offset!! > row)) {
-                        if (offset == null || (offset != null && offset!! <= row)) {
-                            continueCursorLoop = rowHandler.handle(set, row)
-                        }
-                        row++
-                    }
-                }
-
-                if (cacheStrategy != null && rowHandler is CachedRowHandler<*>) {
-                    val value = (rowHandler as CachedRowHandler<Any>).result
-                    cacheStrategy!!.put(CacheableQuery(sql!!, whereParameters, offset, rows), value)
-                }
-            } finally {
-                ps.close()
-            }
-        } catch (e: SQLException) {
-            throw PersistenceException("<$sql> failed with parameters $whereParameters", e)
-        } finally {
-            sql = null
-            offset = null
-            backend.closeConnection(con)
-        }
+        return PreparedSql(sqlBuffer.toString(), whereParameters)
     }
 
     private fun injectRowHandler(rowHandler: Any, properties: List<PropertyReference>?) {
@@ -346,6 +344,19 @@ class SelectImpl(val backend: Backend) : Select {
         if (rowHandler is DynamicBeanRowHandler<*>) {
             rowHandler.mappings = sqlMappings
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> from(rowHandler: RowHandler): T? {
+        if (rowHandler is ReturningRowHandler<*>) {
+            return rowHandler.result as T
+        }
+
+        if (rowHandler is OptionalReturningRowHandler<*>) {
+            return rowHandler.result as T
+        }
+
+        return null
     }
 
     override fun sql(sql: String, vararg parameters: Any): Select {
