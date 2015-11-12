@@ -1,5 +1,7 @@
 # SQLBuilder for SQL lovers
 
+[![Build Status](https://travis-ci.org/laurentvdl/sqlbuilder.svg)](https://travis-ci.org/laurentvdl/sqlbuilder)
+
 ## What is it ?
 
 - SQL ResultSet to POJO mapper
