@@ -8,11 +8,11 @@ import java.lang.reflect.Field
  * Wrapper for bean property using java.lang.reflect.Field access.
  */
 public class JavaFieldPropertyReference(override var name: String, private val field: Field, override var classType: Class<*>) : PropertyReference {
-    private val fieldType = field.getType()!!
+    private val fieldType = field.type!!
 
     override fun set(bean: Any, value: Any?) {
         try {
-            if (!(value == null && fieldType.isPrimitive())) {
+            if (!(value == null && fieldType.isPrimitive)) {
                 field.set(bean, value)
             }
         } catch (e: Exception) {

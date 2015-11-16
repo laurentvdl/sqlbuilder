@@ -27,6 +27,6 @@ public class LongMapper : BiMapper {
     }
 
     override fun handles(targetType: Class<*>): Boolean {
-        return Boolean::class.java == targetType
+        return Long::class.java == targetType || java.lang.Long::class.java == targetType
     }
 }

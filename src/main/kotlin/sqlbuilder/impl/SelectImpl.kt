@@ -68,7 +68,7 @@ class SelectImpl(val backend: Backend) : Select {
             orderBy = column
             orderAscending = ascending
         } else {
-            throw IllegalArgumentException("can't order by <" + column + ">")
+            throw IllegalArgumentException("can't order by <$column>")
         }
         return this
     }
@@ -120,7 +120,7 @@ class SelectImpl(val backend: Backend) : Select {
             if (result.size > 1) {
                 throw IncorrectResultSizeException("more than 1 result")
             }
-            return result.get(0)
+            return result[0]
         }
         return null
     }
@@ -210,7 +210,7 @@ class SelectImpl(val backend: Backend) : Select {
             if (list.size > 1) {
                 throw IncorrectResultSizeException("more than 1 result")
             }
-            return list.get(0)
+            return list[0]
         }
         return null
     }
@@ -388,8 +388,8 @@ class SelectImpl(val backend: Backend) : Select {
         return this
     }
 
-    override fun resultSetType(`type`: Int, concurrency: Int): Select {
-        this.cursorType = `type`
+    override fun resultSetType(cursorType: Int, concurrency: Int): Select {
+        this.cursorType = cursorType
         this.cursorConcurrency = concurrency
         return this
     }

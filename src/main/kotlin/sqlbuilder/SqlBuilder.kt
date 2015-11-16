@@ -19,9 +19,21 @@ public interface SqlBuilder {
      * @return the same bean with the id set
      */
     public fun <T : Any> save(bean: T, vararg excludedFields: String): T
+    /**
+     * Start a transaction with default isolation.
+     */
     public fun startTransaction()
+    /**
+     * Start a transaction using an isolationlevel other than TRANSACTION_READ_COMMITTED
+     * @param isolationLevel Connection.TRANSACTION_...
+     */
     public fun startTransaction(isolationLevel: Int, readonly: Boolean)
     public fun commitTransaction()
+    /**
+     * This must be called in the a finally clause whenever you have started a transaction.
+     * <br/>If commitTransaction has already been called, it will only cleanup resources,
+     * else it will rollback the transaction.
+     */
     public fun endTransaction()
     public fun purgeCache(cacheId: String)
     public fun purgeAllCaches()

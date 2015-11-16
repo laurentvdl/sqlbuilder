@@ -27,6 +27,6 @@ public class ShortMapper : BiMapper {
     }
 
     override fun handles(targetType: Class<*>): Boolean {
-        return Short::class.java == targetType
+        return Short::class.java == targetType || java.lang.Short::class.java == targetType
     }
 }

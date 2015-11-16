@@ -1,13 +1,9 @@
 package sqlbuilder.meta
 
+import sqlbuilder.Configuration
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
-import java.math.BigDecimal
-import java.sql.Timestamp
-import java.util.Date
-import java.util.HashSet
-import java.util.LinkedList
-import org.slf4j.LoggerFactory
+import java.util.*
 
 /**
  * Scans for public static fields containing info about the tablename and primary key(s):
@@ -21,7 +17,7 @@ import org.slf4j.LoggerFactory
  *
  * @author Laurent Van der Linden
  */
-public class StaticJavaResolver() : MetaResolver {
+public class StaticJavaResolver(val configuration: Configuration) : MetaResolver {
     override fun getTableName(beanClass: Class<*>): String {
         try {
             val field = findField("TABLE", beanClass)
@@ -85,6 +81,10 @@ public class StaticJavaResolver() : MetaResolver {
         return result
     }
 
+    private fun isSqlType(clazz: Class<*>): Boolean {
+        return configuration.objectMapperForType(clazz) != null
+    }
+
     override fun findField(name: String, fieldType: Class<*>): Field? {
         try {
             return fieldType.getDeclaredField(name)
@@ -110,37 +110,5 @@ public class StaticJavaResolver() : MetaResolver {
         }
 
         return arrayOf("id")
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(StaticJavaResolver::class.java)
-
-        @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-        public fun isSqlType(fieldType: Class<*>): Boolean {
-            val isSqlType = String::class.java == fieldType ||
-                    Int::class.java == fieldType ||
-                    java.lang.Integer::class.java == fieldType ||
-                    Short::class.java == fieldType ||
-                    java.lang.Short::class.java == fieldType ||
-                    Double::class.java == fieldType ||
-                    Double::class.java == fieldType ||
-                    Long::class.java == fieldType ||
-                    java.lang.Long::class.java == fieldType ||
-                    Float::class.java == fieldType ||
-                    java.lang.Float::class.java == fieldType ||
-                    Char::class.java == fieldType ||
-                    Date::class.java == fieldType ||
-                    java.sql.Date::class.java == fieldType ||
-                    Timestamp::class.java == fieldType ||
-                    BigDecimal::class.java == fieldType ||
-                    ByteArray::class.java == fieldType ||
-                    Boolean::class.java == fieldType ||
-                    java.lang.Boolean::class.java == fieldType ||
-                    Enum::class.java.isAssignableFrom(fieldType)
-            if (!isSqlType) {
-                logger.debug("$fieldType is not a Sql type")
-            }
-            return isSqlType
-        }
     }
 }

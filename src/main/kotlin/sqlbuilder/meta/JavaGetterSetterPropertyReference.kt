@@ -12,11 +12,11 @@ import java.lang.reflect.Method
 public class JavaGetterSetterPropertyReference(override var name: String, private val method: Method, override var classType: Class<*>) : PropertyReference {
     override fun set(bean: Any, value: Any?) {
         try {
-            if (!(value == null && classType.isPrimitive())) {
+            if (!(value == null && classType.isPrimitive)) {
                 method.invoke(bean, value)
             }
         } catch (e: Exception) {
-            val signature = "${method.getName()}(${method.getParameterTypes()?.joinToString(",")})"
+            val signature = "${method.name}(${method.parameterTypes?.joinToString(",")})"
             throw PersistenceException("unable to set value $name to '$value' on bean $bean using setter <${signature}>, expected argument of type <${classType}>, but got <${value?.javaClass}>", e)
         }
 
@@ -24,12 +24,12 @@ public class JavaGetterSetterPropertyReference(override var name: String, privat
 
     override fun get(bean: Any): Any? {
         try {
-            if (!method.isAccessible()) {
-                method.setAccessible(true)
+            if (!method.isAccessible) {
+                method.isAccessible = true
             }
             return method.invoke(bean)
         } catch (e: Exception) {
-            val signature = "${method.getName()}(${method.getParameterTypes()?.joinToString(",")})"
+            val signature = "${method.name}(${method.parameterTypes?.joinToString(",")})"
             throw PersistenceException("unable to get value $name from bean $bean using getter $signature", e)
         }
     }

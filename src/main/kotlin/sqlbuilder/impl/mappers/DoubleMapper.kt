@@ -27,6 +27,6 @@ public class DoubleMapper : BiMapper {
     }
 
     override fun handles(targetType: Class<*>): Boolean {
-        return targetType == Double::class.java
+        return targetType == Double::class.java || targetType == java.lang.Double::class.java
     }
 }

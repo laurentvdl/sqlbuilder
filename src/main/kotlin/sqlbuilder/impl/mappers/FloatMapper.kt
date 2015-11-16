@@ -27,6 +27,6 @@ public class FloatMapper : BiMapper {
     }
 
     override fun handles(targetType: Class<*>): Boolean {
-        return targetType == Double::class.java
+        return targetType == Float::class.java || targetType == java.lang.Float::class.java
     }
 }

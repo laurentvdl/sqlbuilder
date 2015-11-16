@@ -51,7 +51,7 @@ class UpdateImpl(private val backend: Backend): Update {
         if (entity == null) entity = metaResolver.getTableName(bean.javaClass)
         entity = backend.configuration.escapeEntity(entity)
 
-        if (keys.size == 0) {
+        if (keys.isEmpty()) {
             throw PersistenceException("cannot update bean without a list of keys")
         }
 
@@ -100,10 +100,10 @@ class UpdateImpl(private val backend: Backend): Update {
                 }
 
                 if (updates != 1) {
-                    throw PersistenceException("updateBean resulted in " + updates + " updated rows instead of 1 using <" + sql + "> with bean " + bean)
+                    throw PersistenceException("updateBean resulted in $updates updated rows instead of 1 using <$sql> with bean $bean")
                 }
             } catch (sqlx: SQLException) {
-                throw PersistenceException("update <" + sql + "> failed", sqlx)
+                throw PersistenceException("update <$sql> failed", sqlx)
             }
 
         } finally {
@@ -111,32 +111,14 @@ class UpdateImpl(private val backend: Backend): Update {
         }
     }
 
-    /**
-     * Custom update that allows null parameters due to the types argument.
-     * @param sql statement
-     * @return updated rows
-     */
     public override fun updateStatement(sql: String): Int {
         return updateStatement(sql, null, null)
     }
 
-    /**
-     * Custom update that allows null parameters due to the types argument.
-     * @param sql statement
-     * @param parameters parameters objects
-     * @return updated rows
-     */
     public override fun updateStatement(sql: String, vararg parameters: Any): Int {
         return updateStatement(sql, parameters, null)
     }
 
-    /**
-     * Custom update that allows null parameters due to the types argument.
-     * @param sql statement
-     * @param parameters parameters objects
-     * @param types array of java.sql.Types
-     * @return updated rows
-     */
     public override fun updateStatement(sql: String, parameters: Array<out Any>?, types: IntArray?): Int {
         logger.info(sql)
 
@@ -168,14 +150,14 @@ class UpdateImpl(private val backend: Backend): Update {
                             }
                         } catch (ignore: AbstractMethodError) {
                         } catch (sqlx: SQLException) {
-                            throw PersistenceException("unable to retreive generated keys", sqlx)
+                            throw PersistenceException("unable to retrieve generated keys", sqlx)
                         }
 
                     }
                     rows
                 }
             } catch (px: PersistenceException) {
-                throw PersistenceException("update <" + sql + "> failed with parameters " + Arrays.toString(parameters), px)
+                throw PersistenceException("update <$sql> failed with parameters ${Arrays.toString(parameters)}", px)
             }
 
 
@@ -186,13 +168,6 @@ class UpdateImpl(private val backend: Backend): Update {
         }
     }
 
-    /**
-     * Special updatestatement that throws PersistenceException if updated rows do not match.
-     * @param sql
-     * @param expectedUpdateCount
-     * @param parameters
-     * @return updated rows if matching the expected
-     */
     public override fun updateStatementExpecting(sql: String, expectedUpdateCount: Int, vararg parameters: Any): Int {
         val updates = updateStatement(sql, parameters, null)
         if (updates != expectedUpdateCount) {
@@ -204,12 +179,6 @@ class UpdateImpl(private val backend: Backend): Update {
         return updates
     }
 
-    /**
-     * store any generated id after executing the update statement (which should be an insert in this case)
-     * <br/>use <code>getGeneratedKey</code> to get the value afterwards
-     * @param cond
-     * @return
-     */
     public override fun getKeys(cond: Boolean): Update {
         this.getkeys = cond
         return this

@@ -1,5 +1,6 @@
 package sqlbuilder
 
+import sqlbuilder.impl.mappers.AnyMapper
 import sqlbuilder.mapping.ToObjectMappingParameters
 import java.io.Closeable
 import java.sql.SQLException
@@ -13,8 +14,7 @@ class ResultSet(private val target: java.sql.ResultSet, private val configuratio
     @Suppress("UNCHECKED_CAST")
     @Throws(SQLException::class)
     public fun <T> getObject(targetType: Class<T>, index: Int): T? {
-        val objectMapperForType = configuration.objectMapperForType(targetType) ?:
-                throw PersistenceException("unknown bean property, unable to find matching SQL variant: " + targetType.name)
+        val objectMapperForType = configuration.objectMapperForType(targetType) ?: AnyMapper()
 
         return objectMapperForType.toObject(ToObjectMappingParameters(index, target, targetType)) as T
     }

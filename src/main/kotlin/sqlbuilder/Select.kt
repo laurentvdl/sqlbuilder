@@ -188,7 +188,7 @@ interface Select {
 
     /**
      * Override the cursor direction or concurrency to allow eg. updatable resultsets
-     * @param type one of
+     * @param cursorType one of
      *        <code>ResultSet.TYPE_FORWARD_ONLY</code>,
      *        <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
      *        <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
@@ -197,7 +197,7 @@ interface Select {
      *        <code>ResultSet.CONCUR_UPDATABLE</code>
      * @return the current Select statement
      */
-    fun resultSetType(`type`: Int, concurrency: Int): Select
+    fun resultSetType(cursorType: Int, concurrency: Int): Select
 
     /**
      * Specifiy group by statement, eg. <code>select.groupBy("group by aardvz")</code>

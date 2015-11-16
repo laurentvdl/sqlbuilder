@@ -21,7 +21,6 @@ public open class DefaultConfiguration : Configuration {
 
     protected fun registerDefaultMappers() {
         val dualPurposeMappers = listOf(
-                AnyMapper(),
                 StringMapper(),
                 CharMapper(),
                 LongMapper(),
@@ -45,7 +44,7 @@ public open class DefaultConfiguration : Configuration {
         }
     }
 
-    override var metaResolver: MetaResolver = StaticJavaResolver()
+    override var metaResolver: MetaResolver = StaticJavaResolver(this)
     var escapeCharacter: Char? = null
 
     public fun setEscapeCharacter(escapeCharacter: Char): Configuration {
@@ -65,11 +64,13 @@ public open class DefaultConfiguration : Configuration {
     }
 
     override fun objectMapperForType(targetType: Class<*>): ToObjectMapper? {
-        return toObjectMappers.last { it.handles(targetType) }
+        val lastOrNull = toObjectMappers.lastOrNull { it.handles(targetType) }
+        println("mapper for type $targetType -> $lastOrNull")
+        return lastOrNull
     }
 
     override fun sqlMapperForType(targetType: Class<*>): ToSQLMapper? {
-        return toSQLMappers.last { it.handles(targetType) }
+        return toSQLMappers.lastOrNull { it.handles(targetType) }
     }
 
     override fun registerToObjectMapper(toObjectMapper: ToObjectMapper): DefaultConfiguration {

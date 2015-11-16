@@ -90,6 +90,7 @@ class InsertImpl(val backend: Backend): Insert {
                 sql.append(")")
 
                 sqlString = sql.toString()
+
                 logger.info(sqlString)
 
                 cachedStatement = sqlCon.prepareStatement(sqlString, if (getkeys) Statement.RETURN_GENERATED_KEYS else java.sql.Statement.NO_GENERATED_KEYS)
@@ -103,7 +104,7 @@ class InsertImpl(val backend: Backend): Insert {
 
 
                 for ((index,property) in properties.withIndex()) {
-                    logger.debug("setInsertParameter " + property.name + " <" + property.classType.getName() + ">")
+                    logger.debug("setInsertParameter " + property.name + " <" + property.classType.name + ">")
                     sqlConverter.setParameter(cachedStatement!!, values[property], index + 1, property.classType, null)
                 }
 
@@ -112,7 +113,7 @@ class InsertImpl(val backend: Backend): Insert {
                 if (getkeys) {
                     try {
                         var key: Long = 0;
-                        val keys = cachedStatement!!.getGeneratedKeys()
+                        val keys = cachedStatement!!.generatedKeys
                         if (keys != null) {
                             if (keys.next()) {
                                 key = keys.getLong(1)
