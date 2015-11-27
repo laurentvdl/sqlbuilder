@@ -71,7 +71,7 @@ publishing {
     }
 }
 
-jar {
+/*jar {
     from(configurations.embedded) {
         into('lib')
     }
@@ -81,7 +81,7 @@ jar {
         instruction 'Import-Package', '!jet.*,!kotlin.*,*'
         instruction 'Bundle-Classpath', ".,${configurations.embedded.files.collect({'lib/' + it.name}).join(',')}"
     }
-}
+}*/
 
 defaultTasks 'build'
 sourceSets {

@@ -255,7 +255,7 @@ class SelectImpl(val backend: Backend) : Select {
         }
         val con = backend.getSqlConnection()
         try {
-            logger.info(sql)
+            logger.info("{} ({})", sql, whereParameters)
 
             val sqlConverter = SqlConverter(backend.configuration)
 
@@ -265,7 +265,7 @@ class SelectImpl(val backend: Backend) : Select {
                 val parameterCount = ps.parameterMetaData.parameterCount
                 whereParameters.withIndex().forEach { pair ->
                     if (pair.index < parameterCount) {
-                        sqlConverter.setParameter(ps, pair.value, pair.index + 1)
+                        sqlConverter.setParameter(ps, pair.value, pair.index + 1, pair.value.javaClass)
                     }
                 }
 

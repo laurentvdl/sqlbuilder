@@ -25,6 +25,6 @@ class CharMapper : BiMapper {
     }
 
     override fun handles(targetType: Class<*>): Boolean {
-        return targetType == Char::class.java
+        return targetType == Char::class.java || java.lang.Character::class.java == targetType
     }
 }

@@ -20,7 +20,7 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
     override fun invoke(proxy: Any?, method: Method, args: Array<out Any>?): Any? {
         return synchronized(datasource) {
             lastModified = System.currentTimeMillis()
-            val methodName = method.getName()
+            val methodName = method.name
             if ("close" == methodName) {
                 datasource.freeConnection(this)
             } else {

@@ -27,6 +27,6 @@ public class IntegerMapper : BiMapper {
     }
 
     override fun handles(targetType: Class<*>): Boolean {
-        return Int::class.java == targetType
+        return Int::class.java == targetType || java.lang.Integer::class.java == targetType
     }
 }
