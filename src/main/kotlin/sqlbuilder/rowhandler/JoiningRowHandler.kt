@@ -227,7 +227,7 @@ public abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler
                     relationList = ArrayList<W>()
                     relationField.set(owner, relationList)
                 }
-                if (!relationList.containsRaw(instance)) relationList.add(instance!!)
+                if (!relationList.contains(instance)) relationList.add(instance!!)
             } else
                 if (isSet) {
                     @Suppress("UNCHECKED_CAST")
@@ -237,7 +237,7 @@ public abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler
                                 relationField.set(owner, setValue)
                                 setValue
                             }
-                    if (!relationSet.containsRaw(instance)) relationSet.add(instance!!)
+                    if (!relationSet.contains(instance)) relationSet.add(instance!!)
                 } else {
                     relationField.set(owner, instance)
                 }

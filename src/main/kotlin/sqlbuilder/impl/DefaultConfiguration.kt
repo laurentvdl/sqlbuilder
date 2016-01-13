@@ -65,7 +65,6 @@ public open class DefaultConfiguration : Configuration {
 
     override fun objectMapperForType(targetType: Class<*>): ToObjectMapper? {
         val lastOrNull = toObjectMappers.lastOrNull { it.handles(targetType) }
-        println("mapper for type $targetType -> $lastOrNull")
         return lastOrNull
     }
 
