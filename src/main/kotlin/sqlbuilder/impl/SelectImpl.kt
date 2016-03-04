@@ -319,7 +319,7 @@ class SelectImpl(val backend: Backend) : Select {
         if (this.parameters == null) {
             whereParameters = ArrayList<Any>()
         } else {
-            whereParameters = parameters!!.toArrayList()
+            whereParameters = parameters!!.toMutableList()
         }
         if (whereGroup.getNestedConditions().size > 0) {
             sqlBuffer.append(" where ")
