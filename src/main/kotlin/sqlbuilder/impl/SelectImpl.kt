@@ -265,7 +265,7 @@ class SelectImpl(val backend: Backend) : Select {
                 val parameterCount = ps.parameterMetaData.parameterCount
                 whereParameters.withIndex().forEach { pair ->
                     if (pair.index < parameterCount) {
-                        sqlConverter.setParameter(ps, pair.value, pair.index + 1, pair.value.javaClass)
+                        sqlConverter.setParameter(ps, pair.value, pair.index + 1, pair.value?.javaClass)
                     }
                 }
 

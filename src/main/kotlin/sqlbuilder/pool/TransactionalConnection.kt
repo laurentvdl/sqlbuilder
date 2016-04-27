@@ -67,4 +67,10 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
     fun ping() {
         lastModified = System.currentTimeMillis()
     }
+
+    override fun toString(): String{
+        return "TransactionalConnection(target=$target, lastModified=$lastModified)"
+    }
+
+
 }

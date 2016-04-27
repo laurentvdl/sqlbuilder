@@ -250,4 +250,10 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
     override fun getLoginTimeout(): Int {
         throw UnsupportedOperationException()
     }
+
+    override fun toString(): String{
+        return "DataSourceImpl(idleConnections=$idleConnections, activeConnections=$activeConnections, active=$active, zombieTimeout=$zombieTimeout, idleTimeout=$idleTimeout, cleanupDelay=$cleanupDelay, recordStacks=$recordStacks)"
+    }
+
+
 }
