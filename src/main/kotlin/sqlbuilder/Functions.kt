@@ -6,7 +6,7 @@ import sqlbuilder.meta.PropertyReference
 /**
  * Duplication of Kotlin extension f for Closable
  */
-public inline fun <T : AutoCloseable, R> T.usea(block: (T) -> R): R {
+inline fun <T : AutoCloseable, R> T.usea(block: (T) -> R): R {
     var closed = false
     try {
         return block(this)
@@ -23,11 +23,11 @@ public inline fun <T : AutoCloseable, R> T.usea(block: (T) -> R): R {
     }
 }
 
-public fun List<PropertyReference>.exclude(excludeFields: Array<out String>?): List<PropertyReference> {
+fun List<PropertyReference>.exclude(excludeFields: Array<out String>?): List<PropertyReference> {
     return if (excludeFields != null) crossReference(excludeFields, true) else this
 }
 
-public fun List<PropertyReference>.include(includeFields: Array<out String>?): List<PropertyReference> {
+fun List<PropertyReference>.include(includeFields: Array<out String>?): List<PropertyReference> {
     return if (includeFields != null) crossReference(includeFields, true) else this
 }
 
@@ -39,3 +39,14 @@ private fun List<PropertyReference>.crossReference(crossReference: Array<out Str
         if (include) index >= 0 else index < 0
     }
 }
+
+val RowHandler.result: Any?
+    get() {
+        if (this is ReturningRowHandler<*>) {
+            return this.result
+        } else if (this is OptionalReturningRowHandler<*>){
+            return this.result
+        } else {
+            return null
+        }
+    }

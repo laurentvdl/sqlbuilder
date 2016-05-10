@@ -13,18 +13,18 @@ import org.slf4j.LoggerFactory
  *
  * @author Laurent Van der Linden
  */
-public class FileStrategy(private var file: File) : CacheStrategy {
+class FileStrategy(private var file: File) : CacheStrategy {
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
     override fun get(query: CacheableQuery): Any? {
 
-        if (file.isFile()) {
+        if (file.isFile) {
             try {
                 return FileInputStream(file).use { fis ->
-                    createObjectInputStream(fis).readObject()
+                    ObjectInputStream(fis).readObject()
                 }
             } catch (e: Exception) {
-                logger.warn("failed to read cached value from file ${file.getAbsolutePath()}", e)
+                logger.warn("failed to read cached value from file ${file.absolutePath}", e)
                 file.delete()
             }
 
@@ -43,10 +43,5 @@ public class FileStrategy(private var file: File) : CacheStrategy {
         } catch (e: Exception) {
             logger.warn("failed to cache value to file", e)
         }
-
-    }
-
-    protected fun createObjectInputStream(fis: FileInputStream): ObjectInputStream {
-        return ObjectInputStream(fis)
     }
 }

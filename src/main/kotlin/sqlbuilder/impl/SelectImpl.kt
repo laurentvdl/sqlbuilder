@@ -159,12 +159,12 @@ class SelectImpl(val backend: Backend) : Select {
             }
         }
 
-        val beanHandler = getRowHandler(beanClass)
+        var beanHandler = getRowHandler(beanClass)
         injectRowHandler(beanHandler, properties)
 
-        execute(fields, beanHandler)
+        beanHandler = execute(fields, beanHandler)
 
-        if (beanHandler is ListRowHandler<*>) {
+        if (beanHandler is ListRowHandler<*> || beanHandler is CachedRowHandler<*>) {
             @Suppress("UNCHECKED_CAST")
             return beanHandler.result as List<T>
         } else {
@@ -185,22 +185,24 @@ class SelectImpl(val backend: Backend) : Select {
     }
 
     override fun <T : Any> selectField(soleField: String?, requiredType: Class<T>): T? {
-        val handler = SingleFieldRowHandler(requiredType)
-        execute(if (soleField == null) null else listOf(soleField), handler)
-        return handler.result
+        var handler: RowHandler = SingleFieldRowHandler(requiredType)
+        handler = execute(if (soleField == null) null else listOf(soleField), handler)
+        @Suppress("UNCHECKED_CAST")
+        return handler.result as T?
     }
 
     override fun <T : Any> selectField(soleField: String?, requiredType: Class<T>, defaultValue: T): T {
-        val handler = SingleFieldRowHandler(requiredType)
-        execute(if (soleField == null) null else listOf(soleField), handler)
-        return handler.result ?: defaultValue
+        var handler: RowHandler = SingleFieldRowHandler(requiredType)
+        handler = execute(if (soleField == null) null else listOf(soleField), handler)
+        @Suppress("UNCHECKED_CAST")
+        return handler.result as T? ?: defaultValue
     }
 
-    @SuppressWarnings("unchecked")
     override fun <T : Any> selectAllField(soleField: String?, requiredType: Class<T>): List<T> {
-        val handler = SingleFieldListRowHandler(requiredType)
-        execute(if (soleField == null) null else listOf(soleField), handler)
-        return handler.result
+        var handler: RowHandler = SingleFieldListRowHandler(requiredType)
+        rowHandler = execute(if (soleField == null) null else listOf(soleField), handler)
+        @Suppress("UNCHECKED_CAST")
+        return handler.result as List<T>
     }
 
     @SuppressWarnings("unchecked")
@@ -219,9 +221,8 @@ class SelectImpl(val backend: Backend) : Select {
         val beanHandler = MapRowHandler()
         val list: List<String> = fields.toList()
 
-        execute(list, beanHandler)
-
-        return beanHandler.list
+        @Suppress("UNCHECKED_CAST")
+        return execute(list, beanHandler).result as List<RowMap>
     }
 
     override fun selectFieldToStream(field: String, os: OutputStream) {
@@ -242,11 +243,11 @@ class SelectImpl(val backend: Backend) : Select {
         return from(execute(null, rowHandler))
     }
 
-    public fun execute(fields: List<String>?, rowHandler: RowHandler): RowHandler {
+    fun execute(fields: List<String>?, rowHandler: RowHandler): RowHandler {
         val (sql,whereParameters) = prepareSql(this.sql, fields)
 
         if (cacheStrategy != null) {
-            if (rowHandler is ReturningRowHandler<*>) {
+            if (rowHandler is ReturningRowHandler<*> || rowHandler is OptionalReturningRowHandler<*>) {
                 val cachedResult = cacheStrategy!!.get(CacheableQuery(sql, whereParameters, offset, rows))
                 if (cachedResult != null) {
                     return CachedRowHandler(cachedResult)
@@ -308,10 +309,13 @@ class SelectImpl(val backend: Backend) : Select {
         val sqlBuffer = StringBuilder(sql ?: "")
         if (suppliedSql == null) {
             sqlBuffer.append("select ")
-            if (selectOption != null) sqlBuffer.append(selectOption).append(' ')
-            if (fields != null && fields.isNotEmpty()) {
+            if (selectOption != null) {
+                sqlBuffer.append(selectOption).append(' ')
+            } else if (fields != null && fields.isNotEmpty()) {
                 fields.joinTo(sqlBuffer, ",")
                 sqlBuffer.append(" ")
+            } else {
+                sqlBuffer.append("* ")
             }
             if (entity != null) sqlBuffer.append("from ").append(entity)
         }

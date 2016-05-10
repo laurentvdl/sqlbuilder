@@ -1,13 +1,13 @@
 package sqlbuilder
 
+import org.junit.Before
 import org.junit.Test
+import sqlbuilder.impl.SqlBuilderImpl
 import sqlbuilder.pool.DataSourceImpl
 import sqlbuilder.pool.DefaultConfig
 import sqlbuilder.pool.Drivers
-import org.junit.Before
-import kotlin.test.*
-import sqlbuilder.impl.SqlBuilderImpl
 import sqlbuilder.rowhandler.JoiningRowHandler
+import kotlin.test.assertEquals
 
 class KotlinUsage {
     private val sqlBuilder = SqlBuilderImpl(DataSourceImpl(
@@ -86,6 +86,62 @@ class KotlinUsage {
                 .selectField("count(*)", Long::class.java)
 
         assertEquals(1L, filteredCount, "expecting x users starting matching wildcard")
+    }
+
+    @Test fun caching() {
+        val firstMaps = sqlBuilder.select()
+                .from("users")
+                .cache()
+                .selectMaps("*")
+
+        val firstBeans = sqlBuilder.select()
+                .from("users")
+                .cache()
+                .selectBeans(User::class.java)
+
+        val firstCount = sqlBuilder.select()
+                .from("users")
+                .cache()
+                .selectField("count(*)", java.lang.Long::class.java)
+
+        sqlBuilder.update().updateStatement("delete from users where id = ?", 1)
+
+        val secondMaps = sqlBuilder.select()
+                .from("users")
+                .cache()
+                .selectMaps("*")
+
+        val secondBeans = sqlBuilder.select()
+                .from("users")
+                .cache()
+                .selectBeans(User::class.java)
+
+        val secondCount = sqlBuilder.select()
+                .from("users")
+                .cache()
+                .selectField("count(*)", java.lang.Long::class.java)
+
+        assertEquals(secondMaps.size, firstMaps.size)
+        assertEquals(secondBeans.size, firstBeans.size)
+        assertEquals(secondCount, firstCount)
+
+        val thridMaps = sqlBuilder.select()
+                .from("users")
+                .selectMaps("*")
+
+        assertEquals(1, thridMaps.size)
+
+        val thirdBeans = sqlBuilder.select()
+                .from("users")
+                .selectBeans(User::class.java)
+
+        assertEquals(1, thirdBeans.size)
+
+        val thirdCount = sqlBuilder.select()
+                .from("users")
+                .selectField("count(*)", java.lang.Long::class.java)
+
+        assertEquals(1, thirdCount!!.toLong())
     }
 
     class User() {
