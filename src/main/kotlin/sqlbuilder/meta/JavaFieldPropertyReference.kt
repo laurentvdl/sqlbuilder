@@ -7,7 +7,7 @@ import java.lang.reflect.Field
 /**
  * Wrapper for bean property using java.lang.reflect.Field access.
  */
-public class JavaFieldPropertyReference(override var name: String, private val field: Field, override var classType: Class<*>) : PropertyReference {
+class JavaFieldPropertyReference(override var name: String, private val field: Field, override var classType: Class<*>) : PropertyReference {
     private val fieldType = field.type!!
 
     override fun set(bean: Any, value: Any?) {
@@ -30,7 +30,7 @@ public class JavaFieldPropertyReference(override var name: String, private val f
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this == other) return true
+        if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
 
         val setter = other as JavaGetterSetterPropertyReference

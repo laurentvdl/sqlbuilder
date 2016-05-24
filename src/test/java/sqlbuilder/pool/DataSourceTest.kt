@@ -16,13 +16,13 @@ public class DataSourceTest {
         dataSource.zombieTimeout = 40
         dataSource.cleanupDelay = 10
 
-        val connection1 = dataSource.getConnection()
+        val connection1 = dataSource.connection
         // this will stop the timer
         connection1.close()
 
         Thread.sleep(40)
 
-        dataSource.getConnection()
+        dataSource.connection
 
         Thread.sleep(50)
 

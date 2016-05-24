@@ -9,7 +9,7 @@ import java.sql.SQLException
 import java.util.*
 import kotlin.reflect.KMutableProperty
 
-public abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, ReflectionHandler {
+abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, ReflectionHandler {
     private val beans = HashMap<MappingKey, Any>()
     private val propertyReferenceCache = HashMap<Class<*>, List<PropertyReference>>()
     private val columnToIndex: MutableMap<String, Int> = HashMap()

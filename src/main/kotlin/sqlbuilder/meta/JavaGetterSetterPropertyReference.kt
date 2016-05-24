@@ -9,7 +9,7 @@ import java.lang.reflect.Method
  *
  * @author Laurent Van der Linden
  */
-public class JavaGetterSetterPropertyReference(override var name: String, private val method: Method, override var classType: Class<*>) : PropertyReference {
+class JavaGetterSetterPropertyReference(override var name: String, private val method: Method, override var classType: Class<*>) : PropertyReference {
     override fun set(bean: Any, value: Any?) {
         try {
             if (!(value == null && classType.isPrimitive)) {
@@ -35,7 +35,7 @@ public class JavaGetterSetterPropertyReference(override var name: String, privat
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this == other) return true
+        if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
 
         val setter = other as JavaGetterSetterPropertyReference

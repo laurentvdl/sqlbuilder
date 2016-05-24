@@ -139,7 +139,7 @@ class SelectImpl(val backend: Backend) : Select {
         var fields: List<String>? = null
 
         // don't check fields if using custom SQL
-        if (sql == null) {
+        if (sql == null && selectOption == null) {
             if (entity == null) {
                 throw PersistenceException("no entity set in statement nor declared as final static String TABLE")
             }
@@ -176,7 +176,7 @@ class SelectImpl(val backend: Backend) : Select {
         if (rowHandler != null) {
             return rowHandler!!
         } else {
-            if (sql == null) {
+            if (sql == null && selectOption == null) {
                 return ReflectiveBeanListRowHandler(beanClass)
             } else {
                 return DynamicBeanRowHandler(beanClass)

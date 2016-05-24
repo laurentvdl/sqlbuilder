@@ -240,4 +240,17 @@ public class JavaUsage {
                 .selectField(null, Boolean.class)
         );
     }
+
+    @Test
+    public void selectOption() {
+        final Select select = sqlBuilder.select()
+                .from("users u");
+
+        select.selectField("count(*)", Integer.class);
+
+        select
+                .selectOption("u.*")
+                .selectBeans(User.class);
+
+    }
 }
