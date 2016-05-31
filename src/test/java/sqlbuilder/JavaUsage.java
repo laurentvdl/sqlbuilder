@@ -253,4 +253,21 @@ public class JavaUsage {
                 .selectBeans(User.class);
 
     }
+
+    @Test
+    public void excludeFields() {
+        final List<User> usersWithoutUsername = sqlBuilder.select()
+                .from("users u")
+                .excludeFields("username")
+                .selectBeans(User.class);
+
+        assertNull("username should not be set", usersWithoutUsername.get(0).getUsername());
+
+        final List<User> usersWithUsername = sqlBuilder.select()
+                .from("users u")
+                .includeFields("username")
+                .selectBeans(User.class);
+
+        assertNotNull("username should be set", usersWithUsername.get(0).getUsername());
+    }
 }

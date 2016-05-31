@@ -24,7 +24,7 @@ inline fun <T : AutoCloseable, R> T.usea(block: (T) -> R): R {
 }
 
 fun List<PropertyReference>.exclude(excludeFields: Array<out String>?): List<PropertyReference> {
-    return if (excludeFields != null) crossReference(excludeFields, true) else this
+    return if (excludeFields != null) crossReference(excludeFields, false) else this
 }
 
 fun List<PropertyReference>.include(includeFields: Array<out String>?): List<PropertyReference> {
