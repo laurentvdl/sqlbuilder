@@ -97,7 +97,7 @@ public class JavaUsage {
     @Test
     public void joinHandler() {
         final List<User> allUsersAndFiles = sqlBuilder.select()
-            .sql("select * from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
+            .sql("select users.*,files.*,attributes.* from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
             .select(new JoiningRowHandler<User>() {
                 @Override
                 public boolean handle(@NotNull ResultSet set, int row) throws SQLException {
@@ -269,5 +269,16 @@ public class JavaUsage {
                 .selectBeans(User.class);
 
         assertNotNull("username should be set", usersWithUsername.get(0).getUsername());
+    }
+
+    @Test
+    public void nullConditionParameter() {
+        final String username = null;
+        final List<User> users = sqlBuilder.select()
+                .from("users u")
+                .where("username = ?", username)
+                .selectBeans(User.class);
+
+        assertTrue("no users should have a username of NULL", users.isEmpty());
     }
 }

@@ -49,7 +49,7 @@ class SelectImpl(val backend: Backend) : Select {
         return this
     }
 
-    override fun where(where: String, vararg parameters: Any): Select {
+    override fun where(where: String, vararg parameters: Any?): Select {
         whereGroup.and(where, *parameters)
         return this
     }
@@ -319,9 +319,9 @@ class SelectImpl(val backend: Backend) : Select {
             }
             if (entity != null) sqlBuffer.append("from ").append(entity)
         }
-        val whereParameters: MutableList<Any>
+        val whereParameters: MutableList<Any?>
         if (this.parameters == null) {
-            whereParameters = ArrayList<Any>()
+            whereParameters = ArrayList<Any?>()
         } else {
             whereParameters = parameters!!.toMutableList()
         }

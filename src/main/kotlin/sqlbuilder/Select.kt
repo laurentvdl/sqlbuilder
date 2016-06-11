@@ -31,7 +31,7 @@ interface Select {
      * @param where
      * @return this
      */
-    fun where(where: String, vararg parameters: Any): Select
+    fun where(where: String, vararg parameters: Any?): Select
 
     /**
      * Start building a complex where clause (nested groups, conditional clauses).

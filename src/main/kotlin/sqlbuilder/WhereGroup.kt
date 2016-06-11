@@ -5,14 +5,14 @@ import java.util.ArrayList
 /**
  * Where clause builder.
  */
-public class WhereGroup(protected var parent: Any, private val select: Select, private val relation: Relation) : WherePart {
+class WhereGroup(private var parent: Any, private val select: Select, private val relation: Relation) : WherePart {
     private val children = ArrayList<WherePart>()
 
     /**
      * Default AND group.
      * @return this
      */
-    public fun group(): WhereGroup {
+    fun group(): WhereGroup {
         return group(Relation.AND)
     }
 
@@ -21,7 +21,7 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
      * @param relation
      * @return this
      */
-    public fun group(relation: Relation): WhereGroup {
+    fun group(relation: Relation): WhereGroup {
         val nestedGroup = WhereGroup(this, select, relation)
         children.add(nestedGroup)
         return nestedGroup
@@ -31,7 +31,7 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
      * End the current group and go up in the hierarchy.
      * @return this
      */
-    public fun endGroup(): WhereGroup {
+    fun endGroup(): WhereGroup {
         return parent as WhereGroup
     }
 
@@ -40,8 +40,8 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
      * @param condition where condition
      * @return this
      */
-    public fun and(condition: String): WhereGroup {
-        return andInterrnal(true, condition, null)
+    fun and(condition: String): WhereGroup {
+        return andInternal(true, condition, null)
     }
 
     /**
@@ -50,8 +50,8 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
      * @param condition where condition
      * @return this
      */
-    public fun and(test: Boolean, condition: String): WhereGroup {
-        return andInterrnal(test, condition, null)
+    fun and(test: Boolean, condition: String): WhereGroup {
+        return andInternal(test, condition, null)
     }
 
     /**
@@ -60,8 +60,8 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
      * @param parameters values for any where parameters (?) specified in the condition
      * @return this
      */
-    public fun and(condition: String, vararg parameters: Any): WhereGroup {
-        return andInterrnal(true, condition, parameters)
+    fun and(condition: String, vararg parameters: Any?): WhereGroup {
+        return andInternal(true, condition, parameters)
     }
 
     /**
@@ -71,14 +71,14 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
      * @param parameters values for any where parameters (?) specified in the condition
      * @return this
      */
-    public fun and(test: Boolean, condition: String, vararg parameters: Any): WhereGroup {
-        return andInterrnal(test, condition, parameters)
+    fun and(test: Boolean, condition: String, vararg parameters: Any?): WhereGroup {
+        return andInternal(test, condition, parameters)
     }
 
     /**
      * varargs are not suitable for method overriding, use Array internally
      */
-    private fun andInterrnal(test: Boolean, condition: String, parameters: Array<out Any>?): WhereGroup {
+    private fun andInternal(test: Boolean, condition: String, parameters: Array<out Any?>?): WhereGroup {
         if (test) children.add(Condition(condition, parameters, Relation.AND))
         return this
     }
@@ -88,7 +88,7 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
      * @param condition where condition
      * @return this
      */
-    public fun or(condition: String): WhereGroup {
+    fun or(condition: String): WhereGroup {
         return orInternal(true, condition, null)
     }
 
@@ -98,7 +98,7 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
      * @param condition where condition
      * @return this
      */
-    public fun or(test: Boolean, condition: String): WhereGroup {
+    fun or(test: Boolean, condition: String): WhereGroup {
         return orInternal(test, condition, null)
     }
 
@@ -108,7 +108,7 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
      * @param parameters values for any where parameters (?) specified in the condition
      * @return this
      */
-    public fun or(condition: String, vararg parameters: Any): WhereGroup {
+    fun or(condition: String, vararg parameters: Any?): WhereGroup {
         return orInternal(true, condition, parameters)
     }
 
@@ -119,19 +119,19 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
      * @param parameters values for any where parameters (?) specified in the condition
      * @return this
      */
-    public fun or(test: Boolean, condition: String, vararg parameters: Any): WhereGroup {
+    fun or(test: Boolean, condition: String, vararg parameters: Any?): WhereGroup {
         return orInternal(test, condition, parameters)
     }
 
     /**
      * create a nested AND group and specify the clauses for each iterated item via a visitor function
      */
-    public fun <T> and(iterable: Iterable<T>?, visitor: WhereGroupVisitor<T>): WhereGroup = forIterable(Relation.AND, iterable, visitor)
+    fun <T> and(iterable: Iterable<T>?, visitor: WhereGroupVisitor<T>): WhereGroup = forIterable(Relation.AND, iterable, visitor)
 
     /**
      * create a nested OR group and specify the clauses for each iterated item via a visitor function
      */
-    public fun <T> or(iterable: Iterable<T>?, visitor: WhereGroupVisitor<T>): WhereGroup = forIterable(Relation.OR, iterable, visitor)
+    fun <T> or(iterable: Iterable<T>?, visitor: WhereGroupVisitor<T>): WhereGroup = forIterable(Relation.OR, iterable, visitor)
 
     fun <T> forIterable(relation: Relation, iterable: Iterable<T>?, visitor: WhereGroupVisitor<T>): WhereGroup {
         if (iterable != null) {
@@ -146,7 +146,7 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
     /**
      * varargs are not suitable for method overriding, use Array internally
      */
-    private fun orInternal(test: Boolean, condition: String, parameters: Array<out Any>?): WhereGroup {
+    private fun orInternal(test: Boolean, condition: String, parameters: Array<out Any?>?): WhereGroup {
         if (test) children.add(Condition(condition, parameters, Relation.OR))
         return this
     }
@@ -159,11 +159,11 @@ public class WhereGroup(protected var parent: Any, private val select: Select, p
      * Close the where builder.
      * @return the select statement
      */
-    public fun endWhere(): Select {
+    fun endWhere(): Select {
         return select
     }
 
-    public fun toSql(sql: StringBuilder, parameters: MutableList<Any>) {
+    fun toSql(sql: StringBuilder, parameters: MutableList<Any?>) {
         var clean = true
         for (child in children) {
             if (child is Condition) {
