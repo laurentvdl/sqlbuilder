@@ -80,7 +80,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         if (table == null) {
             return columnToIndex.get(column)
         } else {
-            return columnToIndex.get(table + column) ?: columnToIndex.get(column)
+            return columnToIndex.get(table + "_" + column) ?: columnToIndex.get(column)
         }
     }
 
@@ -93,7 +93,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             if (tableName?.isEmpty() ?: true) {
                 columnToIndex.put(metaData.getColumnLabel(x)!!.toLowerCase(), x)
             } else {
-                columnToIndex.put(tableName!!.toLowerCase() + metaData.getColumnLabel(x)?.toLowerCase(), x)
+                columnToIndex.put(tableName!!.toLowerCase() + "_" + metaData.getColumnLabel(x)?.toLowerCase(), x)
             }
         }
     }
@@ -244,6 +244,14 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             return instance!!
         }
         return null
+    }
+
+    private fun tableColumnKey(table: String?, column: String): String {
+        if (table != null) {
+            return "${table.toLowerCase()}_${column.toLowerCase()}"
+        }
+
+        return column.toLowerCase()
     }
 
     data class MappingKey(val aType: Class<*>, val keyValues: List<*>)
