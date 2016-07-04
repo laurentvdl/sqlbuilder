@@ -15,6 +15,7 @@ public class SqlConverter(private val configuration: Configuration) {
     @Throws(SQLException::class)
     fun setParameter(ps: PreparedStatement, param: Any?, index: Int, valueType: Class<*>? = null, sqlType: Int? = null) {
         var convertedParam = param
+        var convertedValueType = valueType
 
         logger.debug("set({},{})", index, convertedParam)
 
@@ -40,14 +41,17 @@ public class SqlConverter(private val configuration: Configuration) {
             if (convertedParam is LazyValue) {
                 try {
                     convertedParam = convertedParam.eval()
+                    if (convertedParam != null) {
+                        convertedValueType = convertedParam.javaClass
+                    }
                 } catch (e: Exception) {
                     throw PersistenceException("unable to eval lazy value: " + convertedParam, e)
                 }
             }
 
-            if (valueType != null) {
-                val parameters = ToSQLMappingParameters(index, ps, convertedParam, valueType)
-                configuration.sqlMapperForType(valueType)?.toSQL(parameters)
+            if (convertedValueType != null) {
+                val parameters = ToSQLMappingParameters(index, ps, convertedParam, convertedValueType)
+                configuration.sqlMapperForType(convertedValueType)?.toSQL(parameters)
             } else {
                 ps.setObject(index, convertedParam)
             }
