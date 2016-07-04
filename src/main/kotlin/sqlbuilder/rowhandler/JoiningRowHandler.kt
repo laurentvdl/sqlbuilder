@@ -78,9 +78,9 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
     protected fun getColumnIndex(table: String?, column: String): Int? {
         if (table == null) {
-            return columnToIndex.get(column)
+            return columnToIndex.get(column.toLowerCase())
         } else {
-            return columnToIndex.get(table + "_" + column) ?: columnToIndex.get(column)
+            return columnToIndex.get(table.toLowerCase().replace('.','_') + "_" + column.toLowerCase()) ?: columnToIndex.get(column.toLowerCase())
         }
     }
 
@@ -93,7 +93,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             if (tableName?.isEmpty() ?: true) {
                 columnToIndex.put(metaData.getColumnLabel(x)!!.toLowerCase(), x)
             } else {
-                columnToIndex.put(tableName!!.toLowerCase() + "_" + metaData.getColumnLabel(x)?.toLowerCase(), x)
+                columnToIndex.put(tableName!!.toLowerCase().replace('.','_') + "_" + metaData.getColumnLabel(x)?.toLowerCase(), x)
             }
         }
     }
