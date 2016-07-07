@@ -1,5 +1,6 @@
 package sqlbuilder
 
+import java.io.Serializable
 import java.util.HashMap
 
 /**
@@ -7,39 +8,39 @@ import java.util.HashMap
  *
  * @author Laurent Van der Linden
  */
-public class RowMap() {
+class RowMap() : Serializable {
     private val named = HashMap<String, Any?>()
     private val indexed = HashMap<Int, Any?>()
 
-    public fun get(key: String?): Any? {
+    fun get(key: String?): Any? {
         if (key == null) throw NullPointerException("key cannot be null")
         return named[key.toLowerCase()]
     }
 
-    public fun get(index: Int): Any? {
+    fun get(index: Int): Any? {
         return indexed[index]
     }
 
-    public fun put(index: Int, value: Any?): RowMap {
+    fun put(index: Int, value: Any?): RowMap {
         indexed.put(index, value)
         return this
     }
 
-    public fun put(name: String?, value: Any?): RowMap {
+    fun put(name: String?, value: Any?): RowMap {
         if (name == null) throw NullPointerException("name cannot be null")
         named.put(name.toLowerCase(), value)
         return this
     }
 
-    public fun getNamedMap(): Map<String, Any?> {
+    fun getNamedMap(): Map<String, Any?> {
         return named
     }
 
-    public fun getIndexedMap(): Map<Int, Any?> {
+    fun getIndexedMap(): Map<Int, Any?> {
         return indexed
     }
 
-    public fun size(): Int {
+    fun size(): Int {
         return named.size
     }
 

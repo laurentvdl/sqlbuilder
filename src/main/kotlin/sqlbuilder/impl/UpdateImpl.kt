@@ -156,8 +156,8 @@ class UpdateImpl(private val backend: Backend): Update {
                     }
                     rows
                 }
-            } catch (px: PersistenceException) {
-                throw PersistenceException("update <$sql> failed with parameters ${Arrays.toString(parameters)}", px)
+            } catch (ex: Exception) {
+                throw PersistenceException("update <$sql> failed with parameters ${Arrays.toString(parameters)}", ex)
             }
 
 
