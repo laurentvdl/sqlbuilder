@@ -9,7 +9,7 @@ import java.sql.Types
 /**
  * Helper class that sets/gets from sql objects according to type.
  */
-public class SqlConverter(private val configuration: Configuration) {
+class SqlConverter(private val configuration: Configuration) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Throws(SQLException::class)
@@ -41,12 +41,13 @@ public class SqlConverter(private val configuration: Configuration) {
             if (convertedParam is LazyValue) {
                 try {
                     convertedParam = convertedParam.eval()
-                    if (convertedParam != null) {
-                        convertedValueType = convertedParam.javaClass
-                    }
                 } catch (e: Exception) {
                     throw PersistenceException("unable to eval lazy value: " + convertedParam, e)
                 }
+            }
+
+            if (convertedParam != null) {
+                convertedValueType = convertedParam.javaClass
             }
 
             if (convertedValueType != null) {

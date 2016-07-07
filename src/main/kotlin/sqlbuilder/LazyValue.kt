@@ -5,7 +5,7 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-public interface LazyValue {
+interface LazyValue {
     @Throws(Exception::class )
-    public fun eval(): Any
+    fun eval(): Any?
 }
