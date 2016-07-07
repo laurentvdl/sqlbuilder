@@ -9,7 +9,7 @@ import java.sql.SQLException
  *
  * @author Laurent Van der Linden
  */
-public abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, private val rows: Int, private val table: String) : JoiningRowHandler<T>() {
+abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, private val rows: Int, private val prefix: String) : JoiningRowHandler<T>() {
     private var primaryCount = 0
     private var skip: Boolean = false
     private var lastKeyValues: List<Any?>? = null
@@ -19,7 +19,7 @@ public abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, p
         val parameterizedType = javaClass.getGenericSuperclass() as ParameterizedType
         val aType = parameterizedType.getActualTypeArguments()?.get(0)
         @Suppress("UNCHECKED_CAST")
-        val keyValues = getKeyValues(set, aType as Class<T>, table)
+        val keyValues = getKeyValues(set, aType as Class<T>, prefix)
         if (lastKeyValues == null || !(lastKeyValues?.equals(keyValues) ?: false)) {
             primaryCount++
             lastKeyValues = keyValues
@@ -34,9 +34,9 @@ public abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, p
         super.addPrimaryBean(instance)
     }
 
-    override fun <S : Any> mapSetToBean(set: ResultSet, table: String, instance: S, mappings: Map<String, String>?) : S {
+    override fun <S : Any> mapSetToBean(set: ResultSet, prefix: String, instance: S, mappings: Map<String, String>?) : S {
         if (skip) throw IllegalStateException("you should not map resultsets while skip is true")
-        return super.mapSetToBean(set, table, instance, mappings)
+        return super.mapSetToBean(set, prefix, instance, mappings)
     }
 
     /**
@@ -46,5 +46,5 @@ public abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, p
      * @throws SQLException
      */
     @Throws(SQLException::class)
-    public abstract fun handleInPage(set: ResultSet, i: Int)
+    abstract fun handleInPage(set: ResultSet, i: Int)
 }

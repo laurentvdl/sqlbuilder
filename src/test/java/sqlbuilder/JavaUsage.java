@@ -97,17 +97,42 @@ public class JavaUsage {
     @Test
     public void joinHandler() {
         final List<User> allUsersAndFiles = sqlBuilder.select()
-            .sql("select users.*,files.*,attributes.* from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
+                .sql("select * from users " +
+                        "left join files on users.id = files.userid " +
+                        "left join attributes on files.id = attributes.fileid")
+                .select(new JoiningRowHandler<User>() {
+                    @Override
+                    public boolean handle(@NotNull ResultSet set, int row) throws SQLException {
+                        final User user = mapPrimaryBean(set, User.class, User.TABLE);
+                        final File file = join(set, user, "files", File.class, File.TABLE);
+                        join(set, file, "attributes", Attribute.class, Attribute.TABLE);
+                        return true;
+                    }
+                }.entities(User.class, File.class, Attribute.class));
+
+        validateJoinedResult(allUsersAndFiles);
+
+        // some databases like Oracle don't fully support JDBC resultset metadata, so we need to be more explicit
+        // for every bean in the query, specify a macro to include all properties for that bean
+        // or if cherry picking, define a sql alias like "users.firstname as users_firstname"
+        final List<User> allUsersAndFiles2 = sqlBuilder.select()
+            .sql("select {User.*},{File.*},{Attribute.*} from users " +
+                    "left join files on users.id = files.userid " +
+                    "left join attributes on files.id = attributes.fileid")
             .select(new JoiningRowHandler<User>() {
                 @Override
                 public boolean handle(@NotNull ResultSet set, int row) throws SQLException {
-                    final User user = mapPrimaryBean(set, User.class, User.TABLE);
-                    final File file = join(set, user, "files", File.class, File.TABLE);
-                    join(set, file, "attributes", Attribute.class, Attribute.TABLE);
+                    final User user = mapPrimaryBean(set, User.class, "users");
+                    final File file = join(set, user, "files", File.class, "files");
+                    join(set, file, "attributes", Attribute.class, "attributes");
                     return true;
                 }
-            });
+            }.entities(User.class, File.class, Attribute.class));
 
+        validateJoinedResult(allUsersAndFiles2);
+    }
+
+    private void validateJoinedResult(List<User> allUsersAndFiles) {
         final Set<File> firstUserFiles = allUsersAndFiles.get(0).getFiles();
         assertEquals(1, firstUserFiles.size());
 

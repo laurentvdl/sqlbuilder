@@ -78,7 +78,7 @@ public class StaticJavaResolver(val configuration: Configuration) : MetaResolver
                 result.add(JavaFieldPropertyReference(name, field, field.type!!))
             }
         }
-        return result
+        return result.sortedBy { it.name }
     }
 
     private fun isSqlType(clazz: Class<*>): Boolean {

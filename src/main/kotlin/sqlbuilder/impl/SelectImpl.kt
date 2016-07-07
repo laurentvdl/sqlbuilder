@@ -23,7 +23,6 @@ class SelectImpl(val backend: Backend) : Select {
     private var offset: Int? = null
     private var rows: Int? = null
     private var cacheStrategy: CacheStrategy? = null
-    private var rowHandler: RowHandler? = null
     private var sql: String? = null
     private var parameters: Array<out Any>? = null
     private var includeFields: Array<out String>? = null
@@ -173,14 +172,10 @@ class SelectImpl(val backend: Backend) : Select {
     }
 
     private fun <T : Any> getRowHandler(beanClass: Class<T>): RowHandler {
-        if (rowHandler != null) {
-            return rowHandler!!
+        if (sql == null && selectOption == null) {
+            return ReflectiveBeanListRowHandler(beanClass)
         } else {
-            if (sql == null && selectOption == null) {
-                return ReflectiveBeanListRowHandler(beanClass)
-            } else {
-                return DynamicBeanRowHandler(beanClass)
-            }
+            return DynamicBeanRowHandler(beanClass)
         }
     }
 
@@ -200,7 +195,7 @@ class SelectImpl(val backend: Backend) : Select {
 
     override fun <T : Any> selectAllField(soleField: String?, requiredType: Class<T>): List<T> {
         var handler: RowHandler = SingleFieldListRowHandler(requiredType)
-        rowHandler = execute(if (soleField == null) null else listOf(soleField), handler)
+        handler = execute(if (soleField == null) null else listOf(soleField), handler)
         @Suppress("UNCHECKED_CAST")
         return handler.result as List<T>
     }
@@ -244,7 +239,7 @@ class SelectImpl(val backend: Backend) : Select {
     }
 
     fun execute(fields: List<String>?, rowHandler: RowHandler): RowHandler {
-        val (sql,whereParameters) = prepareSql(this.sql, fields)
+        val (sql,whereParameters) = prepareSql(this.sql, fields, rowHandler)
 
         if (cacheStrategy != null) {
             if (rowHandler is ReturningRowHandler<*> || rowHandler is OptionalReturningRowHandler<*>) {
@@ -305,12 +300,18 @@ class SelectImpl(val backend: Backend) : Select {
         return rowHandler
     }
 
-    private fun prepareSql(suppliedSql: String?, fields: List<String>?): PreparedSql {
-        val sqlBuffer = StringBuilder(sql ?: "")
+    private fun prepareSql(suppliedSql: String?, fields: List<String>?, rowHandler: RowHandler): PreparedSql {
+        val sqlBuffer: StringBuilder
         if (suppliedSql == null) {
+            sqlBuffer = StringBuilder(sql ?: "")
             sqlBuffer.append("select ")
             if (selectOption != null) {
-                sqlBuffer.append(selectOption).append(' ')
+                if (rowHandler is ExpandingRowHandler) {
+                    sqlBuffer.append(rowHandler.expand(selectOption))
+                } else {
+                    sqlBuffer.append(selectOption)
+                }
+                sqlBuffer.append(' ')
             } else if (fields != null && fields.isNotEmpty()) {
                 fields.joinTo(sqlBuffer, ",")
                 sqlBuffer.append(" ")
@@ -318,6 +319,12 @@ class SelectImpl(val backend: Backend) : Select {
                 sqlBuffer.append("* ")
             }
             if (entity != null) sqlBuffer.append("from ").append(entity)
+        } else {
+            if (rowHandler is ExpandingRowHandler) {
+                sqlBuffer = StringBuilder(rowHandler.expand(sql))
+            } else {
+                sqlBuffer = StringBuilder(sql ?: "")
+            }
         }
         val whereParameters: MutableList<Any?>
         if (this.parameters == null) {

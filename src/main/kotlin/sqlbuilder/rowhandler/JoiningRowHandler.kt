@@ -1,5 +1,6 @@
 package sqlbuilder.rowhandler
 
+import sqlbuilder.PersistenceException
 import sqlbuilder.ResultSet
 import sqlbuilder.RowHandler
 import sqlbuilder.meta.MetaResolver
@@ -9,11 +10,12 @@ import java.sql.SQLException
 import java.util.*
 import kotlin.reflect.KMutableProperty
 
-abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, ReflectionHandler {
+abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, ReflectionHandler, ExpandingRowHandler {
     private val beans = HashMap<MappingKey, Any>()
     private val propertyReferenceCache = HashMap<Class<*>, List<PropertyReference>>()
     private val columnToIndex: MutableMap<String, Int> = HashMap()
     private val relationFieldCache = HashMap<BeanProperty, Field>()
+    private var expansionTypes = HashMap<String,Class<*>>()
 
     override var metaResolver: MetaResolver? = null
 
@@ -42,14 +44,15 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
     /**
      * Map all columns from specified table to bean properties that exist.
      * @param set JDBC ResultSet
-     * @param table name of table without schema/catalog
+     * @param prefix prefix for fields that are to be mapped, by default this will be the table name if your JDBC drivers supports it,
+     * otherwise specify a prefix for all columns either manually: users.id as users_id or using the prefix macro: {Users.* as users}
      * @param instance bean to map to
      * @param mappings map bean property name -> column name
      * @throws SQLException
      * @return same instance populated
      */
     @Throws(SQLException::class)
-    protected open fun <S : Any> mapSetToBean(set: ResultSet, table: String, instance: S, mappings: Map<String, String>? = null): S {
+    protected open fun <S : Any> mapSetToBean(set: ResultSet, prefix: String, instance: S, mappings: Map<String, String>? = null): S {
         createColumnToIndexCache(set)
         val javaClass = instance.javaClass
         var propertyReferences = propertyReferenceCache[javaClass]
@@ -59,7 +62,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         }
         for (pr in propertyReferences) {
             val property = mappings?.get(pr.name) ?: pr.name
-            val index = getColumnIndex(table, property)
+            val index = getColumnIndex(prefix, property)
             if (index != null) {
                 pr.set(instance, set.getObject(pr.classType, index))
             }
@@ -80,7 +83,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         if (table == null) {
             return columnToIndex.get(column.toLowerCase())
         } else {
-            return columnToIndex.get(table.toLowerCase().replace('.','_') + "_" + column.toLowerCase()) ?: columnToIndex.get(column.toLowerCase())
+            return columnToIndex.get(indexFQColumnName(column, table)) ?: columnToIndex.get(column.toLowerCase())
         }
     }
 
@@ -90,27 +93,30 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         val columnCount = metaData.columnCount
         for (x in 1..columnCount) {
             val tableName = metaData.getTableName(x)
-            if (tableName?.isEmpty() ?: true) {
-                columnToIndex.put(metaData.getColumnLabel(x)!!.toLowerCase(), x)
-            } else {
-                columnToIndex.put(tableName!!.toLowerCase().replace('.','_') + "_" + metaData.getColumnLabel(x)?.toLowerCase(), x)
-            }
+            val columnLabel = metaData.getColumnLabel(x)
+            columnToIndex.put(columnLabel.toLowerCase(), x)
+            if (tableName?.isNotEmpty() ?: false) {
+                columnToIndex.put(indexFQColumnName(columnLabel, tableName!!), x)
+            } // else using Oracle are we ?
         }
     }
+
+    private fun indexFQColumnName(column: String, table: String) = table.toLowerCase().replace('.', '_') + "_" + column.toLowerCase()
 
     /**
      * Map primary bean and add to resultlist in unique fashion
      * @param set active ResultSet
      * @param primaryType type of primary bean
-     * @param table table containing primary bean columns
+     * @param prefix prefix for fields that are to be mapped, by default this will be the table name if your JDBC drivers supports it,
+     * otherwise specify a prefix for all columns either manually: users.id as users_id or using the prefix macro: {Users.* as users}
      * @return newly mapped object or cached value if the primary result is not unique
      * @throws SQLException
      */
-    protected fun mapPrimaryBean(set: ResultSet, primaryType: Class<T>, table: String): T {
-        val keyValues = getKeyValues(set, primaryType, table);
+    protected fun mapPrimaryBean(set: ResultSet, primaryType: Class<T>, prefix: String): T {
+        val keyValues = getKeyValues(set, primaryType, prefix);
         var instance = getById(primaryType, keyValues);
         if (instance == null) {
-            instance = mapSetToBean(set, table, primaryType.newInstance());
+            instance = mapSetToBean(set, prefix, primaryType.newInstance())
             addPrimaryBean(instance)
             putById(instance, keyValues)
         }
@@ -118,9 +124,9 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         return instance!!
     }
 
-    protected fun <T> getKeyValues(set: ResultSet, aType: Class<T>, table: String): List<Any?> {
+    protected fun <T> getKeyValues(set: ResultSet, aType: Class<T>, prefix: String): List<Any?> {
         return metaResolver!!.getKeys(aType).mapTo(LinkedList<Any?>()) { key ->
-            getColumnFromTable(set, table, key, Any::class.java)
+            getColumnFromTable(set, prefix, key, Any::class.java)
         }
     }
 
@@ -128,7 +134,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         if (owner != null) {
             val keyValues = getKeyValues(set, targetType, table)
 
-            var inResultSet = keyValues.all { it != null }
+            val inResultSet = keyValues.all { it != null }
             if (inResultSet) {
                 // look in cache first
                 @Suppress("UNCHECKED_CAST")
@@ -189,15 +195,16 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
      * @param owner Object from which we join, which holds the specified property (can be null)
      * @param property attribute in owner that receives the joined result
      * @param targetType type of the joined result
-     * @param table table of the joined result
+     * @param prefix prefix for fields that are to be mapped, by default this will be the table name if your JDBC drivers supports it,
+     * otherwise specify a prefix for all columns either manually: users.id as users_id or using the prefix macro: {Users.* as users}
      * @param <W> joined result type
      * @return the joined object that was attached to the owner
      * @throws SQLException
      */
     protected fun <W : Any> join(set: ResultSet, owner: Any?, property: String,
-                                 targetType: Class<W>, table: String): W? {
+                                 targetType: Class<W>, prefix: String): W? {
         if (owner != null) {
-            val keyValues = getKeyValues(set, targetType, table)
+            val keyValues = getKeyValues(set, targetType, prefix)
 
             val cacheKey = BeanProperty(owner.javaClass, property)
             val relationField = relationFieldCache.get(cacheKey)
@@ -217,7 +224,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             var instance = getById(targetType, keyValues)
             if (instance == null) {
                 // create new instance
-                instance = mapSetToBean(set, table, targetType.newInstance())
+                instance = mapSetToBean(set, prefix, targetType.newInstance())
                 putById(instance, keyValues)
             }
             if (isList) {
@@ -246,12 +253,32 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         return null
     }
 
-    private fun tableColumnKey(table: String?, column: String): String {
-        if (table != null) {
-            return "${table.toLowerCase()}_${column.toLowerCase()}"
+    override fun expand(sql: String?): String? {
+        if (sql != null) {
+            return """\{(\w+)\.\*\}""".toRegex().replace(sql) { match ->
+                val typeName = match.groupValues[1]
+                val type = expansionTypes.get(typeName)
+                if (type != null) {
+                    val table = metaResolver!!.getTableName(type)
+                    val properties = metaResolver!!.getProperties(type, true)
+                    properties.map({ prop ->
+                        "$table.${prop.name} as ${table}_${prop.name}"
+                    }).joinToString(",")
+                } else {
+                    throw PersistenceException("type $typeName is not registered via JoiningRowHandler.entities(Class type) call")
+                }
+
+            }
         }
 
-        return column.toLowerCase()
+        return sql
+    }
+
+    fun entities(vararg types: Class<*>): JoiningRowHandler<T> {
+        for (type in types) {
+            this.expansionTypes.put(type.simpleName, type)
+        }
+        return this
     }
 
     data class MappingKey(val aType: Class<*>, val keyValues: List<*>)
