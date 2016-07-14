@@ -62,12 +62,14 @@ class SelectImpl(val backend: Backend) : Select {
         return this
     }
 
-    override fun orderBy(column: String, ascending: Boolean): Select {
-        if (column.matches(columnPattern)) {
-            orderBy = column
-            orderAscending = ascending
-        } else {
-            throw IllegalArgumentException("can't order by <$column>")
+    override fun orderBy(column: String?, ascending: Boolean): Select {
+        if (column != null) {
+            if (column.matches(columnPattern)) {
+                orderBy = column
+                orderAscending = ascending
+            } else {
+                throw IllegalArgumentException("can't order by <$column>")
+            }
         }
         return this
     }

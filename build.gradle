@@ -33,17 +33,11 @@ repositories {
 }
 
 group = 'com.github.sqlbuilder'
-version = '1.2.0'
-
-configurations {
-    embedded
-    compile.extendsFrom(embedded)
-}
+version = '1.2.1'
 
 dependencies {
-    embedded "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    embedded "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    //compile "org.jetbrains.kotlin:kotlin-jdk-annotations:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile 'org.slf4j:slf4j-jdk14:1.7.7'
     testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
     testCompile 'com.h2database:h2:1.4.183'
@@ -72,18 +66,6 @@ publishing {
         }
     }
 }
-
-/*jar {
-    from(configurations.embedded) {
-        into('lib')
-    }
-    manifest {
-        instruction 'Bundle-Description', 'SQLBuilder for SQL lovers'
-        instruction 'Bundle-DocURL', 'https://github.com/laurentvdl/sqlbuilder'
-        instruction 'Import-Package', '!jet.*,!kotlin.*,*'
-        instruction 'Bundle-Classpath', ".,${configurations.embedded.files.collect({'lib/' + it.name}).join(',')}"
-    }
-}*/
 
 defaultTasks 'build'
 sourceSets {

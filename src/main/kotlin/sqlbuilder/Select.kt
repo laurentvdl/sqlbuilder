@@ -51,7 +51,7 @@ interface Select {
      * @param column
      * @param ascending
      */
-    fun orderBy(column: String, ascending: Boolean): Select
+    fun orderBy(column: String?, ascending: Boolean): Select
 
     /**
      * For partial lists: row 20 -> 40

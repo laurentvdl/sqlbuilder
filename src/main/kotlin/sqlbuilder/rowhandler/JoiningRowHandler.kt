@@ -64,7 +64,11 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             val property = mappings?.get(pr.name) ?: pr.name
             val index = getColumnIndex(prefix, property)
             if (index != null) {
-                pr.set(instance, set.getObject(pr.classType, index))
+                try {
+                    pr.set(instance, set.getObject(pr.classType, index))
+                } catch(e: SQLException) {
+                    throw PersistenceException("failed to retreive ${pr.name} from resultset at index $index using type ${pr.classType}", e)
+                }
             }
         }
         return instance
