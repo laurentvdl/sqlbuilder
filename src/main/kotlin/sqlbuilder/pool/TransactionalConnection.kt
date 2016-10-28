@@ -38,7 +38,7 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
         }
     }
 
-    public fun close(rollback: Boolean) {
+    fun close(rollback: Boolean) {
         if (rollback) {
             try {
                 target.rollback()

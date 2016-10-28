@@ -15,18 +15,19 @@ import java.util.Properties
 import java.util.Timer
 import java.util.TimerTask
 import org.slf4j.LoggerFactory
+import java.util.Collections
 import java.util.logging.Logger
 
-public class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : DataSource {
+class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : DataSource {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    private val idleConnections = ArrayList<TransactionalConnection>()
-    private val activeConnections = ArrayList<TransactionalConnection>()
+    private val _idleConnections = ArrayList<TransactionalConnection>()
+    private val _activeConnections = ArrayList<TransactionalConnection>()
+
     private var timer: Timer? = null
     private var active = true
 
     private var _logWriter: PrintWriter? = null
-    private var _loginTimeout: Long? = 0L
 
     private val lock = Object()
 
@@ -60,20 +61,19 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
      */
     var recordStacks = false
 
-    public fun cleanIdles() {
+    fun cleanIdles() {
         val currentTs = System.currentTimeMillis()
         synchronized(lock) {
-            var x = 0
-            while (x < idleConnections.size) {
-                val connection = idleConnections.get(x)
+            val iterator = _idleConnections.iterator()
+            while (iterator.hasNext()) {
+                val connection = iterator.next()
                 if (currentTs - connection.lastModified > idleTimeout) {
+                    iterator.remove()
                     connection.close(false)
-                    idleConnections.removeAt(x--)
                 }
-                x++
             }
         }
-        if (idleConnections.isEmpty() && activeConnections.isEmpty()) {
+        if (_idleConnections.isEmpty() && _activeConnections.isEmpty()) {
             // not a single connection in use, we can free our Timer thread
             timer?.cancel()
             timer = null
@@ -84,12 +84,13 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         val currentTs = System.currentTimeMillis()
         synchronized(lock) {
             var x = 0
-            while (x < activeConnections.size) {
-                val connection = activeConnections.get(x)
+            val iterator = _activeConnections.iterator()
+            while (iterator.hasNext()) {
+                val connection = iterator.next()
                 val diff = currentTs - connection.lastModified
                 if (diff > zombieTimeout) {
                     connection.close(true)
-                    activeConnections.removeAt(x--)
+                    iterator.remove()
                     logger.error("removed zombie (after $diff millis) that was obtained from: ${connection.callStack}")
                     // once it hits the fan, enable debugging
                     recordStacks = true
@@ -164,8 +165,8 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
             }
 
             val connection: TransactionalConnection
-            if (idleConnections.size > 0) {
-                connection = idleConnections.removeAt(0)
+            if (_idleConnections.size > 0) {
+                connection = _idleConnections.removeAt(0)
                 connection.ping()
             } else {
                 try {
@@ -181,7 +182,7 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
                 }
 
             }
-            activeConnections.add(connection)
+            _activeConnections.add(connection)
             connection
         }
 
@@ -194,11 +195,11 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         return connection
     }
 
-    public fun freeConnection(connection: TransactionalConnection) {
+    fun freeConnection(connection: TransactionalConnection) {
         synchronized(lock) {
-            activeConnections.remove(connection)
+            _activeConnections.remove(connection)
             if (active) {
-                idleConnections.add(connection)
+                _idleConnections.add(connection)
             } else {
                 try {
                     connection.target.close()
@@ -213,21 +214,20 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
         return getConnection()
     }
 
-    @PreDestroy
-    public fun stop() {
+    @PreDestroy fun stop() {
         synchronized(lock) {
             active = false
             if (timer != null) {
                 timer!!.cancel()
                 timer = null
             }
-            for (transactionalConnection in idleConnections) {
+            for (transactionalConnection in _idleConnections) {
                 try {
                     transactionalConnection.target.close()
                 } catch (ignore: SQLException) {}
 
             }
-            idleConnections.clear()
+            _idleConnections.clear()
         }
         logger.info("stopped datasource ${configProvider.url}")
     }
@@ -252,8 +252,12 @@ public class DataSourceImpl(private val configProvider: ConnectionConfigProvider
     }
 
     override fun toString(): String{
-        return "DataSourceImpl(idleConnections=$idleConnections, activeConnections=$activeConnections, active=$active, zombieTimeout=$zombieTimeout, idleTimeout=$idleTimeout, cleanupDelay=$cleanupDelay, recordStacks=$recordStacks)"
+        return "DataSourceImpl(idleConnections=$_idleConnections, activeConnections=$_activeConnections, active=$active, zombieTimeout=$zombieTimeout, idleTimeout=$idleTimeout, cleanupDelay=$cleanupDelay, recordStacks=$recordStacks)"
     }
 
+    val idleConnections: List<TransactionalConnection>
+       get() = Collections.unmodifiableList(_idleConnections)
 
+    val activeConnections: List<TransactionalConnection>
+       get() = Collections.unmodifiableList(_activeConnections)
 }

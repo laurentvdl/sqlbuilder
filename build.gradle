@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.0.3'
+    ext.kotlin_version = '1.0.4'
     repositories {
         mavenCentral()
     }
@@ -33,7 +33,7 @@ repositories {
 }
 
 group = 'com.github.sqlbuilder'
-version = '1.2.1'
+version = '1.2.2'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
