@@ -7,7 +7,10 @@ import sqlbuilder.meta.MetaResolver
 import sqlbuilder.meta.PropertyReference
 import java.lang.reflect.Field
 import java.sql.SQLException
-import java.util.*
+import java.util.ArrayList
+import java.util.HashMap
+import java.util.HashSet
+import java.util.LinkedList
 import kotlin.reflect.KMutableProperty
 
 abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, ReflectionHandler, ExpandingRowHandler {
@@ -16,6 +19,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
     private val columnToIndex: MutableMap<String, Int> = HashMap()
     private val relationFieldCache = HashMap<BeanProperty, Field>()
     private var expansionTypes = HashMap<String,Class<*>>()
+    private val keyCache = HashMap<Class<*>, Array<String>>()
 
     override var metaResolver: MetaResolver? = null
 
@@ -61,7 +65,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             propertyReferenceCache.put(javaClass, propertyReferences)
         }
         for (pr in propertyReferences) {
-            val property = mappings?.get(pr.name) ?: pr.name
+            val property = mappings?.get(pr.name) ?: pr.columnName
             val index = getColumnIndex(prefix, property)
             if (index != null) {
                 try {
@@ -93,15 +97,17 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
     @Throws(SQLException::class)
     private fun createColumnToIndexCache(set: ResultSet) {
-        val metaData = set.getJdbcResultSet().metaData
-        val columnCount = metaData.columnCount
-        for (x in 1..columnCount) {
-            val tableName = metaData.getTableName(x)
-            val columnLabel = metaData.getColumnLabel(x)
-            columnToIndex.put(columnLabel.toLowerCase(), x)
-            if (tableName?.isNotEmpty() ?: false) {
-                columnToIndex.put(indexFQColumnName(columnLabel, tableName!!), x)
-            } // else using Oracle are we ?
+        if (columnToIndex.isEmpty()) {
+            val metaData = set.getJdbcResultSet().metaData
+            val columnCount = metaData.columnCount
+            for (x in 1..columnCount) {
+                val tableName = metaData.getTableName(x)
+                val columnLabel = metaData.getColumnLabel(x)
+                columnToIndex.put(columnLabel.toLowerCase(), x)
+                if (tableName?.isNotEmpty() ?: false) {
+                    columnToIndex.put(indexFQColumnName(columnLabel, tableName!!), x)
+                } // else using Oracle are we ?
+            }
         }
     }
 
@@ -117,7 +123,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
      * @throws SQLException
      */
     protected fun mapPrimaryBean(set: ResultSet, primaryType: Class<T>, prefix: String): T {
-        val keyValues = getKeyValues(set, primaryType, prefix);
+        val keyValues = getKeyValues(set, getKeys(primaryType), prefix);
         var instance = getById(primaryType, keyValues);
         if (instance == null) {
             instance = mapSetToBean(set, prefix, primaryType.newInstance())
@@ -128,15 +134,26 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         return instance!!
     }
 
-    protected fun <T> getKeyValues(set: ResultSet, aType: Class<T>, prefix: String): List<Any?> {
-        return metaResolver!!.getKeys(aType).mapTo(LinkedList<Any?>()) { key ->
+    protected fun getKeys(type: Class<*>): Array<String> {
+        return keyCache.getOrPut(type) {
+            val keys = metaResolver!!.getKeys(type)
+            if (keys.isEmpty()) {
+                throw IllegalArgumentException("No primary key is defined for type <$type>, annotate a key using @sqlbuilder.meta.Id")
+            }
+            @Suppress("UNCHECKED_CAST")
+            return keys
+        }
+    }
+
+    protected fun getKeyValues(set: ResultSet, keys: Array<String>, prefix: String): List<Any?> {
+        return keys.mapTo(LinkedList<Any?>()) { key ->
             getColumnFromTable(set, prefix, key, Any::class.java)
         }
     }
 
     private fun <R, W : Any> joinInstance(set: ResultSet, owner: R, targetType: Class<W>, table: String): W? {
         if (owner != null) {
-            val keyValues = getKeyValues(set, targetType, table)
+            val keyValues = getKeyValues(set, getKeys(targetType), table)
 
             val inResultSet = keyValues.all { it != null }
             if (inResultSet) {
@@ -208,7 +225,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
     protected fun <W : Any> join(set: ResultSet, owner: Any?, property: String,
                                  targetType: Class<W>, prefix: String): W? {
         if (owner != null) {
-            val keyValues = getKeyValues(set, targetType, prefix)
+            val keyValues = getKeyValues(set, getKeys(targetType), prefix)
 
             val cacheKey = BeanProperty(owner.javaClass, property)
             val relationField = relationFieldCache.get(cacheKey)
@@ -261,12 +278,12 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         if (sql != null) {
             return """\{(\w+)\.\*\}""".toRegex().replace(sql) { match ->
                 val typeName = match.groupValues[1]
-                val type = expansionTypes.get(typeName)
+                val type = expansionTypes[typeName]
                 if (type != null) {
                     val table = metaResolver!!.getTableName(type)
                     val properties = metaResolver!!.getProperties(type, true)
                     properties.map({ prop ->
-                        "$table.${prop.name} as ${table}_${prop.name}"
+                        "$table.${prop.columnName} as ${table}_${prop.columnName}"
                     }).joinToString(",")
                 } else {
                     throw PersistenceException("type $typeName is not registered via JoiningRowHandler.entities(Class type) call")

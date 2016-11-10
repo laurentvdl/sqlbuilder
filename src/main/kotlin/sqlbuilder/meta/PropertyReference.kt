@@ -5,8 +5,10 @@ package sqlbuilder.meta
  *
  * @author Laurent Van der Linden
  */
-public interface PropertyReference {
+interface PropertyReference {
     val name: String
+
+    val columnName: String
 
     fun set(bean: Any, value: Any?)
 

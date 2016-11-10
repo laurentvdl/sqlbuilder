@@ -1,6 +1,8 @@
 package sqlbuilder.meta
 
 import sqlbuilder.Configuration
+import sqlbuilder.PersistenceException
+import sqlbuilder.allFields
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.*
@@ -17,8 +19,13 @@ import java.util.*
  *
  * @author Laurent Van der Linden
  */
-public class StaticJavaResolver(val configuration: Configuration) : MetaResolver {
+class StaticJavaResolver(val configuration: Configuration) : MetaResolver {
     override fun getTableName(beanClass: Class<*>): String {
+        val annotatedTableName = beanClass.getAnnotation(Table::class.java)?.name
+        if (annotatedTableName != null) {
+            return annotatedTableName
+        }
+
         try {
             val field = findField("TABLE", beanClass)
             if (field != null && field.type == String::class.java) {
@@ -70,15 +77,19 @@ public class StaticJavaResolver(val configuration: Configuration) : MetaResolver
                 }
             }
         }
-        val fields = beanClass.fields
-        for (field in fields) {
-            val modifiers = field.modifiers
-            val name = field.name!!
-            if (!names.contains(name) && Modifier.isPublic(modifiers) && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers) && !Modifier.isStatic(modifiers) && isSqlType(field.type!!) && !Modifier.isTransient(modifiers)) {
-                result.add(JavaFieldPropertyReference(name, field, field.type!!))
+
+        if (result.isEmpty()) {
+            val fields = beanClass.allFields
+            for (field in fields) {
+                val modifiers = field.modifiers
+                val name = field.name!!
+                if (!names.contains(name) && Modifier.isPublic(modifiers) && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers) && !Modifier.isStatic(modifiers) && isSqlType(field.type!!) && !Modifier.isTransient(modifiers)) {
+                    result.add(JavaFieldPropertyReference(name, field, field.type!!))
+                }
             }
         }
-        return result.sortedBy { it.name }
+
+        return result.sortedBy { it.columnName }
     }
 
     private fun isSqlType(clazz: Class<*>): Boolean {
@@ -98,6 +109,11 @@ public class StaticJavaResolver(val configuration: Configuration) : MetaResolver
 
     @Suppress("UNCHECKED_CAST")
     override fun getKeys(beanClass: Class<*>): Array<String> {
+        val keyFields = beanClass.allFields.filter { field -> field.isAnnotationPresent(Id::class.java) }
+        if (keyFields.isNotEmpty()) {
+            return keyFields.map { field -> field.getAnnotation(Column::class.java)?.name ?: field.name }.toTypedArray()
+        }
+
         try {
             val field: Field?
             field = findField("KEYS", beanClass)
@@ -106,9 +122,12 @@ public class StaticJavaResolver(val configuration: Configuration) : MetaResolver
                     return field.get(null) as Array<String>
                 }
             }
-        } catch (ignore: IllegalAccessException) {
+        } catch (ignore: IllegalAccessException) {}
+
+        if (findField("id", beanClass) != null) {
+            return arrayOf("id")
         }
 
-        return arrayOf("id")
+        return emptyArray<String>()
     }
 }

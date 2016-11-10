@@ -29,20 +29,28 @@ class JavaFieldPropertyReference(override var name: String, private val field: F
         }
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || javaClass != other.javaClass) return false
+    override val columnName: String
+        get() = this.field.getAnnotation(Column::class.java)?.name ?: name
 
-        val setter = other as JavaGetterSetterPropertyReference
 
-        return name == setter.name
-    }
-
-    override fun hashCode(): Int {
-        return name.hashCode()
-    }
 
     override fun toString(): String {
         return "property <$classType.$name>"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is JavaFieldPropertyReference) return false
+
+        if (name != other.name) return false
+        if (classType != other.classType) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + classType.hashCode()
+        return result
     }
 }

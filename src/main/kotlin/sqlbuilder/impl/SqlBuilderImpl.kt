@@ -193,7 +193,7 @@ public class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Ba
         }.filterNotNull()
 
         val missingProperties = nonNullColumns.filter { nonNull ->
-            getters.firstOrNull { it.name.equals(nonNull, ignoreCase = true) } == null
+            getters.firstOrNull { it.columnName.equals(nonNull, ignoreCase = true) } == null
         }
 
         if (!missingProperties.isEmpty()) {

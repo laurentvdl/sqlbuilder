@@ -64,14 +64,14 @@ class UpdateImpl(private val backend: Backend): Update {
             val sql = StringBuilder("update ").append(entity).append(" set ")
 
 
-            val valueProperties = getters.filter { !keys.contains(it.name) }
-            val keyProperties = getters.filter { keys.contains(it.name) }
+            val valueProperties = getters.filter { !keys.contains(it.columnName) }
+            val keyProperties = getters.filter { keys.contains(it.columnName) }
 
-            valueProperties.map { "${it.name} = ?" }.joinTo(sql, ",")
+            valueProperties.map { "${it.columnName} = ?" }.joinTo(sql, ",")
 
             sql.append(" where ")
 
-            keyProperties.map { "${it.name} = ?" }.joinTo(sql, " and ")
+            keyProperties.map { "${it.columnName} = ?" }.joinTo(sql, " and ")
 
             val sqlString = sql.toString()
             logger.info(sqlString)

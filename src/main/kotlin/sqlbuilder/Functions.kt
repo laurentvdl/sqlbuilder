@@ -2,6 +2,7 @@ package sqlbuilder
 
 import java.util.Arrays
 import sqlbuilder.meta.PropertyReference
+import java.lang.reflect.Field
 
 /**
  * Duplication of Kotlin extension f for Closable
@@ -49,4 +50,13 @@ val RowHandler.result: Any?
         } else {
             return null
         }
+    }
+
+val Class<*>.allFields: Array<Field>
+    get() {
+        val superclass = this.superclass
+        if (Any::class.java != superclass) {
+            return this.declaredFields.plus(superclass.allFields)
+        }
+        return this.declaredFields
     }

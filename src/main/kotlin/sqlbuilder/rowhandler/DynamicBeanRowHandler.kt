@@ -24,7 +24,7 @@ public class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>) : L
         set(setters) {
             refCache.clear()
             for (ref in setters!!) {
-                refCache.put(ref.name.toLowerCase(), ref)
+                refCache.put(ref.columnName.toLowerCase(), ref)
             }
         }
 

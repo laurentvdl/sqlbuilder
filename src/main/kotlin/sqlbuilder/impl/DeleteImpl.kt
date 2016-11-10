@@ -39,7 +39,7 @@ class DeleteImpl(private val backend: Backend): Delete {
         }
 
         try {
-            keyProperties.map({"${it.name} = ?"}).joinTo(sql, " and ")
+            keyProperties.map({"${it.columnName} = ?"}).joinTo(sql, " and ")
 
             val con = backend.getSqlConnection()
 

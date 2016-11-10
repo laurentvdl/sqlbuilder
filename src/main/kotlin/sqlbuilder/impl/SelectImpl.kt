@@ -150,10 +150,9 @@ class SelectImpl(val backend: Backend) : Select {
             properties = properties.exclude(excludeFields)
 
             fields = properties.map { property ->
-                val fieldName = property.name
-                val mappedColumn = propertyMappings?.get(fieldName)
+                val mappedColumn = propertyMappings?.get(property.name)
                 if (mappedColumn == null || mappedColumn !is String) {
-                    fieldName
+                    property.columnName
                 } else {
                     mappedColumn
                 }

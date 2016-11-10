@@ -81,7 +81,7 @@ class InsertImpl(val backend: Backend): Insert {
         try {
             if (!batch || cachedStatement == null || !backend.isInTransaction()) {
                 val sql = StringBuilder("insert into ").append(entity).append("(")
-                properties.map { it.name }.joinTo(sql, ",")
+                properties.map { it.columnName }.joinTo(sql, ",")
                 sql.append(") values(")
                 for (i in 0..properties.size - 1) {
                     if (i > 0) sql.append(",")
@@ -104,7 +104,7 @@ class InsertImpl(val backend: Backend): Insert {
 
 
                 for ((index,property) in properties.withIndex()) {
-                    logger.debug("setInsertParameter " + property.name + " <" + property.classType.name + ">")
+                    logger.debug("setInsertParameter " + property.columnName + " <" + property.classType.name + ">")
                     sqlConverter.setParameter(cachedStatement!!, values[property], index + 1, property.classType, null)
                 }
 

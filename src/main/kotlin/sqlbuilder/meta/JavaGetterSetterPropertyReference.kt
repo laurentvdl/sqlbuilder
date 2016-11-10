@@ -34,6 +34,9 @@ class JavaGetterSetterPropertyReference(override var name: String, private val m
         }
     }
 
+    override val columnName: String
+        get() = method.getAnnotation(Column::class.java)?.name ?: name
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
@@ -44,10 +47,8 @@ class JavaGetterSetterPropertyReference(override var name: String, private val m
     }
 
     override fun hashCode(): Int {
-        return name.hashCode()
-    }
-
-    override fun toString(): String {
-        return "property <$name>"
+        var result = name.hashCode()
+        result = 31 * result + classType.hashCode()
+        return result
     }
 }

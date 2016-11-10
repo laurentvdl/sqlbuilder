@@ -1,11 +1,14 @@
 package sqlbuilder.javabeans;
 
+import sqlbuilder.meta.Id;
+import sqlbuilder.meta.Table;
+
 /**
  * @author Laurent Van der Linden
  */
+@Table(name = "attributes")
 public class Attribute {
-    public final static String TABLE = "attributes";
-
+    @Id
     private Long id;
     private long fileid;
     private String name;

@@ -103,9 +103,9 @@ public class JavaUsage {
                 .select(new JoiningRowHandler<User>() {
                     @Override
                     public boolean handle(@NotNull ResultSet set, int row) throws SQLException {
-                        final User user = mapPrimaryBean(set, User.class, User.TABLE);
-                        final File file = join(set, user, "files", File.class, File.TABLE);
-                        join(set, file, "attributes", Attribute.class, Attribute.TABLE);
+                        final User user = mapPrimaryBean(set, User.class, "users");
+                        final File file = join(set, user, "files", File.class, "files");
+                        join(set, file, "attributes", Attribute.class, "attributes");
                         return true;
                     }
                 }.entities(User.class, File.class, Attribute.class));
@@ -152,12 +152,12 @@ public class JavaUsage {
     public void pagedJoinHandler() {
         final List<? extends User> allUsersAndFiles = sqlBuilder.select()
             .sql("select * from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
-            .select(new JoiningPagedRowHandler<User>(1, 1, User.TABLE) {
+            .select(new JoiningPagedRowHandler<User>(1, 1, "users") {
                 @Override
                 public void handleInPage(@NotNull ResultSet set, int i) throws SQLException {
-                    final User user = mapPrimaryBean(set, User.class, User.TABLE);
-                    final File file = join(set, user, "files", File.class, File.TABLE);
-                    join(set, file, "attributes", Attribute.class, Attribute.TABLE);
+                    final User user = mapPrimaryBean(set, User.class, "users");
+                    final File file = join(set, user, "files", File.class, "files");
+                    join(set, file, "attributes", Attribute.class, "attributes");
                 }
             });
 

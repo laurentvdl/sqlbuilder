@@ -2,12 +2,15 @@ package sqlbuilder.javabeans;
 
 import java.util.Set;
 
+import sqlbuilder.meta.Id;
+import sqlbuilder.meta.Table;
+
 /**
  * @author Laurent Van der Linden
  */
+@Table(name = "users")
 public class User {
-    public final static String TABLE = "users";
-
+    @Id
     private Long id;
     private String username;
     private int birthYear;
