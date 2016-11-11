@@ -196,14 +196,14 @@ public class JavaUsage {
     @Test
     public void mapping() {
         List<User> mappedResults = sqlBuilder.select()
-            .sql("select gender,count(*) from users group by gender order by gender desc")
+            .sql("select sex,count(*) from users group by sex order by sex desc")
             .map("gender", "username")
             .map(2, "birthyear")
             .selectBeans(User.class);
 
-        assertEquals("M", mappedResults.get(0).getUsername());
+        assertEquals('M', mappedResults.get(0).getGender());
         assertEquals(1, mappedResults.get(0).getBirthYear());
-        assertEquals("F", mappedResults.get(1).getUsername());
+        assertEquals('F', mappedResults.get(1).getGender());
         assertEquals(1, mappedResults.get(1).getBirthYear());
     }
 

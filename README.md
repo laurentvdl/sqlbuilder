@@ -36,6 +36,26 @@ List<User> allUsersAndFiles = sqlBuilder.select()
 
 See more examples at <a href="https://github.com/laurentvdl/sqlbuilder/blob/master/src/test/java/sqlbuilder/JavaUsage.java">JavaUsage</a>.
 
+## How to use
+
+### Gradle
+
+```groovy
+dependencies {
+    compile 'com.github.sqlbuilder:sqlbuilder:3.0.1'
+}
+```
+
+### Maven
+
+```xml
+<dependency>
+    <groupId>com.github.sqlbuilder</groupId>
+    <artifactId>sqlbuilder</artifactId>
+    <version>3.0.1</version>
+</dependency>
+```
+
 ##Features:
 
 - non intrusive mapping, no annotations or configuration required to map a query result to

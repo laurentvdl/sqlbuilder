@@ -8,7 +8,7 @@ object Setup {
             id bigint auto_increment primary key,
             username varchar(255) not null,
             birthyear int,
-            gender char(1)
+            sex char(1)
         )
         """)
 

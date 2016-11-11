@@ -2,6 +2,7 @@ package sqlbuilder.javabeans;
 
 import java.util.Set;
 
+import sqlbuilder.meta.Column;
 import sqlbuilder.meta.Id;
 import sqlbuilder.meta.Table;
 
@@ -14,6 +15,7 @@ public class User {
     private Long id;
     private String username;
     private int birthYear;
+    @Column(name = "sex")
     private char gender;
     private Set<File> files;
 

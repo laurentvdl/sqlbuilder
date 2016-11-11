@@ -10,6 +10,8 @@ import java.lang.reflect.Method
  * @author Laurent Van der Linden
  */
 class JavaGetterSetterPropertyReference(override var name: String, private val method: Method, override var classType: Class<*>) : PropertyReference {
+    override val columnName: String = findColumnName()
+
     override fun set(bean: Any, value: Any?) {
         try {
             if (!(value == null && classType.isPrimitive)) {
@@ -17,7 +19,7 @@ class JavaGetterSetterPropertyReference(override var name: String, private val m
             }
         } catch (e: Exception) {
             val signature = "${method.name}(${method.parameterTypes?.joinToString(",")})"
-            throw PersistenceException("unable to set value $name to '$value' on bean $bean using setter <${signature}>, expected argument of type <${classType}>, but got <${value?.javaClass}>", e)
+            throw PersistenceException("unable to set value $name to '$value' on bean $bean using setter <$signature>, expected argument of type <$classType>, but got <${value?.javaClass}>", e)
         }
 
     }
@@ -34,8 +36,18 @@ class JavaGetterSetterPropertyReference(override var name: String, private val m
         }
     }
 
-    override val columnName: String
-        get() = method.getAnnotation(Column::class.java)?.name ?: name
+    private fun findColumnName(): String {
+        try {
+            val fieldAnnotationName = method.declaringClass.getDeclaredField(this.name)?.getAnnotation(Column::class.java)?.name
+            if (fieldAnnotationName != null) {
+                return fieldAnnotationName
+            } else {
+                return name
+            }
+        } catch(ignore: NoSuchFieldException) {
+            return name
+        }
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -50,5 +62,9 @@ class JavaGetterSetterPropertyReference(override var name: String, private val m
         var result = name.hashCode()
         result = 31 * result + classType.hashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return "property <$classType.$name>"
     }
 }
