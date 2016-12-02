@@ -1,11 +1,13 @@
 package sqlbuilder.pool
 
+import org.slf4j.LoggerFactory
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.lang.reflect.InvocationHandler
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.sql.Connection
-import java.lang.reflect.InvocationTargetException
 import java.sql.SQLException
-import org.slf4j.LoggerFactory
 
 /**
  * @author Laurent Van der Linden
@@ -15,14 +17,35 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
 
     var lastModified = System.currentTimeMillis()
 
-    var callStack: String? = null
+    val excludedMethodsToLog = listOf("setAutoCommit", "setReadOnly", "commit", "rollback")
+
+    var lastMethod: Method? = null
+    var lastArguments: Array<out Any>? = null
+    var lastCallstack: String? = null
+
+    private var valid = true
 
     override fun invoke(proxy: Any?, method: Method, args: Array<out Any>?): Any? {
+        if (args != null && args.isNotEmpty() && !excludedMethodsToLog.contains(method.name)) {
+            lastMethod = method
+            lastArguments = args
+
+            if (datasource.recordStacks) {
+                val writer = StringWriter()
+                Exception("${method.name} stacktrace").printStackTrace(PrintWriter(writer))
+                lastCallstack = writer.toString()
+            }
+        }
+
         return synchronized(datasource) {
             lastModified = System.currentTimeMillis()
             val methodName = method.name
             if ("close" == methodName) {
-                datasource.freeConnection(this)
+                if (valid) {
+                    datasource.freeConnection(this)
+                } else {
+                    null
+                }
             } else {
                 try {
                     if (args == null) {
@@ -39,6 +62,8 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
     }
 
     fun close(rollback: Boolean) {
+        valid = false
+
         if (rollback) {
             try {
                 target.rollback()
@@ -51,7 +76,6 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
         } catch (e: SQLException) {
             logger.warn("close failed", e)
         }
-
     }
 
   fun setClientUser(name: String) {

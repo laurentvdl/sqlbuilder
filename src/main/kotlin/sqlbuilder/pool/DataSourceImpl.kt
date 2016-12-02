@@ -1,22 +1,21 @@
 package sqlbuilder.pool
 
+import org.slf4j.LoggerFactory
 import sqlbuilder.PersistenceException
-
-import javax.annotation.PreDestroy
-import javax.sql.DataSource
 import java.io.PrintWriter
-import java.io.StringWriter
 import java.lang.reflect.Proxy
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 import java.util.ArrayList
+import java.util.Arrays
+import java.util.Collections
 import java.util.Properties
 import java.util.Timer
 import java.util.TimerTask
-import org.slf4j.LoggerFactory
-import java.util.Collections
 import java.util.logging.Logger
+import javax.annotation.PreDestroy
+import javax.sql.DataSource
 
 class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : DataSource {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -91,7 +90,9 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
                 if (diff > zombieTimeout) {
                     connection.close(true)
                     iterator.remove()
-                    logger.error("removed zombie (after $diff millis) that was obtained from: ${connection.callStack}")
+                    logger.error("removed zombie (after $diff milliseconds) that was invoking ${connection.lastMethod?.declaringClass?.name}.${connection.lastMethod?.name}" +
+                            " with arguments ${connection.lastArguments.let { Arrays.toString(it) } ?: "[]"}" +
+                            (if (connection.lastCallstack == null) "" else " at ${connection.lastCallstack}"))
                     // once it hits the fan, enable debugging
                     recordStacks = true
                 }
@@ -172,11 +173,6 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
                 try {
                     val jdbcConnection = newFysicalConnection()
                     connection = TransactionalConnection(jdbcConnection, this)
-                    if (recordStacks) {
-                        val writer = StringWriter()
-                        Exception("getConnection stacktrace").printStackTrace(PrintWriter(writer))
-                        connection.callStack = writer.toString()
-                    }
                 } catch (e: SQLException) {
                     throw PersistenceException(e.message, e)
                 }
