@@ -7,22 +7,25 @@ import java.lang.reflect.Field
 /**
  * Wrapper for bean property using java.lang.reflect.Field access.
  */
-class JavaFieldPropertyReference(override var name: String, private val field: Field, override var classType: Class<*>) : PropertyReference {
-    private val fieldType = field.type!!
+class JavaFieldPropertyReference(private val field: Field) : PropertyReference {
+    override val name: String = field.name
+    override val classType: Class<*> = field.type
 
     override fun set(bean: Any, value: Any?) {
         try {
-            if (!(value == null && fieldType.isPrimitive)) {
+            if (!(value == null && classType.isPrimitive)) {
+                if (!field.isAccessible) field.isAccessible = true
                 field.set(bean, value)
             }
         } catch (e: Exception) {
-            throw PersistenceException("unable to set value $name to '$value' on bean $bean using field access, expected argument of type <$fieldType>, but got <${value?.javaClass}>", e)
+            throw PersistenceException("unable to set value $name to '$value' on bean $bean using field access, expected argument of type <$classType>, but got <${value?.javaClass}>", e)
         }
 
     }
 
     override fun get(bean: Any): Any? {
         try {
+            if (!field.isAccessible) field.isAccessible = true
             return field.get(bean)
         } catch (e: Exception) {
             throw PersistenceException("unable to get value $name from bean $bean using field access", e)
@@ -30,12 +33,12 @@ class JavaFieldPropertyReference(override var name: String, private val field: F
     }
 
     override val columnName: String
-        get() = this.field.getAnnotation(Column::class.java)?.name ?: name
+        get() = this.field.getAnnotation(Column::class.java)?.name ?: name.toLowerCase()
 
 
 
     override fun toString(): String {
-        return "property <$classType.$name>"
+        return "property <${field.declaringClass}.$name>"
     }
 
     override fun equals(other: Any?): Boolean {

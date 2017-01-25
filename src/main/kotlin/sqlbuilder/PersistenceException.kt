@@ -5,4 +5,4 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-open public class PersistenceException(message: String?, cause: Throwable? = null) : RuntimeException(message, cause)
+open class PersistenceException(message: String?, cause: Throwable? = null) : RuntimeException(message, cause)

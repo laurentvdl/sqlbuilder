@@ -1,19 +1,20 @@
 package sqlbuilder.impl
 
+import org.slf4j.LoggerFactory
 import sqlbuilder.Backend
+import sqlbuilder.IncorrectMetadataException
+import sqlbuilder.IncorrectResultSizeException
 import sqlbuilder.PersistenceException
+import sqlbuilder.SqlConverter
+import sqlbuilder.Update
 import sqlbuilder.exclude
 import sqlbuilder.include
+import sqlbuilder.meta.PropertyReference
 import sqlbuilder.usea
-import sqlbuilder.SqlConverter
-import sqlbuilder.IncorrectResultSizeException
-
-import java.util.Arrays
+import java.sql.PreparedStatement
 import java.sql.SQLException
 import java.sql.Statement
-import java.sql.PreparedStatement
-import org.slf4j.LoggerFactory
-import sqlbuilder.Update
+import java.util.Arrays
 
 /**
  * Update statement: pass in a bean or run a custom statement
@@ -22,6 +23,8 @@ import sqlbuilder.Update
  */
 class UpdateImpl(private val backend: Backend): Update {
     private val logger = LoggerFactory.getLogger(javaClass)
+
+    private val metaResolver = backend.metaResolver
 
     private var entity: String? = null
     private var checkNullability = false
@@ -42,17 +45,16 @@ class UpdateImpl(private val backend: Backend): Update {
     }
 
     override fun updateBean(bean: Any) {
-        val keys = backend.configuration.metaResolver.getKeys(bean.javaClass)
-        updateBean(bean, keys)
+        val keys = metaResolver.getKeys(bean.javaClass)
+        updateBean(bean, keys.map(PropertyReference::columnName).toTypedArray())
     }
 
     override fun updateBean(bean: Any, keys: Array<out String>) {
-        val metaResolver = backend.configuration.metaResolver
         if (entity == null) entity = metaResolver.getTableName(bean.javaClass)
         entity = backend.configuration.escapeEntity(entity)
 
         if (keys.isEmpty()) {
-            throw PersistenceException("cannot update bean without a list of keys")
+            throw IncorrectMetadataException("cannot update bean without a list of keys")
         }
 
         val sqlCon = backend.getSqlConnection()

@@ -9,7 +9,7 @@ import sqlbuilder.meta.Table;
 /**
  * @author Laurent Van der Linden
  */
-@Table(name = "users")
+@Table(name = "public.users")
 public class User {
     @Id
     private Long id;

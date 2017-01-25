@@ -6,8 +6,6 @@ import java.lang.reflect.Method
 
 /**
  * Wrapper for bean property using getter/setter reflection.
- *
- * @author Laurent Van der Linden
  */
 class JavaGetterSetterPropertyReference(override var name: String, private val method: Method, override var classType: Class<*>) : PropertyReference {
     override val columnName: String = findColumnName()
@@ -42,10 +40,10 @@ class JavaGetterSetterPropertyReference(override var name: String, private val m
             if (fieldAnnotationName != null) {
                 return fieldAnnotationName
             } else {
-                return name
+                return name.toLowerCase()
             }
         } catch(ignore: NoSuchFieldException) {
-            return name
+            return name.toLowerCase()
         }
     }
 
@@ -65,6 +63,6 @@ class JavaGetterSetterPropertyReference(override var name: String, private val m
     }
 
     override fun toString(): String {
-        return "property <$classType.$name>"
+        return "property <${method.declaringClass}.$name>"
     }
 }

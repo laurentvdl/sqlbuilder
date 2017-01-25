@@ -1,13 +1,21 @@
 package sqlbuilder;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.sql.SQLException;
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.Set;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
+
 import sqlbuilder.impl.SqlBuilderImpl;
-import sqlbuilder.rowhandler.BeanListRowHandler;
-import sqlbuilder.rowhandler.JoiningPagedRowHandler;
-import sqlbuilder.rowhandler.JoiningRowHandler;
 import sqlbuilder.javabeans.Attribute;
 import sqlbuilder.javabeans.File;
 import sqlbuilder.javabeans.User;
@@ -16,13 +24,9 @@ import sqlbuilder.mapping.ToObjectMappingParameters;
 import sqlbuilder.pool.DataSourceImpl;
 import sqlbuilder.pool.DefaultConfig;
 import sqlbuilder.pool.Drivers;
-
-import java.sql.SQLException;
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.Assert.*;
+import sqlbuilder.rowhandler.BeanListRowHandler;
+import sqlbuilder.rowhandler.JoiningPagedRowHandler;
+import sqlbuilder.rowhandler.JoiningRowHandler;
 
 /**
  * Test the API using Java code
@@ -116,15 +120,18 @@ public class JavaUsage {
         // for every bean in the query, specify a macro to include all properties for that bean
         // or if cherry picking, define a sql alias like "users.firstname as users_firstname"
         final List<User> allUsersAndFiles2 = sqlBuilder.select()
-            .sql("select {User.*},{File.*},{Attribute.*} from users " +
+            .sql("select {User.* as someuser},{File.*},{Attribute.*} from users " +
                     "left join files on users.id = files.userid " +
                     "left join attributes on files.id = attributes.fileid")
             .select(new JoiningRowHandler<User>() {
                 @Override
                 public boolean handle(@NotNull ResultSet set, int row) throws SQLException {
-                    final User user = mapPrimaryBean(set, User.class, "users");
+                    // use custom prefix
+                    final User user = mapPrimaryBean(set, User.class, "someuser");
+                    // specify default prefix: table name
                     final File file = join(set, user, "files", File.class, "files");
-                    join(set, file, "attributes", Attribute.class, "attributes");
+                    // leave prefix null, will be inferred as table name
+                    join(set, file, "attributes", Attribute.class, null);
                     return true;
                 }
             }.entities(User.class, File.class, Attribute.class));

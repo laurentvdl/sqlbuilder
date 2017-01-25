@@ -1,12 +1,12 @@
 package sqlbuilder
 
+import org.junit.Assert
 import org.junit.Test
 import sqlbuilder.impl.DefaultConfiguration
 import sqlbuilder.javabeans.File
 import sqlbuilder.javabeans.User
-import sqlbuilder.meta.StaticJavaResolver
+import sqlbuilder.meta.ReflectionResolver
 import sqlbuilder.rowhandler.JoiningRowHandler
-import kotlin.test.assertEquals
 
 class QueryExpansion {
     @Test fun testJoinExpansion() {
@@ -16,13 +16,13 @@ class QueryExpansion {
             }
         }
 
-        joiner.metaResolver = StaticJavaResolver(DefaultConfiguration())
+        joiner.metaResolver = ReflectionResolver(DefaultConfiguration())
 
         joiner.entities(User::class.java, File::class.java)
 
-        assertEquals("select users.birthyear as users_birthyear,users.id as users_id,users.sex as users_sex," +
-                "users.username as users_username,files.id as files_id,files.name as files_name,files.userid as files_userid from users",
-                joiner.expand("select {User.*},{File.*} from users")
+        Assert.assertEquals("select users.birthyear as someuser_0,users.id as someuser_1,users.sex as someuser_2," +
+                "users.username as someuser_3,files.id as files_0,files.name as files_1,files.userid as files_2 from users",
+                joiner.expand("select {User.* as someuser},{File.*} from users")
         )
     }
 }

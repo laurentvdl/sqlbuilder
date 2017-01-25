@@ -42,7 +42,7 @@ See more examples at <a href="https://github.com/laurentvdl/sqlbuilder/blob/mast
 
 ```groovy
 dependencies {
-    compile 'com.github.sqlbuilder:sqlbuilder:1.3.2'
+    compile 'com.github.sqlbuilder:sqlbuilder:1.4.0'
 }
 ```
 
@@ -52,7 +52,7 @@ dependencies {
 <dependency>
     <groupId>com.github.sqlbuilder</groupId>
     <artifactId>sqlbuilder</artifactId>
-    <version>1.3.2</version>
+    <version>1.4.0</version>
 </dependency>
 ```
 

@@ -5,4 +5,4 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-class IncorrectResultSizeException(message: String) : PersistenceException(message)
+class IncorrectMetadataException(message: String) : PersistenceException(message)

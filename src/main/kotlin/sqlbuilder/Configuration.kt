@@ -6,10 +6,9 @@ import sqlbuilder.meta.MetaResolver
 
 /**
  * Configuration container for all pluggable aspects of a SqlBuilder instance.
- * @author Laurent Van der Linden
  */
-public interface Configuration {
-    val metaResolver: MetaResolver
+interface Configuration {
+    fun createMetaResolver(): MetaResolver
 
     fun escapeEntity(entity: String?): String?
 

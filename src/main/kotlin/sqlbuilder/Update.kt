@@ -20,9 +20,6 @@ interface Update {
      * Update all properties, including NULL values & keys (used for where)
      * @param bean value bean
      * @param keys fields to use for where
-     * @param includeFields omit fields from query
-     * @param excludedFields omit fields from query
-     * @return updated rows
      * @throws sqlbuilder.PersistenceException if more or less than 1 row is updated
      */
     fun updateBean(bean: Any, keys: Array<out String>)

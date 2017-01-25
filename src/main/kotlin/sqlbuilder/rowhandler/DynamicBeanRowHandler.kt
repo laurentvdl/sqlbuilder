@@ -1,13 +1,13 @@
 package sqlbuilder.rowhandler
 
+import org.slf4j.LoggerFactory
+import sqlbuilder.PersistenceException
+import sqlbuilder.ResultSet
+import sqlbuilder.meta.MetaResolver
 import sqlbuilder.meta.PropertyReference
-
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.regex.Pattern
-import sqlbuilder.meta.MetaResolver
-import org.slf4j.LoggerFactory
-import sqlbuilder.*
 
 /**
  * Used for mapping custom query results to a bean.

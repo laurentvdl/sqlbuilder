@@ -2,9 +2,6 @@ package sqlbuilder.meta
 
 import java.lang.reflect.Field
 
-/**
- * @author Laurent Van der Linden
- */
 interface MetaResolver {
     fun getProperties(beanClass: Class<*>, mutators: Boolean): List<PropertyReference>
 
@@ -15,5 +12,5 @@ interface MetaResolver {
      */
     fun findField(name: String, fieldType: Class<*>): Field?
 
-    fun getKeys(beanClass: Class<*>): Array<String>
+    fun getKeys(beanClass: Class<*>): List<PropertyReference>
 }

@@ -3,11 +3,15 @@ package sqlbuilder
 import org.junit.Before
 import org.junit.Test
 import sqlbuilder.impl.SqlBuilderImpl
+import sqlbuilder.meta.Table
+import sqlbuilder.meta.Transient
 import sqlbuilder.pool.DataSourceImpl
 import sqlbuilder.pool.DefaultConfig
 import sqlbuilder.pool.Drivers
 import sqlbuilder.rowhandler.JoiningRowHandler
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class KotlinUsage {
     private val sqlBuilder = SqlBuilderImpl(DataSourceImpl(
@@ -19,33 +23,30 @@ class KotlinUsage {
     @Before fun setup() {
         Setup.createTables(sqlBuilder)
 
-        assertEquals(1L, sqlBuilder.insert().getKeys(true).into("users").insertBean(with(User()) {
+        assertEquals(1L, sqlBuilder.insert().getKeys(true).insertBean(User().apply {
             username = "test a"
-            this
+            birthYear = 1976
         }), "generated key incorrect")
 
-        assertEquals(2L, sqlBuilder.insert().getKeys(true).into("users").insertBean(with(User()) {
+        assertEquals(2L, sqlBuilder.insert().getKeys(true).insertBean(User().apply {
             username = "test b"
-            this
+            birthYear = 1977
         }), "generated key incorrect")
 
-        sqlBuilder.insert().into("files").insertBean(with(File()) {
+        sqlBuilder.insert().insertBean(File().apply {
             userid = 1
             name = "home"
-            this
         })
 
-        sqlBuilder.insert().into("files").insertBean(with(File()) {
+        sqlBuilder.insert().insertBean(File().apply {
             userid = 1
             name = "guest"
-            this
         })
 
-        sqlBuilder.insert().into("attributes").insertBean(with(Attribute()) {
+        sqlBuilder.insert().insertBean(Attribute().apply {
             fileid = 1
             name = "size"
             value = "2kb"
-            this
         })
     }
 
@@ -144,24 +145,54 @@ class KotlinUsage {
         assertEquals(1, thirdCount!!.toLong())
     }
 
-    class User() {
+    @Test(expected = IncorrectMetadataException::class)
+    fun verifyKeys() {
+        sqlBuilder.update().updateBean(InvalidBean())
+    }
+
+    @Test
+    fun transientFields() {
+        val firstUserWithBirthYear = sqlBuilder.select().offset(0, 1).selectBean(User::class.java)
+        assertNotNull(firstUserWithBirthYear?.birthYear)
+
+        val firstUserWithoutBirthYear = sqlBuilder.select().offset(0, 1).selectBean(UserWithNoBirthYear::class.java)
+        assertNull(firstUserWithoutBirthYear?.birthYear)
+    }
+
+    @Table("users")
+    class User {
         var id: Long? = null
         var username: String? = null
         var birthYear: Short? = null
         var files: MutableList<File>? = null
     }
 
-    class File() {
+    @Table("users")
+    class UserWithNoBirthYear {
+        var id: Long? = null
+        var username: String? = null
+        @Transient
+        var birthYear: Short? = null
+        var files: MutableList<File>? = null
+    }
+
+    @Table("files")
+    class File {
         var id: Long? = null
         var userid: Long? = null
         var name: String? = null
         var attributes: MutableSet<Attribute>? = null
     }
 
-    class Attribute() {
+    @Table("attributes")
+    class Attribute {
         var id: Long? = null
         var fileid: Long? = null
         var name: String? = null
         var value: String? = null
+    }
+
+    class InvalidBean {
+        var uuid: String? = null
     }
 }

@@ -1,48 +1,50 @@
 package sqlbuilder.impl
 
-import sqlbuilder.exclude
-import sqlbuilder.include
-import sqlbuilder.Backend
-import java.sql.PreparedStatement
-import sqlbuilder.Insert
-import java.sql.SQLException
 import org.slf4j.LoggerFactory
-import java.sql.Statement
+import sqlbuilder.Backend
+import sqlbuilder.Insert
 import sqlbuilder.PersistenceException
 import sqlbuilder.SqlConverter
+import sqlbuilder.exclude
+import sqlbuilder.include
+import java.sql.PreparedStatement
+import java.sql.SQLException
+import java.sql.Statement
 
 class InsertImpl(val backend: Backend): Insert {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    private val metaResolver = backend.metaResolver
+
     private var entity: String? = null
     private var cachedStatement: PreparedStatement? = null
     private var batch = false
-    private var getkeys = false
+    private var getkeys = true
     private var checkNullability = false
     private var includeFields: Array<out String>? = null
     private var excludeFields: Array<out String>? = null
 
-    public override fun into(entity: String): Insert {
+    override fun into(entity: String): Insert {
         this.entity = entity
         return this
     }
 
-    public override fun batch(): Insert {
+    override fun batch(): Insert {
         this.batch = true
         return this
     }
 
-    public override fun getKeys(cond: Boolean): Insert {
+    override fun getKeys(cond: Boolean): Insert {
         this.getkeys = cond
         return this
     }
 
-    public override fun checkNullability(check: Boolean): Insert {
+    override fun checkNullability(check: Boolean): Insert {
         checkNullability = check
         return this
     }
 
-    public override fun endBatch(): Insert {
+    override fun endBatch(): Insert {
         this.batch = false
         if (cachedStatement != null) {
             try {
@@ -54,9 +56,7 @@ class InsertImpl(val backend: Backend): Insert {
         return this
     }
 
-    public override fun insertBean(bean: Any): Long {
-        val metaResolver = backend.configuration.metaResolver
-
+    override fun insertBean(bean: Any): Long {
         if (entity == null) {
             entity = backend.configuration.escapeEntity(
                     metaResolver.getTableName(bean.javaClass)
@@ -66,7 +66,7 @@ class InsertImpl(val backend: Backend): Insert {
         var sqlString: String? = null
         val sqlCon = backend.getSqlConnection()
 
-        var allProperties = metaResolver.getProperties(bean.javaClass, false)
+        val allProperties = metaResolver.getProperties(bean.javaClass, false)
                 .exclude(excludeFields)
                 .include(includeFields)
 

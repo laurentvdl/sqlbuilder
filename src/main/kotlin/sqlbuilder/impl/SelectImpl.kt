@@ -1,15 +1,41 @@
 package sqlbuilder.impl
 
+import org.slf4j.LoggerFactory
+import sqlbuilder.Backend
+import sqlbuilder.CacheStrategy
+import sqlbuilder.CacheableQuery
+import sqlbuilder.IncorrectResultSizeException
+import sqlbuilder.OptionalReturningRowHandler
+import sqlbuilder.PersistenceException
+import sqlbuilder.Relation
+import sqlbuilder.ReturningRowHandler
+import sqlbuilder.RowHandler
+import sqlbuilder.RowMap
+import sqlbuilder.Select
+import sqlbuilder.SqlConverter
+import sqlbuilder.WhereGroup
+import sqlbuilder.exclude
+import sqlbuilder.include
+import sqlbuilder.meta.PropertyReference
+import sqlbuilder.result
+import sqlbuilder.rowhandler.CachedRowHandler
+import sqlbuilder.rowhandler.DynamicBeanRowHandler
+import sqlbuilder.rowhandler.ExpandingRowHandler
+import sqlbuilder.rowhandler.FieldStreamHandler
+import sqlbuilder.rowhandler.FieldWriterHandler
+import sqlbuilder.rowhandler.ListRowHandler
+import sqlbuilder.rowhandler.MapRowHandler
+import sqlbuilder.rowhandler.PropertiesHandler
+import sqlbuilder.rowhandler.ReflectionHandler
+import sqlbuilder.rowhandler.ReflectiveBeanListRowHandler
+import sqlbuilder.rowhandler.SingleFieldListRowHandler
+import sqlbuilder.rowhandler.SingleFieldRowHandler
 import java.io.File
 import java.io.OutputStream
 import java.io.Writer
-import java.sql.SQLException
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.util.ArrayList
-import sqlbuilder.meta.PropertyReference
-import org.slf4j.LoggerFactory
-import sqlbuilder.*
-import sqlbuilder.rowhandler.*
 
 class SelectImpl(val backend: Backend) : Select {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -37,6 +63,8 @@ class SelectImpl(val backend: Backend) : Select {
     private var cursorConcurrency = ResultSet.CONCUR_READ_ONLY
 
     private val columnPattern = "^(\\w|_|\\.)+$".toRegex()
+
+    private val metaResolver = backend.metaResolver
 
     override fun from(entity: String): Select {
         this.entity = entity
@@ -127,8 +155,6 @@ class SelectImpl(val backend: Backend) : Select {
     }
 
     override fun <T : Any> selectBeans(beanClass: Class<T>): List<T> {
-        val metaResolver = backend.configuration.metaResolver
-
         if (entity == null) {
             entity = backend.configuration.escapeEntity(
                     metaResolver.getTableName(beanClass)
@@ -266,7 +292,7 @@ class SelectImpl(val backend: Backend) : Select {
                     }
                 }
 
-                sqlbuilder.ResultSet(ps.executeQuery(), backend.configuration).use { set ->
+                sqlbuilder.ResultSet(ps.executeQuery(), backend.configuration, sql).use { set ->
                     var row = 0
                     var continueCursorLoop = true
                     while (continueCursorLoop && set.next() && (offset == null || rows == null || rows!! + offset!! > row)) {
@@ -351,7 +377,7 @@ class SelectImpl(val backend: Backend) : Select {
             rowHandler.properties = properties!!
         }
         if (rowHandler is ReflectionHandler) {
-            rowHandler.metaResolver = backend.configuration.metaResolver
+            rowHandler.metaResolver = metaResolver
         }
         if (rowHandler is DynamicBeanRowHandler<*>) {
             rowHandler.mappings = sqlMappings

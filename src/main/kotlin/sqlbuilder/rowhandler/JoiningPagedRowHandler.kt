@@ -19,7 +19,7 @@ abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, private 
         val parameterizedType = javaClass.getGenericSuperclass() as ParameterizedType
         val aType = parameterizedType.getActualTypeArguments()?.get(0)
         @Suppress("UNCHECKED_CAST")
-        val keyValues = getKeyValues(set, getKeys(aType as Class<T>), prefix)
+        val keyValues = getKeyValues(set, getKeys(aType as Class<T>), prefix, true)
         if (lastKeyValues == null || !(lastKeyValues?.equals(keyValues) ?: false)) {
             primaryCount++
             lastKeyValues = keyValues
@@ -34,9 +34,9 @@ abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, private 
         super.addPrimaryBean(instance)
     }
 
-    override fun <S : Any> mapSetToBean(set: ResultSet, prefix: String, instance: S, mappings: Map<String, String>?) : S {
+    override fun <S : Any> mapSetToBean(set: ResultSet, tableAlias: String?, instance: S) : S {
         if (skip) throw IllegalStateException("you should not map resultsets while skip is true")
-        return super.mapSetToBean(set, prefix, instance, mappings)
+        return super.mapSetToBean(set, tableAlias, instance)
     }
 
     /**

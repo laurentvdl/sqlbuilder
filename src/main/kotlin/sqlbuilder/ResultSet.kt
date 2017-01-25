@@ -3,24 +3,23 @@ package sqlbuilder
 import sqlbuilder.impl.mappers.AnyMapper
 import sqlbuilder.mapping.ToObjectMappingParameters
 import java.io.Closeable
+import java.sql.ResultSet
 import java.sql.SQLException
 
-class ResultSet(private val target: java.sql.ResultSet, private val configuration: Configuration) : Closeable {
+class ResultSet(private val target: ResultSet, private val configuration: Configuration, val query: String) : Closeable {
 
-    public fun getJdbcResultSet(): java.sql.ResultSet {
+    fun getJdbcResultSet(): java.sql.ResultSet {
         return target
     }
 
     @Suppress("UNCHECKED_CAST")
-    @Throws(SQLException::class)
-    public fun <T> getObject(targetType: Class<T>, index: Int): T? {
+    @Throws(SQLException::class) fun <T> getObject(targetType: Class<T>, index: Int): T? {
         val objectMapperForType = configuration.objectMapperForType(targetType) ?: AnyMapper()
 
         return objectMapperForType.toObject(ToObjectMappingParameters(index, target, targetType)) as T
     }
 
-    @Throws(SQLException::class)
-    public fun next(): Boolean {
+    @Throws(SQLException::class) fun next(): Boolean {
         return target.next()
     }
 

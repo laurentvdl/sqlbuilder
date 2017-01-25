@@ -1,12 +1,26 @@
 package sqlbuilder.impl
 
 import sqlbuilder.Configuration
-import sqlbuilder.impl.mappers.*
+import sqlbuilder.impl.mappers.BigDecimalMapper
+import sqlbuilder.impl.mappers.BooleanMapper
+import sqlbuilder.impl.mappers.ByteArrayMapper
+import sqlbuilder.impl.mappers.CharMapper
+import sqlbuilder.impl.mappers.DateMapper
+import sqlbuilder.impl.mappers.DoubleMapper
+import sqlbuilder.impl.mappers.EnumMapper
+import sqlbuilder.impl.mappers.FloatMapper
+import sqlbuilder.impl.mappers.InputStreamMapper
+import sqlbuilder.impl.mappers.IntegerMapper
+import sqlbuilder.impl.mappers.LongMapper
+import sqlbuilder.impl.mappers.ReaderMapper
+import sqlbuilder.impl.mappers.ShortMapper
+import sqlbuilder.impl.mappers.StringMapper
+import sqlbuilder.impl.mappers.TimestampMapper
 import sqlbuilder.mapping.ToObjectMapper
 import sqlbuilder.mapping.ToSQLMapper
 import sqlbuilder.meta.MetaResolver
-import sqlbuilder.meta.StaticJavaResolver
-import java.util.*
+import sqlbuilder.meta.ReflectionResolver
+import java.util.ArrayList
 
 /**
  * @author Laurent Van der Linden.
@@ -44,7 +58,8 @@ public open class DefaultConfiguration : Configuration {
         }
     }
 
-    override var metaResolver: MetaResolver = StaticJavaResolver(this)
+    override fun createMetaResolver(): MetaResolver = ReflectionResolver(this)
+
     var escapeCharacter: Char? = null
 
     public fun setEscapeCharacter(escapeCharacter: Char): Configuration {
