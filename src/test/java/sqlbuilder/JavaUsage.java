@@ -120,8 +120,8 @@ public class JavaUsage {
         // for every bean in the query, specify a macro to include all properties for that bean
         // or if cherry picking, define a sql alias like "users.firstname as users_firstname"
         final List<User> allUsersAndFiles2 = sqlBuilder.select()
-            .sql("select {User.* as someuser},{File.*},{Attribute.*} from users " +
-                    "left join files on users.id = files.userid " +
+            .sql("select {User.* as someuser},{File.*},{Attribute.*} from users someuser " +
+                    "left join files on someuser.id = files.userid " +
                     "left join attributes on files.id = attributes.fileid")
             .select(new JoiningRowHandler<User>() {
                 @Override

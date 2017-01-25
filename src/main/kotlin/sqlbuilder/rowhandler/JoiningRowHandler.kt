@@ -283,19 +283,18 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         if (sql != null) {
             return """\{(\w+)\.\*(\s+as\s+(\w+))?\}""".toRegex().replace(sql) { match ->
                 val typeName = match.groupValues[1]
-                var alias = match.groupValues[3]
+                val expansionAlias = match.groupValues[3]
                 val type = expansionTypes[typeName]
                 if (type != null) {
                     var columnIndex = 0
                     val table = metaResolver!!.getTableName(type).replace("""^(\w+\.)?(\w+)$""".toRegex(), "$2")
-                    if (alias.isEmpty()) {
-                        alias = table.replace('.', '_')
-                    }
+                    val alias = if (expansionAlias.isEmpty()) table.replace('.', '_') else expansionAlias
+                    val columnPrefix = if (expansionAlias.isEmpty()) table else expansionAlias
                     val properties = metaResolver!!.getProperties(type, true)
                     properties.map({ prop ->
                         val columnAlias = "${alias}_${columnIndex++}"
                         tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(alias, prop.columnName)] = columnAlias
-                        "$table.${prop.columnName} as $columnAlias"
+                        "$columnPrefix.${prop.columnName} as $columnAlias"
                     }).joinToString(",")
                 } else {
                     throw PersistenceException("type $typeName is not registered via JoiningRowHandler.entities(Class type) call")
