@@ -52,7 +52,6 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
      * @param tableAlias prefix for fields that are to be mapped, by default this will be the table name if your JDBC drivers supports it,
      * otherwise specify a prefix for all columns either manually: users.id as users_id or using the prefix macro: {Users.* as users}
      * @param instance bean to map to
-     * @param mappings map bean property name -> column name
      * @throws SQLException
      * @return same instance populated
      */
@@ -66,11 +65,13 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             propertyReferenceCache.put(javaClass, propertyReferences)
         }
         for (property in propertyReferences) {
-            val index = getColumnIndex(tableAlias ?: metaResolver!!.getTableName(javaClass), property, set)
-            try {
-                property.set(instance, set.getObject(property.classType, index))
-            } catch(e: SQLException) {
-                throw PersistenceException("failed to retreive ${property.name} from resultset at index $index using type ${property.classType}", e)
+            val index = getColumnIndex(tableAlias ?: metaResolver!!.getTableName(javaClass), property)
+            if (index != null) {
+                try {
+                    property.set(instance, set.getObject(property.classType, index))
+                } catch(e: SQLException) {
+                    throw PersistenceException("failed to retreive ${property.name} from resultset at index $index using type ${property.classType}", e)
+                }
             }
         }
         return instance
@@ -80,18 +81,20 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
     @Throws(SQLException::class)
     protected fun <S> getColumnFromTable(set: ResultSet, table: String, property: PropertyReference, propertyType: Class<S>): S? {
         createColumnToIndexCache(set)
-        val index = getColumnIndex(table, property, set)
-        return set.getObject(propertyType, index)
+        val index = getColumnIndex(table, property)
+        if (index != null) {
+            return set.getObject(propertyType, index)
+        }
+        return null
     }
 
-    protected fun getColumnIndex(tableAlias: String?, property: PropertyReference, set: ResultSet): Int {
+    protected fun getColumnIndex(tableAlias: String?, property: PropertyReference): Int? {
         if (tableAlias == null) {
-            return columnToIndex.get(property.columnName.toLowerCase()) ?: throw PersistenceException("no column was found for property $property using column name ${property.columnName}")
+            return columnToIndex[property.columnName] ?: throw PersistenceException("no column was found for property $property using column name ${property.columnName}")
         } else {
-            val columnName = tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(tableAlias, property.columnName)]
+            val columnName = tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(tableAlias.toLowerCase(), property.columnName)]
                 ?: indexFQColumnName(property.columnName, tableAlias)
             return columnToIndex[columnName] ?: columnToIndex[property.columnName]
-                    ?: throw PersistenceException("no column was found for property $property using column name $columnName, check the prefix and the query: ${set.query}")
         }
     }
 
@@ -123,10 +126,10 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
      * @throws SQLException
      */
     protected fun mapPrimaryBean(set: ResultSet, primaryType: Class<T>, prefix: String): T {
-        val keyValues = getKeyValues(set, getKeys(primaryType), prefix, false);
-        var instance = getById(primaryType, keyValues);
+        val keyValues = getKeyValues(set, getKeys(primaryType), prefix, false)
+        var instance = getById(primaryType, keyValues)
         if (instance == null) {
-            instance = mapSetToBean(set, prefix, primaryType.newInstance())
+            instance = mapSetToBean(set, prefix.toLowerCase(), primaryType.newInstance())
             addPrimaryBean(instance)
             putById(instance, keyValues)
         }
@@ -233,7 +236,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             val keyValues = getKeyValues(set, getKeys(targetType), prefix ?: metaResolver!!.getTableName(targetType), true)
 
             val cacheKey = BeanProperty(owner.javaClass, property)
-            val relationField = relationFieldCache.get(cacheKey)
+            val relationField = relationFieldCache[cacheKey]
                     ?: run<Field> {
                 val relationField = metaResolver!!.findField(property, owner.javaClass)
                         ?: throw IllegalArgumentException("${owner.javaClass} has no property named <$property>")
@@ -293,7 +296,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
                     val properties = metaResolver!!.getProperties(type, true)
                     properties.map({ prop ->
                         val columnAlias = "${alias}_${columnIndex++}"
-                        tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(alias, prop.columnName)] = columnAlias
+                        tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(alias.toLowerCase(), prop.columnName)] = columnAlias
                         "$columnPrefix.${prop.columnName} as $columnAlias"
                     }).joinToString(",")
                 } else {

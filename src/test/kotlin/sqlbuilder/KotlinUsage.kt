@@ -159,6 +159,23 @@ class KotlinUsage {
         assertNull(firstUserWithoutBirthYear?.birthYear)
     }
 
+    @Test
+    fun joinAliasCaseSensitivity() {
+        val usersWithFiles = sqlBuilder.select()
+                .sql("select {User.* as users},{File.* as files},{Attribute.* as attributes} from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
+                .select(object : JoiningRowHandler<User>() {
+                    override fun handle(set: ResultSet, row: Int): Boolean {
+                        val user = mapPrimaryBean(set, User::class.java, "USERS")
+                        val file = joinList(set, user, User::files, File::class.java, "files")
+                        joinSet(set, file, File::attributes, Attribute::class.java, "attributes")
+                        return true
+                    }
+                }.entities(User::class.java, File::class.java, Attribute::class.java))
+
+        assertNotNull(usersWithFiles.first().birthYear)
+        assertNotNull(usersWithFiles.first().files?.first()?.name)
+    }
+
     @Table("users")
     class User {
         var id: Long? = null
