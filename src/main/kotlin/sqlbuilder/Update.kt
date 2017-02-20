@@ -64,6 +64,8 @@ interface Update {
      */
     fun getKeys(cond: Boolean): Update
 
+    fun getGeneratedKey(): Long
+
     fun excludeFields(vararg excludes: String): Update
 
     fun includeFields(vararg includes: String): Update

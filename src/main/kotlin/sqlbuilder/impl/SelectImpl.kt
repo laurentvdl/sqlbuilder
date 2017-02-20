@@ -359,7 +359,7 @@ class SelectImpl(val backend: Backend) : Select {
         } else {
             whereParameters = parameters!!.toMutableList()
         }
-        if (whereGroup.getNestedConditions().size > 0) {
+        if (whereGroup.isNotEmpty) {
             sqlBuffer.append(" where ")
             whereGroup.toSql(sqlBuffer, whereParameters)
         }

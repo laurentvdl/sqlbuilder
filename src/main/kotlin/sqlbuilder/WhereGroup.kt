@@ -200,4 +200,9 @@ class WhereGroup(private var parent: Any, private val select: Select, private va
             }
         }
     }
+
+    val isNotEmpty: Boolean
+        get() = getNestedConditions().any {
+            it is Condition || (it is WhereGroup && it.isNotEmpty)
+        }
 }

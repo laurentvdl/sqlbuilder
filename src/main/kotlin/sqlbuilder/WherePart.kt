@@ -5,4 +5,4 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-public interface WherePart
+interface WherePart

@@ -32,7 +32,7 @@ class UpdateImpl(private val backend: Backend): Update {
     private var includeFields: Array<out String>? = null
     private var excludeFields: Array<out String>? = null
 
-    var generatedKey: Long = 0
+    private var _generatedKey: Long = 0
 
     override fun entity(entity: String): Update {
         this.entity = entity
@@ -133,19 +133,19 @@ class UpdateImpl(private val backend: Backend): Update {
                 if (parameters != null) {
                     for ((index, parameter) in parameters.withIndex()) {
                         val parameterType = if (types == null) null else types[index]
-                        sqlConverter.setParameter(ps, parameters[index], index + 1, null, parameterType)
+                        sqlConverter.setParameter(ps, parameter, index + 1, null, parameterType)
                     }
                 }
 
                 val rows = ps.executeUpdate()
 
-                generatedKey = 0
+                _generatedKey = 0
                 if (getkeys) {
                     try {
                         val keys = ps.getGeneratedKeys()
                         if (keys != null) {
                             if (keys.next()) {
-                                generatedKey = keys.getLong(1)
+                                _generatedKey = keys.getLong(1)
                             }
                             keys.close()
                         }
@@ -189,4 +189,6 @@ class UpdateImpl(private val backend: Backend): Update {
         this.includeFields = includes
         return this
     }
+
+    override fun getGeneratedKey(): Long  = _generatedKey
 }

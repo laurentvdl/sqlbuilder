@@ -176,6 +176,19 @@ class KotlinUsage {
         assertNotNull(usersWithFiles.first().files?.first()?.name)
     }
 
+    @Test
+    fun emptyNestedWhereGroup() {
+        sqlBuilder.select()
+                .where()
+                    .group()
+                        .or(false, "jiberisch")
+                        .or(false, "jiberda")
+                    .endGroup()
+                    .and(false, "jiberu")
+                .endWhere()
+            .selectBeans(User::class.java)
+    }
+
     @Table("users")
     class User {
         var id: Long? = null

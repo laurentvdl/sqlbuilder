@@ -9,7 +9,6 @@ import sqlbuilder.exclude
 import sqlbuilder.include
 import java.sql.PreparedStatement
 import java.sql.SQLException
-import java.sql.Statement
 
 class InsertImpl(val backend: Backend): Insert {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -70,6 +69,8 @@ class InsertImpl(val backend: Backend): Insert {
                 .exclude(excludeFields)
                 .include(includeFields)
 
+        val keys = metaResolver.getKeys(bean.javaClass)
+
         val values = allProperties.filterNotNull().map { getter ->
             Pair(getter, getter.get(bean))
         }.filter({ it.second != null }).toMap()
@@ -93,7 +94,7 @@ class InsertImpl(val backend: Backend): Insert {
 
                 logger.info(sqlString)
 
-                cachedStatement = sqlCon.prepareStatement(sqlString, if (getkeys) Statement.RETURN_GENERATED_KEYS else java.sql.Statement.NO_GENERATED_KEYS)
+                cachedStatement = sqlCon.prepareStatement(sqlString, keys.map { it.columnName }.toTypedArray())
             }
             try {
                 if (checkNullability) {
