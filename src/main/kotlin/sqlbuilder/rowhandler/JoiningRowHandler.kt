@@ -235,49 +235,53 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         if (owner != null) {
             val keyValues = getKeyValues(set, getKeys(targetType), prefix ?: metaResolver!!.getTableName(targetType), true)
 
-            val cacheKey = BeanProperty(owner.javaClass, property)
-            val relationField = relationFieldCache[cacheKey]
-                    ?: run<Field> {
-                val relationField = metaResolver!!.findField(property, owner.javaClass)
-                        ?: throw IllegalArgumentException("${owner.javaClass} has no property named <$property>")
-                relationField.isAccessible = true
-                relationFieldCache.put(cacheKey, relationField)
-                relationField
-            }
+            val inResultSet = keyValues.all { it != null }
 
-            val isList = List::class.java.isAssignableFrom(relationField.type!!)
-            val isSet = Set::class.java.isAssignableFrom(relationField.type!!)
+            if (inResultSet) {
+                val cacheKey = BeanProperty(owner.javaClass, property)
+                val relationField = relationFieldCache[cacheKey]
+                        ?: run<Field> {
+                    val relationField = metaResolver!!.findField(property, owner.javaClass)
+                            ?: throw IllegalArgumentException("${owner.javaClass} has no property named <$property>")
+                    relationField.isAccessible = true
+                    relationFieldCache.put(cacheKey, relationField)
+                    relationField
+                }
 
-            // look in cache first
-            @Suppress("UNCHECKED_CAST")
-            var instance = getById(targetType, keyValues)
-            if (instance == null) {
-                // create new instance
-                instance = mapSetToBean(set, prefix, targetType.newInstance())
-                putById(instance, keyValues)
-            }
-            if (isList) {
+                val isList = List::class.java.isAssignableFrom(relationField.type!!)
+                val isSet = Set::class.java.isAssignableFrom(relationField.type!!)
+
+                // look in cache first
                 @Suppress("UNCHECKED_CAST")
-                var relationList = relationField.get(owner) as MutableList<W>?
-                if (relationList == null) {
-                    relationList = ArrayList<W>()
-                    relationField.set(owner, relationList)
+                var instance = getById(targetType, keyValues)
+                if (instance == null) {
+                    // create new instance
+                    instance = mapSetToBean(set, prefix, targetType.newInstance())
+                    putById(instance, keyValues)
                 }
-                if (!relationList.contains(instance)) relationList.add(instance!!)
-            } else
-                if (isSet) {
+                if (isList) {
                     @Suppress("UNCHECKED_CAST")
-                    val relationSet = relationField.get(owner) as MutableSet<W>? ?:
-                            run<MutableSet<W>> {
-                                val setValue = HashSet<W>()
-                                relationField.set(owner, setValue)
-                                setValue
-                            }
-                    if (!relationSet.contains(instance)) relationSet.add(instance!!)
-                } else {
-                    relationField.set(owner, instance)
-                }
-            return instance!!
+                    var relationList = relationField.get(owner) as MutableList<W>?
+                    if (relationList == null) {
+                        relationList = ArrayList<W>()
+                        relationField.set(owner, relationList)
+                    }
+                    if (!relationList.contains(instance)) relationList.add(instance!!)
+                } else
+                    if (isSet) {
+                        @Suppress("UNCHECKED_CAST")
+                        val relationSet = relationField.get(owner) as MutableSet<W>? ?:
+                                run<MutableSet<W>> {
+                                    val setValue = HashSet<W>()
+                                    relationField.set(owner, setValue)
+                                    setValue
+                                }
+                        if (!relationSet.contains(instance)) relationSet.add(instance!!)
+                    } else {
+                        relationField.set(owner, instance)
+                    }
+                return instance!!
+            }
         }
         return null
     }

@@ -34,7 +34,6 @@ import java.io.File
 import java.io.OutputStream
 import java.io.Writer
 import java.sql.ResultSet
-import java.sql.SQLException
 import java.util.ArrayList
 
 class SelectImpl(val backend: Backend) : Select {
@@ -316,7 +315,7 @@ class SelectImpl(val backend: Backend) : Select {
             } finally {
                 ps.close()
             }
-        } catch (e: SQLException) {
+        } catch (e: Exception) {
             throw PersistenceException("<$sql> failed with parameters $whereParameters", e)
         } finally {
             this.sql = null
@@ -332,16 +331,16 @@ class SelectImpl(val backend: Backend) : Select {
         if (suppliedSql == null) {
             sqlBuffer = StringBuilder(sql ?: "")
             sqlBuffer.append("select ")
-            if (selectOption != null) {
+            if (fields != null && fields.isNotEmpty()) {
+                fields.joinTo(sqlBuffer, ",")
+                sqlBuffer.append(" ")
+            } else if (selectOption != null) {
                 if (rowHandler is ExpandingRowHandler) {
                     sqlBuffer.append(rowHandler.expand(selectOption))
                 } else {
                     sqlBuffer.append(selectOption)
                 }
                 sqlBuffer.append(' ')
-            } else if (fields != null && fields.isNotEmpty()) {
-                fields.joinTo(sqlBuffer, ",")
-                sqlBuffer.append(" ")
             } else {
                 sqlBuffer.append("* ")
             }
