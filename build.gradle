@@ -33,7 +33,7 @@ repositories {
 }
 
 group = 'com.github.sqlbuilder'
-version = '1.4.5'
+version = '1.4.6'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

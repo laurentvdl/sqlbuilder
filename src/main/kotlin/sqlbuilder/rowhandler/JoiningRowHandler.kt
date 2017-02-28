@@ -29,17 +29,17 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
     override var result: MutableList<T> = list
 
     @Suppress("UNCHECKED_CAST")
-    protected fun <S> getById(beanClass: Class<S>, ids: List<Any?>): S? {
-        return beans[MappingKey(beanClass, ids)] as S
+    protected fun <S> getById(beanClass: Class<S>, prefix: String?,ids: List<Any?>): S? {
+        return beans[MappingKey(beanClass, prefix, ids)] as S
     }
 
-    protected fun <S : Any> putById(instance: S, ids: List<Any?>): S {
-        beans.put(MappingKey(instance.javaClass, ids), instance)
+    protected fun <S : Any> putById(instance: S, prefix: String?, ids: List<Any?>): S {
+        beans.put(MappingKey(instance.javaClass, prefix, ids), instance)
         return instance
     }
 
-    protected fun putById(type: Class<*>, ids: List<Any>) {
-        beans.put(MappingKey(type, ids), Object())
+    protected fun putById(type: Class<*>, prefix: String?, ids: List<Any>) {
+        beans.put(MappingKey(type, prefix, ids), Object())
     }
 
     protected open fun addPrimaryBean(instance: T) {
@@ -93,7 +93,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             return columnToIndex[property.columnName] ?: throw PersistenceException("no column was found for property $property using column name ${property.columnName}")
         } else {
             val columnName = tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(tableAlias.toLowerCase(), property.columnName)]
-                ?: indexFQColumnName(property.columnName, tableAlias)
+                    ?: indexFQColumnName(property.columnName, tableAlias)
             return columnToIndex[columnName] ?: columnToIndex[property.columnName]
         }
     }
@@ -127,11 +127,11 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
      */
     protected fun mapPrimaryBean(set: ResultSet, primaryType: Class<T>, prefix: String): T {
         val keyValues = getKeyValues(set, getKeys(primaryType), prefix, false)
-        var instance = getById(primaryType, keyValues)
+        var instance = getById(primaryType, prefix, keyValues)
         if (instance == null) {
             instance = mapSetToBean(set, prefix.toLowerCase(), primaryType.newInstance())
             addPrimaryBean(instance)
-            putById(instance, keyValues)
+            putById(instance, prefix, keyValues)
         }
 
         return instance!!
@@ -159,19 +159,19 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         }
     }
 
-    private fun <R, W : Any> joinInstance(set: ResultSet, owner: R, targetType: Class<W>, table: String): W? {
+    private fun <R, W : Any> joinInstance(set: ResultSet, owner: R, targetType: Class<W>, prefix: String): W? {
         if (owner != null) {
-            val keyValues = getKeyValues(set, getKeys(targetType), table, true)
+            val keyValues = getKeyValues(set, getKeys(targetType), prefix, true)
 
             val inResultSet = keyValues.all { it != null }
             if (inResultSet) {
                 // look in cache first
                 @Suppress("UNCHECKED_CAST")
-                var instance = getById(targetType, keyValues as List<Any>)
+                var instance = getById(targetType, prefix, keyValues as List<Any>)
                 if (instance == null) {
                     // create new instance
-                    instance = mapSetToBean(set, table, targetType.newInstance())
-                    putById(instance, keyValues)
+                    instance = mapSetToBean(set, prefix, targetType.newInstance())
+                    putById(instance, prefix, keyValues)
                 }
                 return instance
             }
@@ -253,11 +253,11 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
                 // look in cache first
                 @Suppress("UNCHECKED_CAST")
-                var instance = getById(targetType, keyValues)
+                var instance = getById(targetType, prefix, keyValues)
                 if (instance == null) {
                     // create new instance
                     instance = mapSetToBean(set, prefix, targetType.newInstance())
-                    putById(instance, keyValues)
+                    putById(instance, prefix, keyValues)
                 }
                 if (isList) {
                     @Suppress("UNCHECKED_CAST")
@@ -320,7 +320,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         return this
     }
 
-    data class MappingKey(val aType: Class<*>, val keyValues: List<*>)
+    data class MappingKey(val aType: Class<*>, val prefix: String?, val keyValues: List<*>)
 
     data class BeanProperty(val aType: Class<*>, val property: String)
 
