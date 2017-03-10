@@ -1,8 +1,8 @@
 package sqlbuilder.impl.mappers
 
-import sqlbuilder.mapping.*
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import sqlbuilder.mapping.BiMapper
+import sqlbuilder.mapping.ToObjectMappingParameters
+import sqlbuilder.mapping.ToSQLMappingParameters
 import java.sql.Types
 
 /**
@@ -11,7 +11,7 @@ import java.sql.Types
 class CharMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Char? {
         val string = params.resultSet.getString(params.index)
-        if (string != null && string.length > 0) return string[0]
+        if (string != null && string.isNotEmpty()) return string[0]
         return null
 
     }

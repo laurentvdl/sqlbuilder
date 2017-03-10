@@ -2,6 +2,7 @@ package sqlbuilder.javabeans;
 
 import java.util.Set;
 
+import sqlbuilder.meta.Column;
 import sqlbuilder.meta.Id;
 import sqlbuilder.meta.Table;
 
@@ -10,7 +11,7 @@ import sqlbuilder.meta.Table;
  */
 @Table(name = "files")
 public class File {
-    @Id
+    @Id @Column(name = "ID")
     private Long id;
     private Long userid;
     private String name;

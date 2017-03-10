@@ -15,7 +15,7 @@ import java.util.prefs.Preferences
  *
  * @author Laurent Van der Linden
  */
-public class PreferencesConfig(preferencesPath: String, user: Boolean) : ConnectionConfigProvider {
+class PreferencesConfig(preferencesPath: String, user: Boolean) : ConnectionConfigProvider {
     private val preferencesNode = if (user) {
         Preferences.userRoot()!!.node(preferencesPath)!!
     } else {

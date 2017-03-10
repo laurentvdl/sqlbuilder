@@ -8,12 +8,12 @@ import java.sql.SQLException
  *
  * @author Laurent Van der Linden.
  */
-public interface ToSQLMapper {
+interface ToSQLMapper {
     @Throws(SQLException::class)
     fun toSQL(params: ToSQLMappingParameters)
     fun handles(targetType: Class<*>): Boolean
 }
 
-public class ToSQLMappingParameters (
+class ToSQLMappingParameters (
     val index: Int, val preparedStatement: PreparedStatement, val value: Any?, val sourceType: Class<*>
 )

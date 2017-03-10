@@ -2,9 +2,9 @@ package sqlbuilder.rowhandler
 
 import sqlbuilder.ResultSet
 import java.sql.SQLException
-import java.util.*
+import java.util.ArrayList
 
-public abstract class BeanListRowHandler<T> : ListRowHandler<T> {
+abstract class BeanListRowHandler<T> : ListRowHandler<T> {
     var list = ArrayList<T>()
 
     override val result: MutableList<T> = list

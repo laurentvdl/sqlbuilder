@@ -104,7 +104,7 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
     @Throws(SQLException::class)
     override fun getConnection(): Connection {
         loadDriver()
-        return Proxy.newProxyInstance(javaClass.getClassLoader(), arrayOf<Class<*>>(Connection::class.java), obtainConnection()) as Connection
+        return Proxy.newProxyInstance(javaClass.classLoader, arrayOf<Class<*>>(Connection::class.java), obtainConnection()) as Connection
     }
 
     private fun loadDriver() {
@@ -112,13 +112,13 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
         try {
             Class.forName(driver)
         } catch (e: ClassNotFoundException) {
-            throw PersistenceException("Driver <" + driver + "> not in classpath", e)
+            throw PersistenceException("Driver <$driver> not in classpath", e)
         }
 
     }
 
     @Throws(SQLException::class)
-    protected fun newFysicalConnection(): Connection {
+    private fun newFysicalConnection(): Connection {
         val properties = configProvider.properties ?: Properties()
 
         // ask DB2 to explain it's error codes
@@ -140,7 +140,7 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
         if (isWrapperFor(iface)) {
             return this as T
         } else {
-            throw SQLException(javaClass.getName() + " does not implement " + iface.getName())
+            throw SQLException(javaClass.name + " does not implement " + iface.name)
         }
     }
 
@@ -149,7 +149,7 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
         return iface == javaClass
     }
 
-    protected fun obtainConnection(): TransactionalConnection {
+    private fun obtainConnection(): TransactionalConnection {
         val connection = synchronized(lock) {
             if (!active) throw IllegalStateException("datasource is inactive")
 
@@ -207,7 +207,7 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
     }
 
     override fun getConnection(username: String?, password: String?): Connection? {
-        return getConnection()
+        return connection
     }
 
     @PreDestroy fun stop() {

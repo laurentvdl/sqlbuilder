@@ -1,14 +1,14 @@
 package sqlbuilder.impl.mappers
 
-import sqlbuilder.mapping.*
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import sqlbuilder.mapping.BiMapper
+import sqlbuilder.mapping.ToObjectMappingParameters
+import sqlbuilder.mapping.ToSQLMappingParameters
 import java.sql.Types
 
 /**
  * @author Laurent Van der Linden.
  */
-public class IntegerMapper : BiMapper {
+class IntegerMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Int? {
         val value = params.resultSet.getInt(params.index)
         if (params.resultSet.wasNull()) {

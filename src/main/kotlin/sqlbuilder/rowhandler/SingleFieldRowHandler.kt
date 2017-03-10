@@ -9,7 +9,7 @@ import sqlbuilder.ResultSet
  *
  * @author Laurent Van der Linden
  */
-public class SingleFieldRowHandler<T : Any?>(private val requiredType: Class<T>) : OptionalReturningRowHandler<T> {
+class SingleFieldRowHandler<T : Any?>(private val requiredType: Class<T>) : OptionalReturningRowHandler<T> {
     override var result: T? = null
 
     override fun handle(set: ResultSet, row: Int): Boolean {

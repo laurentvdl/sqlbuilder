@@ -10,7 +10,7 @@ import java.util.ArrayList
  *
  * @author Laurent Van der Linden
  */
-public class SingleFieldListRowHandler<T>(private val requiredType: Class<T>) : ReturningRowHandler<List<T>> {
+class SingleFieldListRowHandler<T>(private val requiredType: Class<T>) : ReturningRowHandler<List<T>> {
     private var list = ArrayList<T>()
 
     override var result: List<T> = list

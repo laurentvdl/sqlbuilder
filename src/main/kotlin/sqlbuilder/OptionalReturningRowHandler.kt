@@ -5,6 +5,6 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-interface OptionalReturningRowHandler<R : Any?> : RowHandler {
+interface OptionalReturningRowHandler<out R : Any?> : RowHandler {
     val result: R?
 }

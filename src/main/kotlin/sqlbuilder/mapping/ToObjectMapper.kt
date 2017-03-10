@@ -8,10 +8,10 @@ import java.sql.SQLException
  *
  * @author Laurent Van der Linden.
  */
-public interface ToObjectMapper {
+interface ToObjectMapper {
     @Throws(SQLException::class)
     fun toObject(params: ToObjectMappingParameters): Any?
     fun handles(targetType: Class<*>): Boolean
 }
 
-public class ToObjectMappingParameters (val index: Int, val resultSet: ResultSet, val targetType: Class<*>)
+class ToObjectMappingParameters (val index: Int, val resultSet: ResultSet, val targetType: Class<*>)

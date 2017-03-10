@@ -1,11 +1,11 @@
 package sqlbuilder
 
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-import org.slf4j.LoggerFactory
 
 /**
  * Caching strategy that use Serialisation to store any query to a single file.
@@ -35,10 +35,8 @@ class FileStrategy(private var file: File) : CacheStrategy {
     override fun put(query: CacheableQuery, result: Any) {
         try {
             val oos = ObjectOutputStream(FileOutputStream(file))
-            try {
+            oos.use { oos ->
                 oos.writeObject(result)
-            } finally {
-                oos.close()
             }
         } catch (e: Exception) {
             logger.warn("failed to cache value to file", e)

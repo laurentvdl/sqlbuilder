@@ -9,6 +9,7 @@ import sqlbuilder.pool.DataSourceImpl
 import sqlbuilder.pool.DefaultConfig
 import sqlbuilder.pool.Drivers
 import sqlbuilder.rowhandler.JoiningRowHandler
+import java.sql.SQLException
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -187,6 +188,21 @@ class KotlinUsage {
                     .and(false, "jiberu")
                 .endWhere()
             .selectBeans(User::class.java)
+    }
+
+    @Test(expected = IncorrectJoinMapping::class)
+    fun duplicateAssignment() {
+        sqlBuilder.select()
+            .sql("select * from users " +
+                    "left join users parents on users.parent_id = parents.id")
+            .select(object : JoiningRowHandler<User>() {
+                @Throws(SQLException::class)
+                override fun handle(set: ResultSet, row: Int): Boolean {
+                    val user = mapPrimaryBean(set, User::class.java, "users")
+                    join(set, user, "parent", User::class.java, "parents")
+                    return true
+                }
+            }.entities(User::class.java, File::class.java, Attribute::class.java))
     }
 
     @Table("users")

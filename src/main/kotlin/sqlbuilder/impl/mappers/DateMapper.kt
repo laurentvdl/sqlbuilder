@@ -1,15 +1,15 @@
 package sqlbuilder.impl.mappers
 
-import sqlbuilder.mapping.*
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import sqlbuilder.mapping.BiMapper
+import sqlbuilder.mapping.ToObjectMappingParameters
+import sqlbuilder.mapping.ToSQLMappingParameters
 import java.sql.Types
-import java.util.*
+import java.util.Date
 
 /**
  * @author Laurent Van der Linden.
  */
-public class DateMapper : BiMapper {
+class DateMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Date? {
         val value = params.resultSet.getDate(params.index)
         if (params.resultSet.wasNull()) {

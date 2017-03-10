@@ -25,13 +25,9 @@ import java.util.ArrayList
 /**
  * @author Laurent Van der Linden.
  */
-public open class DefaultConfiguration : Configuration {
+open class DefaultConfiguration() : Configuration {
     private val toObjectMappers: MutableList<ToObjectMapper> = ArrayList()
     private val toSQLMappers: MutableList<ToSQLMapper> = ArrayList()
-
-    constructor() {
-        registerDefaultMappers()
-    }
 
     protected fun registerDefaultMappers() {
         val dualPurposeMappers = listOf(
@@ -62,12 +58,12 @@ public open class DefaultConfiguration : Configuration {
 
     var escapeCharacter: Char? = null
 
-    public fun setEscapeCharacter(escapeCharacter: Char): Configuration {
+    fun setEscapeCharacter(escapeCharacter: Char): Configuration {
         this.escapeCharacter = escapeCharacter
         return this
     }
 
-    public override fun escapeEntity(entity: String?): String? {
+    override fun escapeEntity(entity: String?): String? {
         if (entity != null) {
             if (escapeCharacter != null) {
                 if (entity[0] != escapeCharacter) {
@@ -105,5 +101,9 @@ public open class DefaultConfiguration : Configuration {
     override fun unregisterToSQLMapper(toSQLMapper: ToSQLMapper): DefaultConfiguration {
         toSQLMappers.remove(toSQLMapper)
         return this
+    }
+
+    init {
+        registerDefaultMappers()
     }
 }

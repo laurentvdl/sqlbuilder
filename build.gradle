@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.0.5-3'
+    ext.kotlin_version = '1.1.0'
     repositories {
         mavenCentral()
     }
@@ -24,6 +24,7 @@ compileJava {
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
     options.compilerArgs << '-Xlint:unchecked'
+    options.incremental = true
 }
 
 repositories {
@@ -33,7 +34,7 @@ repositories {
 }
 
 group = 'com.github.sqlbuilder'
-version = '1.4.6'
+version = '1.5.0'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

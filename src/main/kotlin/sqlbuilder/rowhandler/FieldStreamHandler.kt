@@ -12,7 +12,7 @@ import java.sql.SQLException
  *
  * @author Laurent Van der Linden
  */
-public class FieldStreamHandler(private val os: OutputStream) : RowHandler {
+class FieldStreamHandler(private val os: OutputStream) : RowHandler {
     @Throws(SQLException::class)
     override fun handle(set: ResultSet, row: Int): Boolean {
         val iStream = set.getJdbcResultSet().getBinaryStream(1)

@@ -20,8 +20,8 @@ class QueryExpansion {
 
         joiner.entities(User::class.java, File::class.java)
 
-        Assert.assertEquals("select someuser.birthyear as someuser_0,someuser.id as someuser_1,someuser.sex as someuser_2," +
-                "someuser.username as someuser_3,files.id as files_0,files.name as files_1,files.userid as files_2 from users someuser",
+        Assert.assertEquals("select someuser.birthyear as someuser_0,someuser.id as someuser_1,someuser.parent_id as " +
+                "someuser_2,someuser.sex as someuser_3,someuser.username as someuser_4,files.id as files_0,files.name as files_1,files.userid as files_2 from users someuser",
                 joiner.expand("select {User.* as someuser},{File.*} from users someuser")
         )
     }

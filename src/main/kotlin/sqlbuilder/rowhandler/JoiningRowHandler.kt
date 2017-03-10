@@ -1,5 +1,6 @@
 package sqlbuilder.rowhandler
 
+import sqlbuilder.IncorrectJoinMapping
 import sqlbuilder.PersistenceException
 import sqlbuilder.ResultSet
 import sqlbuilder.RowHandler
@@ -79,9 +80,9 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
     @SuppressWarnings("unchecked")
     @Throws(SQLException::class)
-    protected fun <S> getColumnFromTable(set: ResultSet, table: String, property: PropertyReference, propertyType: Class<S>): S? {
+    protected fun <S> getColumnFromTable(set: ResultSet, prefix: String, property: PropertyReference, propertyType: Class<S>): S? {
         createColumnToIndexCache(set)
-        val index = getColumnIndex(table, property)
+        val index = getColumnIndex(prefix, property)
         if (index != null) {
             return set.getObject(propertyType, index)
         }
@@ -94,7 +95,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         } else {
             val columnName = tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(tableAlias.toLowerCase(), property.columnName)]
                     ?: indexFQColumnName(property.columnName, tableAlias)
-            return columnToIndex[columnName] ?: columnToIndex[property.columnName]
+            return columnToIndex[columnName]
         }
     }
 
@@ -108,13 +109,17 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
                 val columnLabel = metaData.getColumnLabel(x)
                 columnToIndex.put(columnLabel.toLowerCase(), x)
                 if (tableName?.isNotEmpty() ?: false) {
-                    columnToIndex.put(indexFQColumnName(columnLabel, tableName!!), x)
+                    val key = indexFQColumnName(columnLabel, tableName!!)
+                    if (columnToIndex.containsKey(key)) {
+                        throw IncorrectJoinMapping(set.query, x, columnToIndex[key]!!, tableName, columnLabel)
+                    }
+                    columnToIndex.put(key, x)
                 }
             }
         }
     }
 
-    private fun indexFQColumnName(column: String, table: String) = table.toLowerCase().replace('.', '_') + "_" + column.toLowerCase()
+    private fun indexFQColumnName(column: String, table: String) = table.toLowerCase().replace('.', '_') + ":" + column.toLowerCase()
 
     /**
      * Map primary bean and add to resultlist in unique fashion

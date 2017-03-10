@@ -15,12 +15,12 @@ class DeleteImpl(private val backend: Backend): Delete {
 
     private var entity: String? = null
 
-    public override fun from(entity: String): Delete {
+    override fun from(entity: String): Delete {
         this.entity = entity
         return this
     }
 
-    public override fun deleteBean(bean: Any): Int {
+    override fun deleteBean(bean: Any): Int {
         if (entity == null) {
             entity = backend.configuration.escapeEntity(
                     metaResolver.getTableName(bean.javaClass)

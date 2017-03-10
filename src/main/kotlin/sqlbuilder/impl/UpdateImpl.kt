@@ -142,7 +142,7 @@ class UpdateImpl(private val backend: Backend): Update {
                 _generatedKey = 0
                 if (getkeys) {
                     try {
-                        val keys = ps.getGeneratedKeys()
+                        val keys = ps.generatedKeys
                         if (keys != null) {
                             if (keys.next()) {
                                 _generatedKey = keys.getLong(1)

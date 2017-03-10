@@ -15,7 +15,7 @@ import java.util.regex.Pattern
  *
  * @author Laurent Van der Linden
  */
-public class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>) : ListRowHandler<T>, ReflectionHandler, PropertiesHandler, BeanListRowHandler<T>() {
+class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>) : ListRowHandler<T>, ReflectionHandler, PropertiesHandler, BeanListRowHandler<T>() {
     private val trace = LoggerFactory.getLogger("sqlbuildertrace")
 
     var mappings: Map<Any, String>? = null
@@ -45,9 +45,9 @@ public class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>) : L
                 if (propertyCache.size < index ) {
                     val cName = meta.getColumnLabel(index)!!.toLowerCase()
                     val mappedColumn = mappings?.get(cName) ?: mappings?.get(index) ?: cName
-                    val prop = refCache.get(mappedColumn.toLowerCase())
-                            ?: refCache.get(simplifier1.matcher(cName).replaceAll("").toLowerCase())
-                            ?: refCache.get(simplifier2.matcher(cName).replaceAll("").toLowerCase())
+                    val prop = refCache[mappedColumn.toLowerCase()]
+                            ?: refCache[simplifier1.matcher(cName).replaceAll("").toLowerCase()]
+                            ?: refCache[simplifier2.matcher(cName).replaceAll("").toLowerCase()]
 
                     if (prop != null) {
                         propertyCache.add(prop)
@@ -57,7 +57,7 @@ public class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>) : L
                     }
                 }
 
-                val prop = propertyCache.get(index - 1)
+                val prop = propertyCache[index - 1]
                 prop?.set(bean, set.getObject(prop.classType, index))
             }
 

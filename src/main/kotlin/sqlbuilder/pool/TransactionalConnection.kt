@@ -80,11 +80,11 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
 
   fun setClientUser(name: String) {
     try {
-      target.setClientInfo("clientUser", name);
+      target.setClientInfo("clientUser", name)
     } catch (e: Exception) {
-        logger.warn("unable to set clientUser to $name: ${e.message}");
+        logger.warn("unable to set clientUser to $name: ${e.message}")
     } catch (e: Error) {
-      logger.warn("unable to set clientUser to $name: ${e.message}");
+      logger.warn("unable to set clientUser to $name: ${e.message}")
     }
   }
 

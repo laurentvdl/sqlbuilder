@@ -1,14 +1,14 @@
 package sqlbuilder.impl.mappers
 
-import sqlbuilder.mapping.*
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import sqlbuilder.mapping.BiMapper
+import sqlbuilder.mapping.ToObjectMappingParameters
+import sqlbuilder.mapping.ToSQLMappingParameters
 import java.sql.Types
 
 /**
  * @author Laurent Van der Linden.
  */
-public class ShortMapper : BiMapper {
+class ShortMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Short? {
         val value = params.resultSet.getShort(params.index)
         if (params.resultSet.wasNull()) {

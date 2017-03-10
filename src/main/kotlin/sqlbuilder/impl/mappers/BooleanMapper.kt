@@ -1,15 +1,14 @@
 package sqlbuilder.impl.mappers
 
-import sqlbuilder.mapping.*
-import java.sql.PreparedStatement
-import java.sql.ResultSet
-import java.sql.Timestamp
+import sqlbuilder.mapping.BiMapper
+import sqlbuilder.mapping.ToObjectMappingParameters
+import sqlbuilder.mapping.ToSQLMappingParameters
 import java.sql.Types
 
 /**
  * @author Laurent Van der Linden.
  */
-public class BooleanMapper : BiMapper {
+class BooleanMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Boolean? {
         val value = params.resultSet.getBoolean(params.index)
         if (params.resultSet.wasNull()) {

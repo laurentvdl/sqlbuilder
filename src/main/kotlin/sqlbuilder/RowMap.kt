@@ -8,7 +8,7 @@ import java.util.HashMap
  *
  * @author Laurent Van der Linden
  */
-class RowMap() : Serializable {
+class RowMap : Serializable {
     private val named = HashMap<String, Any?>()
     private val indexed = HashMap<Int, Any?>()
 

@@ -30,6 +30,7 @@ import sqlbuilder.rowhandler.ReflectionHandler
 import sqlbuilder.rowhandler.ReflectiveBeanListRowHandler
 import sqlbuilder.rowhandler.SingleFieldListRowHandler
 import sqlbuilder.rowhandler.SingleFieldRowHandler
+import sqlbuilder.usea
 import java.io.File
 import java.io.OutputStream
 import java.io.Writer
@@ -283,7 +284,7 @@ class SelectImpl(val backend: Backend) : Select {
 
             val ps = con.prepareStatement(sql, cursorType, cursorConcurrency)!!
             if (fetchSize != null) ps.fetchSize = fetchSize!!
-            try {
+            ps.usea { ps ->
                 val parameterCount = ps.parameterMetaData.parameterCount
                 whereParameters.withIndex().forEach { pair ->
                     if (pair.index < parameterCount) {
@@ -312,11 +313,12 @@ class SelectImpl(val backend: Backend) : Select {
                         }
                     }
                 }
-            } finally {
-                ps.close()
             }
         } catch (e: Exception) {
-            throw PersistenceException("<$sql> failed with parameters $whereParameters", e)
+            when (e) {
+                is PersistenceException -> throw e
+                else -> throw PersistenceException("<$sql> failed with parameters $whereParameters", e)
+            }
         } finally {
             this.sql = null
             this.offset = null

@@ -1,15 +1,15 @@
 package sqlbuilder.impl.mappers
 
-import sqlbuilder.mapping.*
+import sqlbuilder.mapping.BiMapper
+import sqlbuilder.mapping.ToObjectMappingParameters
+import sqlbuilder.mapping.ToSQLMappingParameters
 import java.io.Reader
-import java.sql.PreparedStatement
-import java.sql.ResultSet
 import java.sql.Types
 
 /**
  * @author Laurent Van der Linden.
  */
-public class ReaderMapper : BiMapper {
+class ReaderMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Reader? {
         return params.resultSet.getCharacterStream(params.index)
     }

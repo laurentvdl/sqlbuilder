@@ -16,8 +16,8 @@ abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, private 
 
     @Throws(SQLException::class)
     override fun handle(set: ResultSet, row: Int): Boolean {
-        val parameterizedType = javaClass.getGenericSuperclass() as ParameterizedType
-        val aType = parameterizedType.getActualTypeArguments()?.get(0)
+        val parameterizedType = javaClass.genericSuperclass as ParameterizedType
+        val aType = parameterizedType.actualTypeArguments?.get(0)
         @Suppress("UNCHECKED_CAST")
         val keyValues = getKeyValues(set, getKeys(aType as Class<T>), prefix, true)
         if (lastKeyValues == null || !(lastKeyValues?.equals(keyValues) ?: false)) {

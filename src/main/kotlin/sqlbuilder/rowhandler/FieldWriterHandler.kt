@@ -12,7 +12,7 @@ import java.sql.SQLException
  *
  * @author Laurent Van der Linden
  */
-public class FieldWriterHandler(private val writer: Writer) : RowHandler {
+class FieldWriterHandler(private val writer: Writer) : RowHandler {
     @Throws(SQLException::class)
     override fun handle(set: ResultSet, row: Int): Boolean {
         try {

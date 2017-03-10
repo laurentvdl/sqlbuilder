@@ -3,6 +3,6 @@ package sqlbuilder
 /**
  * @author Laurent Van der Linden
  */
-public interface WhereGroupVisitor<T> {
+interface WhereGroupVisitor<in T> {
     fun forItem(subGroup: WhereGroup, item: T)
 }

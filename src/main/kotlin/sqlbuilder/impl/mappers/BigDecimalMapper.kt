@@ -1,15 +1,15 @@
 package sqlbuilder.impl.mappers
 
-import sqlbuilder.mapping.*
+import sqlbuilder.mapping.BiMapper
+import sqlbuilder.mapping.ToObjectMappingParameters
+import sqlbuilder.mapping.ToSQLMappingParameters
 import java.math.BigDecimal
-import java.sql.PreparedStatement
-import java.sql.ResultSet
 import java.sql.Types
 
 /**
  * @author Laurent Van der Linden.
  */
-public class BigDecimalMapper : BiMapper {
+class BigDecimalMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): BigDecimal? {
         val value = params.resultSet.getBigDecimal(params.index)
         if (params.resultSet.wasNull()) {

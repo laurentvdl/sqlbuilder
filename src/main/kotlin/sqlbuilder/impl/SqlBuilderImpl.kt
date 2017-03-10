@@ -139,7 +139,7 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
 
     override fun getCache(cacheId: String?): MutableMap<CacheableQuery, SoftReference<Any>> {
         if (cacheId != null) {
-            var specificCache = caches.get(cacheId)
+            var specificCache = caches[cacheId]
             if (specificCache == null) {
                 specificCache = ConcurrentHashMap<CacheableQuery, SoftReference<Any>>()
                 caches.put(cacheId, specificCache)

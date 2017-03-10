@@ -1,7 +1,7 @@
 package sqlbuilder
 
-import java.lang.ref.SoftReference
 import org.slf4j.LoggerFactory
+import java.lang.ref.SoftReference
 
 /**
  * Caching strategy that uses memory softlinks to hold results.
@@ -9,11 +9,11 @@ import org.slf4j.LoggerFactory
  *
  * @author Laurent Van der Linden
  */
-public class MemoryCache(private val backend: Backend, private val cacheId: String?) : CacheStrategy {
+class MemoryCache(private val backend: Backend, private val cacheId: String?) : CacheStrategy {
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
     override fun get(query: CacheableQuery): Any? {
-        val cachedResultReference = backend.getCache(cacheId).get(query)
+        val cachedResultReference = backend.getCache(cacheId)[query]
         if (cachedResultReference != null) {
             val cachedResult = cachedResultReference.get()
             if (cachedResult != null) {

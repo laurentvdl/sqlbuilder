@@ -109,26 +109,26 @@ class InsertImpl(val backend: Backend): Insert {
                     sqlConverter.setParameter(cachedStatement!!, values[property], index + 1, property.classType, null)
                 }
 
-                cachedStatement!!.executeUpdate();
+                cachedStatement!!.executeUpdate()
 
                 if (getkeys) {
                     try {
-                        var key: Long = 0;
-                        val keys = cachedStatement!!.generatedKeys
-                        if (keys != null) {
-                            if (keys.next()) {
-                                key = keys.getLong(1)
+                        var key: Long = 0
+                        val generatedKeys = cachedStatement!!.generatedKeys
+                        if (generatedKeys != null) {
+                            if (generatedKeys.next()) {
+                                key = generatedKeys.getLong(1)
                             }
-                            keys.close()
+                            generatedKeys.close()
                         }
-                        return key;
+                        return key
                     } catch (ignore: AbstractMethodError) {
                     } catch (ignore: SQLException) {}
                 }
             } finally {
                 if (!batch) {
-                    cachedStatement!!.close();
-                    cachedStatement = null;
+                    cachedStatement!!.close()
+                    cachedStatement = null
                 }
             }
             return 0

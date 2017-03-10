@@ -11,21 +11,24 @@ import sqlbuilder.meta.Table;
  */
 @Table(name = "public.users")
 public class User {
-    @Id
+    @Id @Column(name = "id")
     private Long id;
     private String username;
     private int birthYear;
     @Column(name = "sex")
     private char gender;
     private Set<File> files;
+    private Long parent_id;
+    private User parent;
 
     public User() {
     }
 
-    public User(String username, int birthYear, char gender) {
+    public User(String username, int birthYear, char gender, Long parent_id) {
         this.username = username;
         this.birthYear = birthYear;
         this.gender = gender;
+        this.parent_id = parent_id;
     }
 
     public Long getId() {
@@ -66,6 +69,22 @@ public class User {
 
     public void setFiles(Set<File> files) {
         this.files = files;
+    }
+
+    public Long getParent_id() {
+        return parent_id;
+    }
+
+    public void setParent_id(Long parent_id) {
+        this.parent_id = parent_id;
+    }
+
+    public User getParent() {
+        return parent;
+    }
+
+    public void setParent(User parent) {
+        this.parent = parent;
     }
 
     @Override

@@ -2,13 +2,13 @@ package sqlbuilder.rowhandler
 
 import sqlbuilder.PersistenceException
 import sqlbuilder.ResultSet
-import sqlbuilder.meta.PropertyReference
 import sqlbuilder.meta.MetaResolver
+import sqlbuilder.meta.PropertyReference
 
 /**
  * @author Laurent Van der Linden
  */
-public open class ReflectiveBeanListRowHandler<T : Any>(protected var beanClass: Class<T>) : BeanListRowHandler<T>(),
+open class ReflectiveBeanListRowHandler<T : Any>(protected var beanClass: Class<T>) : BeanListRowHandler<T>(),
         ReflectionHandler, PropertiesHandler {
     override var properties: List<PropertyReference>? = null
     override var metaResolver: MetaResolver? = null

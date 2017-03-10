@@ -1,13 +1,15 @@
 package sqlbuilder.impl.mappers
 
-import sqlbuilder.mapping.*
+import sqlbuilder.mapping.BiMapper
+import sqlbuilder.mapping.ToObjectMappingParameters
+import sqlbuilder.mapping.ToSQLMappingParameters
 import java.sql.Timestamp
 import java.sql.Types
 
 /**
  * @author Laurent Van der Linden.
  */
-public class TimestampMapper : BiMapper {
+class TimestampMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Timestamp? {
         val value = params.resultSet.getTimestamp(params.index)
         if (params.resultSet.wasNull()) {

@@ -1,14 +1,14 @@
 package sqlbuilder.impl.mappers
 
-import sqlbuilder.mapping.*
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import sqlbuilder.mapping.BiMapper
+import sqlbuilder.mapping.ToObjectMappingParameters
+import sqlbuilder.mapping.ToSQLMappingParameters
 import java.sql.Types
 
 /**
  * @author Laurent Van der Linden.
  */
-public class LongMapper : BiMapper {
+class LongMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Long? {
         val longValue = params.resultSet.getLong(params.index)
         if (params.resultSet.wasNull()) {

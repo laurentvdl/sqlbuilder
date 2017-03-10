@@ -5,11 +5,11 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-public interface SqlBuilder {
-    public fun select(): Select
-    public fun insert(): Insert
-    public fun delete(): Delete
-    public fun update(): Update
+interface SqlBuilder {
+    fun select(): Select
+    fun insert(): Insert
+    fun delete(): Delete
+    fun update(): Update
 
     /**
      * Insert or Update a bean by looking for an ID field.
@@ -18,25 +18,25 @@ public interface SqlBuilder {
      * @param <T> type of the bean
      * @return the same bean with the id set
      */
-    public fun <T : Any> save(bean: T, vararg excludedFields: String): T
+    fun <T : Any> save(bean: T, vararg excludedFields: String): T
     /**
      * Start a transaction with default isolation.
      */
-    public fun startTransaction()
+    fun startTransaction()
     /**
      * Start a transaction using an isolationlevel other than TRANSACTION_READ_COMMITTED
      * @param isolationLevel Connection.TRANSACTION_...
      */
-    public fun startTransaction(isolationLevel: Int, readonly: Boolean)
-    public fun commitTransaction()
+    fun startTransaction(isolationLevel: Int, readonly: Boolean)
+    fun commitTransaction()
     /**
      * This must be called in the a finally clause whenever you have started a transaction.
      * <br/>If commitTransaction has already been called, it will only cleanup resources,
      * else it will rollback the transaction.
      */
-    public fun endTransaction()
-    public fun purgeCache(cacheId: String)
-    public fun purgeAllCaches()
+    fun endTransaction()
+    fun purgeCache(cacheId: String)
+    fun purgeAllCaches()
 
-    public var configuration: Configuration
+    var configuration: Configuration
 }

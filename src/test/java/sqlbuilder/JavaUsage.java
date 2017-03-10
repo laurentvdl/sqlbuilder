@@ -34,7 +34,7 @@ import sqlbuilder.rowhandler.JoiningRowHandler;
  * @author Laurent Van der Linden
  */
 public class JavaUsage {
-    protected final SqlBuilder sqlBuilder = new SqlBuilderImpl(
+    private final SqlBuilder sqlBuilder = new SqlBuilderImpl(
         new DataSourceImpl(new DefaultConfig(null, null, "jdbc:h2:mem:test", Drivers.H2))
     );
 
@@ -44,12 +44,12 @@ public class JavaUsage {
 
         assertEquals(
             "generated key should be 1", 1L,
-            sqlBuilder.insert().getKeys(true).insertBean(new User("javauser a", 2014, 'M'))
+            sqlBuilder.insert().getKeys(true).insertBean(new User("javauser a", 2014, 'M', null))
         );
 
         assertEquals(
             "generated key should be 2", 2L,
-            sqlBuilder.insert().getKeys(true).into("users").insertBean(new User("javauser b", 2014, 'F'))
+            sqlBuilder.insert().getKeys(true).into("users").insertBean(new User("javauser b", 2014, 'F', 1L))
         );
 
         final Long fileId = sqlBuilder.insert().getKeys(true).insertBean(new File(1L, "profile"));
@@ -106,8 +106,9 @@ public class JavaUsage {
                         "left join attributes on files.id = attributes.fileid")
                 .select(new JoiningRowHandler<User>() {
                     @Override
-                    public boolean handle(@NotNull ResultSet set, int row) throws SQLException {
+                    public boolean handle(@NotNull ResultSet set, int row) {
                         final User user = mapPrimaryBean(set, User.class, "users");
+                        join(set, user, "parent", User.class, "parents");
                         final File file = join(set, user, "files", File.class, "files");
                         join(set, file, "attributes", Attribute.class, "attributes");
                         return true;
@@ -115,19 +116,27 @@ public class JavaUsage {
                 }.entities(User.class, File.class, Attribute.class));
 
         validateJoinedResult(allUsersAndFiles);
+        for (User userAndFiles : allUsersAndFiles) {
+            assertNull("mutli context tables are not supported without prefixed columns", userAndFiles.getParent());
+        }
 
         // some databases like Oracle don't fully support JDBC resultset metadata, so we need to be more explicit
         // for every bean in the query, specify a macro to include all properties for that bean
         // or if cherry picking, define a sql alias like "users.firstname as users_firstname"
+
+        // also, if you need the same table in multiple contexts (ie. parent-child), use macros or prefixed column aliases,
+        // as JDBC metadata does not expose table aliases
         final List<User> allUsersAndFiles2 = sqlBuilder.select()
-            .sql("select {User.* as someuser},{File.*},{Attribute.*} from users someuser " +
+            .sql("select {User.* as someuser},{User.* as parents},{File.*},{Attribute.*} from users someuser " +
+                    "left join users parents on someuser.parent_id = parents.id " +
                     "left join files on someuser.id = files.userid " +
                     "left join attributes on files.id = attributes.fileid")
             .select(new JoiningRowHandler<User>() {
                 @Override
-                public boolean handle(@NotNull ResultSet set, int row) throws SQLException {
+                public boolean handle(@NotNull ResultSet set, int row) {
                     // use custom prefix
                     final User user = mapPrimaryBean(set, User.class, "someuser");
+                    join(set, user, "parent", User.class, "parents");
                     // specify default prefix: table name
                     final File file = join(set, user, "files", File.class, "files");
                     // leave prefix null, will be inferred as table name
@@ -137,6 +146,7 @@ public class JavaUsage {
             }.entities(User.class, File.class, Attribute.class));
 
         validateJoinedResult(allUsersAndFiles2);
+        assertEquals("parent should be set for user b", allUsersAndFiles2.get(1).getParent(), allUsersAndFiles.get(0));
     }
 
     private void validateJoinedResult(List<User> allUsersAndFiles) {
@@ -161,7 +171,7 @@ public class JavaUsage {
             .sql("select * from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
             .select(new JoiningPagedRowHandler<User>(1, 1, "users") {
                 @Override
-                public void handleInPage(@NotNull ResultSet set, int i) throws SQLException {
+                public void handleInPage(@NotNull ResultSet set, int i) {
                     final User user = mapPrimaryBean(set, User.class, "users");
                     final File file = join(set, user, "files", File.class, "files");
                     join(set, file, "attributes", Attribute.class, "attributes");

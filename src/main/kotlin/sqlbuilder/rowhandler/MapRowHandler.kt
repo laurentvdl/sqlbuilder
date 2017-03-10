@@ -7,7 +7,7 @@ import sqlbuilder.RowMap
 import java.sql.SQLException
 import java.util.ArrayList
 
-public class MapRowHandler() : ReturningRowHandler<List<RowMap>> {
+class MapRowHandler : ReturningRowHandler<List<RowMap>> {
     private var columnCount: Int = 0
     private var columnNames: List<String?>? = null
 
@@ -36,7 +36,7 @@ public class MapRowHandler() : ReturningRowHandler<List<RowMap>> {
     }
 
     @Throws(SQLException::class)
-    protected fun handleColumn(set: ResultSet, rowMap: RowMap, columnName: String?, column: Int) {
+    private fun handleColumn(set: ResultSet, rowMap: RowMap, columnName: String?, column: Int) {
         if (columnName == null) {
             throw NullPointerException("no column name found for index $column")
         }
@@ -45,7 +45,7 @@ public class MapRowHandler() : ReturningRowHandler<List<RowMap>> {
         rowMap.put(columnName.trim(), value)
     }
 
-    protected fun handleMap(rowMap: RowMap) {
+    private fun handleMap(rowMap: RowMap) {
         list.add(rowMap)
     }
 }
