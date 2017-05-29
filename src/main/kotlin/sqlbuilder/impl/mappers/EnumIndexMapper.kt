@@ -1,12 +1,11 @@
 package sqlbuilder.impl.mappers
 
-import sqlbuilder.mapping.*
+import sqlbuilder.mapping.BiMapper
+import sqlbuilder.mapping.ToObjectMappingParameters
+import sqlbuilder.mapping.ToSQLMappingParameters
 import java.sql.Types
 
-/**
- * @author Laurent Van der Linden.
- */
-class EnumMapper : BiMapper {
+class EnumIndexMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Any? {
         val index = params.resultSet.getInt(params.index)
         if (params.resultSet.wasNull()) {

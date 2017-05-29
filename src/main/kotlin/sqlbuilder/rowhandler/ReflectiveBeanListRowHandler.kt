@@ -14,16 +14,16 @@ open class ReflectiveBeanListRowHandler<T : Any>(protected var beanClass: Class<
     override var metaResolver: MetaResolver? = null
 
     override fun mapSetToListItem(set: ResultSet): T {
-        try {
-            val bean = beanClass.newInstance()
+        val bean = beanClass.newInstance()
 
-            properties?.withIndex()?.forEach { pair ->
+        properties?.withIndex()?.forEach { pair ->
+            try {
                 pair.value.set(bean, set.getObject(pair.value.classType, pair.index + 1))
+            } catch(e: Exception) {
+                throw PersistenceException("failed to retreive value from resultset for property ${pair.value}", e)
             }
-
-            return bean
-        } catch (e: Throwable) {
-            throw PersistenceException(e.message, e)
         }
+
+        return bean
     }
 }

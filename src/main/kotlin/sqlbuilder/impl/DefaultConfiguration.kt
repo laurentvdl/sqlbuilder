@@ -7,7 +7,7 @@ import sqlbuilder.impl.mappers.ByteArrayMapper
 import sqlbuilder.impl.mappers.CharMapper
 import sqlbuilder.impl.mappers.DateMapper
 import sqlbuilder.impl.mappers.DoubleMapper
-import sqlbuilder.impl.mappers.EnumMapper
+import sqlbuilder.impl.mappers.EnumNameMapper
 import sqlbuilder.impl.mappers.FloatMapper
 import sqlbuilder.impl.mappers.InputStreamMapper
 import sqlbuilder.impl.mappers.IntegerMapper
@@ -44,7 +44,7 @@ open class DefaultConfiguration() : Configuration {
                 ReaderMapper(),
                 DateMapper(),
                 TimestampMapper(),
-                EnumMapper(),
+                EnumNameMapper(),
                 BooleanMapper()
         )
 

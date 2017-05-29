@@ -109,7 +109,7 @@ class SelectImpl(val backend: Backend) : Select {
     }
 
     override fun fetchSize(fetchSize: Int): Select {
-        this.fetchSize = fetchSize
+        this.fetchSize = if (fetchSize > 0) fetchSize else 0
         return this
     }
 

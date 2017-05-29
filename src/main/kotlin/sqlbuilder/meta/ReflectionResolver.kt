@@ -100,7 +100,7 @@ open class ReflectionResolver(val configuration: Configuration) : MetaResolver {
             for (field in fields) {
                 val modifiers = field.modifiers
                 val name = field.name!!
-                if (!names.contains(name) && Modifier.isPublic(modifiers) && !Modifier.isFinal(modifiers) && !Modifier.isAbstract(modifiers) && !Modifier.isStatic(modifiers) && isSqlType(field.type!!) && !Modifier.isTransient(modifiers)) {
+                if (!names.contains(name) && !Modifier.isAbstract(modifiers) && !Modifier.isStatic(modifiers) && isSqlType(field.type!!) && !Modifier.isTransient(modifiers)) {
                     result.add(JavaFieldPropertyReference(field))
                 }
             }
