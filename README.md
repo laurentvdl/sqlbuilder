@@ -56,7 +56,7 @@ dependencies {
 </dependency>
 ```
 
-##Features:
+## Features:
 
 - non intrusive mapping, no annotations or configuration required to map a query result to
   - a list of POJOs
@@ -65,7 +65,7 @@ dependencies {
 - supports mapping of joined tables with cursor based pagination (not in memory like Hibernate)
 - all mappings are based on `RowHandler` interface
 
-##It does not:
+## It does not:
 
 - generate SQL but for the simplest of cases (selectBeans)
 - try to enable type-safety on top of SQL
