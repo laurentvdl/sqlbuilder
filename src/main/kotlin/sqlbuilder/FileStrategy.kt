@@ -34,8 +34,7 @@ class FileStrategy(private var file: File) : CacheStrategy {
 
     override fun put(query: CacheableQuery, result: Any) {
         try {
-            val oos = ObjectOutputStream(FileOutputStream(file))
-            oos.use { oos ->
+            ObjectOutputStream(FileOutputStream(file)).use { oos ->
                 oos.writeObject(result)
             }
         } catch (e: Exception) {

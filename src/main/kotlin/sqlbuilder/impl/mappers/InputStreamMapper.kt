@@ -1,6 +1,8 @@
 package sqlbuilder.impl.mappers
 
-import sqlbuilder.mapping.*
+import sqlbuilder.mapping.BiMapper
+import sqlbuilder.mapping.ToObjectMappingParameters
+import sqlbuilder.mapping.ToSQLMappingParameters
 import java.io.InputStream
 import java.sql.Types
 
@@ -23,6 +25,6 @@ class InputStreamMapper : BiMapper {
     }
 
     override fun handles(targetType: Class<*>): Boolean {
-        return InputStream::class.java == targetType
+        return InputStream::class.java.isAssignableFrom(targetType)
     }
 }
