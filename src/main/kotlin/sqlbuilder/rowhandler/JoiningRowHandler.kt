@@ -119,7 +119,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         }
     }
 
-    private fun indexFQColumnName(column: String, table: String) = table.toLowerCase().replace('.', '_') + ":" + column.toLowerCase()
+    private fun indexFQColumnName(column: String, table: String) = table.toLowerCase().replace('.', '_') + "_" + column.toLowerCase()
 
     /**
      * Map primary bean and add to resultlist in unique fashion
