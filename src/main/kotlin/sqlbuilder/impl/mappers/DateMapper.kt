@@ -32,6 +32,6 @@ class DateMapper : BiMapper {
     }
 
     override fun handles(targetType: Class<*>): Boolean {
-        return Date::class.java == targetType
+        return Date::class.java.isAssignableFrom(targetType)
     }
 }
