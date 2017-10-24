@@ -293,7 +293,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
     override fun expand(sql: String?): String? {
         if (sql != null) {
-            return """\{(\w+)\.\*(\s+as\s+(\w+))?\}""".toRegex().replace(sql) { match ->
+            return """\{(\w+)\.\*(\s+as\s+(\w+))?\}""".toRegex(setOf(RegexOption.IGNORE_CASE)).replace(sql) { match ->
                 val typeName = match.groupValues[1]
                 val expansionAlias = match.groupValues[3]
                 val type = expansionTypes[typeName]
