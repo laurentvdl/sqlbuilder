@@ -12,10 +12,10 @@ import java.sql.Types
 class BigDecimalMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): BigDecimal? {
         val value = params.resultSet.getBigDecimal(params.index)
-        if (params.resultSet.wasNull()) {
-            return null
+        return if (params.resultSet.wasNull()) {
+            null
         } else {
-            return value
+            value
         }
     }
 

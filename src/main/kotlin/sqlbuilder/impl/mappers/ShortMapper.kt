@@ -11,10 +11,10 @@ import java.sql.Types
 class ShortMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Short? {
         val value = params.resultSet.getShort(params.index)
-        if (params.resultSet.wasNull()) {
-            return null
+        return if (params.resultSet.wasNull()) {
+            null
         } else {
-            return value
+            value
         }
     }
 

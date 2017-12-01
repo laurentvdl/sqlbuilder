@@ -35,7 +35,7 @@ class DeleteImpl(private val backend: Backend): Delete {
         val sql = StringBuilder("delete from ").append(entity).append(" where ")
 
         try {
-            keys.map({"${it.columnName} = ?"}).joinTo(sql, " and ")
+            keys.joinTo(sql, " and ", transform = {"${it.columnName} = ?"})
 
             val con = backend.getSqlConnection()
 

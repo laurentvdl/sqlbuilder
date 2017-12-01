@@ -11,10 +11,10 @@ import java.sql.Types
 class BooleanMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Boolean? {
         val value = params.resultSet.getBoolean(params.index)
-        if (params.resultSet.wasNull()) {
-            return null
+        return if (params.resultSet.wasNull()) {
+            null
         } else {
-            return value
+            value
         }
     }
 

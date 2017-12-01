@@ -9,7 +9,7 @@ import javax.sql.DataSource
  * Adapter to use SqlBuilder with an externally provided sql Connection.
  * Will not close the target connection.
  */
-class SingleConnectionDataSource(val target: Connection) : DataSource {
+class SingleConnectionDataSource(private val target: Connection) : DataSource {
     override fun getConnection(): Connection? {
         return NonClosingConnection(target)
     }

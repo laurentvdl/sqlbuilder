@@ -11,10 +11,10 @@ import java.sql.Types
 class FloatMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Float? {
         val value = params.resultSet.getFloat(params.index)
-        if (params.resultSet.wasNull()) {
-            return null
+        return if (params.resultSet.wasNull()) {
+            null
         } else {
-            return value
+            value
         }
     }
 

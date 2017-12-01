@@ -11,10 +11,10 @@ import java.sql.Types
 class IntegerMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Int? {
         val value = params.resultSet.getInt(params.index)
-        if (params.resultSet.wasNull()) {
-            return null
+        return if (params.resultSet.wasNull()) {
+            null
         } else {
-            return value
+            value
         }
     }
 

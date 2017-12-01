@@ -25,7 +25,7 @@ import java.util.ArrayList
 /**
  * @author Laurent Van der Linden.
  */
-open class DefaultConfiguration() : Configuration {
+open class DefaultConfiguration : Configuration {
     private val toObjectMappers: MutableList<ToObjectMapper> = ArrayList()
     private val toSQLMappers: MutableList<ToSQLMapper> = ArrayList()
 
@@ -75,8 +75,7 @@ open class DefaultConfiguration() : Configuration {
     }
 
     override fun objectMapperForType(targetType: Class<*>): ToObjectMapper? {
-        val lastOrNull = toObjectMappers.lastOrNull { it.handles(targetType) }
-        return lastOrNull
+        return toObjectMappers.lastOrNull { it.handles(targetType) }
     }
 
     override fun sqlMapperForType(targetType: Class<*>): ToSQLMapper? {

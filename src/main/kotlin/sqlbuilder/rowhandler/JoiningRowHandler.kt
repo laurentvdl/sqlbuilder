@@ -91,12 +91,12 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
     }
 
     protected fun getColumnIndex(tableAlias: String?, property: PropertyReference): Int? {
-        if (tableAlias == null) {
-            return columnToIndex[property.columnName] ?: throw PersistenceException("no column was found for property $property using column name ${property.columnName}")
+        return if (tableAlias == null) {
+            columnToIndex[property.columnName] ?: throw PersistenceException("no column was found for property $property using column name ${property.columnName}")
         } else {
             val columnName = tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(tableAlias.toLowerCase(), property.columnName)]
                     ?: indexFQColumnName(property.columnName, tableAlias)
-            return columnToIndex[columnName]
+            columnToIndex[columnName]
         }
     }
 
@@ -109,7 +109,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
                 val tableName = metaData.getTableName(x)
                 val columnLabel = metaData.getColumnLabel(x)
                 columnToIndex.put(columnLabel.toLowerCase(), x)
-                if (tableName?.isNotEmpty() ?: false) {
+                if (tableName?.isNotEmpty() == true) {
                     val key = indexFQColumnName(columnLabel, tableName)
                     if (columnToIndex.containsKey(key)) {
                         throw IncorrectJoinMapping(set.query, x, columnToIndex[key]!!, tableName, columnLabel)
@@ -155,7 +155,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
     }
 
     protected fun getKeyValues(set: ResultSet, keys: List<PropertyReference>, prefix: String, allowNull: Boolean): List<Any?> {
-        return keys.mapTo(LinkedList<Any?>()) { key ->
+        return keys.mapTo(LinkedList()) { key ->
             val value = getColumnFromTable(set, prefix, key, Any::class.java)
             if (value == null && !allowNull) {
                 throw PersistenceException("no value was found for key $key in this resultset using column alias" +
@@ -193,7 +193,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             val relationSet = run {
                 var embeddedSet = property.getter.call(owner)
                 if (embeddedSet == null) {
-                    embeddedSet = HashSet<W>()
+                    embeddedSet = HashSet()
                     property.setter.call(owner, embeddedSet)
                 }
                 embeddedSet
@@ -272,7 +272,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
                     @Suppress("UNCHECKED_CAST")
                     var relationList = relationField.get(owner) as MutableList<W>?
                     if (relationList == null) {
-                        relationList = ArrayList<W>()
+                        relationList = ArrayList()
                         relationField.set(owner, relationList)
                     }
                     if (!relationList.contains(instance)) relationList.add(instance!!)
@@ -297,7 +297,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
     override fun expand(sql: String?): String? {
         if (sql != null) {
-            return """\{(\w+)\.\*(\s+as\s+(\w+))?\}""".toRegex(setOf(RegexOption.IGNORE_CASE)).replace(sql) { match ->
+            return """\{(\w+)\.\*(\s+as\s+(\w+))?}""".toRegex(setOf(RegexOption.IGNORE_CASE)).replace(sql) { match ->
                 val typeName = match.groupValues[1]
                 val expansionAlias = match.groupValues[3]
                 val type = expansionTypes[typeName]
@@ -307,11 +307,11 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
                     val alias = if (expansionAlias.isEmpty()) table.replace('.', '_') else expansionAlias
                     val columnPrefix = if (expansionAlias.isEmpty()) table else expansionAlias
                     val properties = metaResolver!!.getProperties(type, true)
-                    properties.map({ prop ->
+                    properties.joinToString(",", transform = { prop ->
                         val columnAlias = "${alias}_${columnIndex++}"
                         tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(alias.toLowerCase(), prop.columnName)] = columnAlias
                         "$columnPrefix.${prop.columnName} as $columnAlias"
-                    }).joinToString(",")
+                    })
                 } else {
                     throw PersistenceException("type $typeName is not registered via JoiningRowHandler.entities(Class type) call")
                 }

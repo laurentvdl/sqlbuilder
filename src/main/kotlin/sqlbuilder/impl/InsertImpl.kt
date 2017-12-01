@@ -10,7 +10,7 @@ import sqlbuilder.include
 import java.sql.PreparedStatement
 import java.sql.SQLException
 
-class InsertImpl(val backend: Backend): Insert {
+class InsertImpl(private val backend: Backend): Insert {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     private val metaResolver = backend.metaResolver
@@ -82,9 +82,9 @@ class InsertImpl(val backend: Backend): Insert {
         try {
             if (!batch || cachedStatement == null || !backend.isInTransaction()) {
                 val sql = StringBuilder("insert into ").append(entity).append("(")
-                properties.map { it.columnName }.joinTo(sql, ",")
+                properties.joinTo(sql, ",") { it.columnName }
                 sql.append(") values(")
-                for (i in 0..properties.size - 1) {
+                for (i in 0 until properties.size) {
                     if (i > 0) sql.append(",")
                     sql.append("?")
                 }

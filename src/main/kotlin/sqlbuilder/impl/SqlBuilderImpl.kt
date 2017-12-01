@@ -146,7 +146,7 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
         if (cacheId != null) {
             var specificCache = caches[cacheId]
             if (specificCache == null) {
-                specificCache = ConcurrentHashMap<CacheableQuery, SoftReference<Any>>()
+                specificCache = ConcurrentHashMap()
                 caches.put(cacheId, specificCache)
             }
             return specificCache
@@ -189,7 +189,7 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
                 }
             }
             columns
-        }.filterNotNull()
+        }
 
         val missingProperties = nonNullColumns.filter { nonNull ->
             getters.firstOrNull { it.columnName.equals(nonNull, ignoreCase = true) } == null

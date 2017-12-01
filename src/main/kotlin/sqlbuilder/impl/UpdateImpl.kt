@@ -71,11 +71,11 @@ class UpdateImpl(private val backend: Backend): Update {
             val valueProperties = getters.filter { !keys.contains(it.columnName) }
             val keyProperties = getters.filter { keys.contains(it.columnName) }
 
-            valueProperties.map { "${it.columnName} = ?" }.joinTo(sql, ",")
+            valueProperties.joinTo(sql, ",") { "${it.columnName} = ?" }
 
             sql.append(" where ")
 
-            keyProperties.map { "${it.columnName} = ?" }.joinTo(sql, " and ")
+            keyProperties.joinTo(sql, " and ") { "${it.columnName} = ?" }
 
             val sqlString = sql.toString()
             logger.info(sqlString)

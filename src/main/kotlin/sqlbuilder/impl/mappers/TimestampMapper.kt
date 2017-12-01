@@ -12,10 +12,10 @@ import java.sql.Types
 class TimestampMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Timestamp? {
         val value = params.resultSet.getTimestamp(params.index)
-        if (params.resultSet.wasNull()) {
-            return null
+        return if (params.resultSet.wasNull()) {
+            null
         } else {
-            return value
+            value
         }
     }
 

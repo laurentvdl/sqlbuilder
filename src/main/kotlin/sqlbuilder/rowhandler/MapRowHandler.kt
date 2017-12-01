@@ -24,7 +24,7 @@ class MapRowHandler : ReturningRowHandler<List<RowMap>> {
                 columnNames = (1..columnCount).map { meta.getColumnName(it) }
             }
             val rowMap = RowMap()
-            for (i in 0..columnCount - 1) {
+            for (i in 0 until columnCount) {
                 handleColumn(set, rowMap, columnNames!![i], i)
             }
             handleMap(rowMap)

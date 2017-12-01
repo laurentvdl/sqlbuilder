@@ -12,10 +12,10 @@ import java.util.Date
 class DateMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Date? {
         val value = params.resultSet.getDate(params.index)
-        if (params.resultSet.wasNull()) {
-            return null
+        return if (params.resultSet.wasNull()) {
+            null
         } else {
-            return value
+            value
         }
     }
 

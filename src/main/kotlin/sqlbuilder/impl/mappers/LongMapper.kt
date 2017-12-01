@@ -11,10 +11,10 @@ import java.sql.Types
 class LongMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Long? {
         val longValue = params.resultSet.getLong(params.index)
-        if (params.resultSet.wasNull()) {
-            return null
+        return if (params.resultSet.wasNull()) {
+            null
         } else {
-            return longValue
+            longValue
         }
     }
 

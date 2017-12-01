@@ -37,7 +37,7 @@ import java.io.Writer
 import java.sql.ResultSet
 import java.util.ArrayList
 
-class SelectImpl(val backend: Backend) : Select {
+class SelectImpl(private val backend: Backend) : Select {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     private var entity: String? = null
@@ -199,10 +199,10 @@ class SelectImpl(val backend: Backend) : Select {
     }
 
     private fun <T : Any> getRowHandler(beanClass: Class<T>): RowHandler {
-        if (sql == null && selectOption == null) {
-            return ReflectiveBeanListRowHandler(beanClass)
+        return if (sql == null && selectOption == null) {
+            ReflectiveBeanListRowHandler(beanClass)
         } else {
-            return DynamicBeanRowHandler(beanClass)
+            DynamicBeanRowHandler(beanClass)
         }
     }
 
@@ -271,7 +271,7 @@ class SelectImpl(val backend: Backend) : Select {
         return from(execute(null, rowHandler))
     }
 
-    fun execute(fields: List<String>?, rowHandler: RowHandler): RowHandler {
+    private fun execute(fields: List<String>?, rowHandler: RowHandler): RowHandler {
         val (sql,whereParameters) = prepareSql(this.sql, fields, rowHandler)
 
         cacheStrategy?.let { currentStrategy ->
@@ -353,17 +353,16 @@ class SelectImpl(val backend: Backend) : Select {
             }
             if (entity != null) sqlBuffer.append("from ").append(entity)
         } else {
-            if (rowHandler is ExpandingRowHandler) {
-                sqlBuffer = StringBuilder(rowHandler.expand(sql))
+            sqlBuffer = if (rowHandler is ExpandingRowHandler) {
+                StringBuilder(rowHandler.expand(sql))
             } else {
-                sqlBuffer = StringBuilder(sql ?: "")
+                StringBuilder(sql ?: "")
             }
         }
-        val whereParameters: MutableList<Any?>
-        if (this.parameters == null) {
-            whereParameters = ArrayList()
+        val whereParameters: MutableList<Any?> = if (this.parameters == null) {
+            ArrayList()
         } else {
-            whereParameters = parameters!!.toMutableList()
+            parameters!!.toMutableList()
         }
         if (whereGroup.isNotEmpty) {
             sqlBuffer.append(" where ")

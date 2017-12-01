@@ -6,7 +6,7 @@ import sqlbuilder.ReturningRowHandler
 /**
  * @author Laurent Van der Linden.
  */
-class CachedRowHandler<T>(private val cachedResult: T) : ReturningRowHandler<T> {
+class CachedRowHandler<out T>(private val cachedResult: T) : ReturningRowHandler<T> {
     override val result: T
         get() = cachedResult
 

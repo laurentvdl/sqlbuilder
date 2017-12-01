@@ -10,7 +10,6 @@ inline fun <R> SqlBuilder.withTransaction(
         block: (sqlBuilder: SqlBuilder) -> R): R {
     this.startTransaction(transactionIsolation, readonly)
     try {
-        this.apply {  }
         val result = block(this)
         this.commitTransaction()
         return result

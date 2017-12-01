@@ -11,10 +11,10 @@ import java.sql.Types
 class DoubleMapper : BiMapper {
     override fun toObject(params: ToObjectMappingParameters): Double? {
         val value = params.resultSet.getDouble(params.index)
-        if (params.resultSet.wasNull()) {
-            return null
+        return if (params.resultSet.wasNull()) {
+            null
         } else {
-            return value
+            value
         }
     }
 
