@@ -29,8 +29,8 @@ class UpdateImpl(private val backend: Backend): Update {
     private var entity: String? = null
     private var checkNullability = false
     private var getkeys = false
-    private var includeFields: Array<out String>? = null
-    private var excludeFields: Array<out String>? = null
+    private var includeFields: Set<String>? = null
+    private var excludeFields: Set<String>? = null
 
     private var _generatedKey: Long = 0
 
@@ -50,6 +50,8 @@ class UpdateImpl(private val backend: Backend): Update {
     }
 
     override fun updateBean(bean: Any, keys: Array<out String>) {
+        val keySet = keys.toSet()
+
         if (entity == null) entity = metaResolver.getTableName(bean.javaClass)
         entity = backend.configuration.escapeEntity(entity)
 
@@ -61,7 +63,7 @@ class UpdateImpl(private val backend: Backend): Update {
         try {
             val getters = metaResolver.getProperties(bean.javaClass, false)
                     .exclude(excludeFields)
-                    .include(includeFields)
+                    .include(includeFields?.union(keySet))
 
             val sql = StringBuilder("update ").append(entity).append(" set ")
 
@@ -181,12 +183,12 @@ class UpdateImpl(private val backend: Backend): Update {
     }
 
     override fun excludeFields(vararg excludes: String): Update {
-        this.excludeFields = excludes
+        this.excludeFields = excludes.toSet()
         return this
     }
 
     override fun includeFields(vararg includes: String): Update {
-        this.includeFields = includes
+        this.includeFields = includes.toSet()
         return this
     }
 

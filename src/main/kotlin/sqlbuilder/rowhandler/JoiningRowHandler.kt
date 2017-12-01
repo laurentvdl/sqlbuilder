@@ -13,6 +13,7 @@ import java.util.HashMap
 import java.util.HashSet
 import java.util.LinkedList
 import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KProperty
 
 abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, ReflectionHandler, ExpandingRowHandler {
     private val beans = HashMap<MappingKey, Any>()
@@ -109,7 +110,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
                 val columnLabel = metaData.getColumnLabel(x)
                 columnToIndex.put(columnLabel.toLowerCase(), x)
                 if (tableName?.isNotEmpty() ?: false) {
-                    val key = indexFQColumnName(columnLabel, tableName!!)
+                    val key = indexFQColumnName(columnLabel, tableName)
                     if (columnToIndex.containsKey(key)) {
                         throw IncorrectJoinMapping(set.query, x, columnToIndex[key]!!, tableName, columnLabel)
                     }
@@ -130,7 +131,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
      * @return newly mapped object or cached value if the primary result is not unique
      * @throws SQLException
      */
-    protected fun mapPrimaryBean(set: ResultSet, primaryType: Class<T>, prefix: String): T {
+    fun mapPrimaryBean(set: ResultSet, primaryType: Class<T>, prefix: String): T {
         val keyValues = getKeyValues(set, getKeys(primaryType), prefix, false)
         var instance = getById(primaryType, prefix, keyValues)
         if (instance == null) {
@@ -144,7 +145,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
     protected fun getKeys(type: Class<*>): List<PropertyReference> {
         return keyCache.getOrPut(type) {
-            val keys = metaResolver!!.getKeys(type)
+            val keys = metaResolver?.getKeys(type) ?: throw IllegalStateException("MetaResolver is not set")
             if (keys.isEmpty()) {
                 throw IllegalArgumentException("No primary key is defined for type <$type>, annotate a key using @sqlbuilder.meta.Id")
             }
@@ -211,7 +212,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             val relationList = run {
                 var embeddedSet = property.getter.call(owner)
                 if (embeddedSet == null) {
-                    embeddedSet = ArrayList<W>()
+                    embeddedSet = ArrayList()
                     property.setter.call(owner, embeddedSet)
                 }
                 embeddedSet
@@ -222,6 +223,9 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
         return instance
     }
+
+    inline fun <reified P : Any> join(set: ResultSet, owner: Any?, property: KProperty<Collection<P>?>, prefix: String?) =
+            join(set, owner, property.name, P::class.java, prefix)
 
     /**
      * Automated joiner, using reflection to detect joined tables, relation cardinality and List initialization.
@@ -235,7 +239,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
      * @return the joined object that was attached to the owner
      * @throws SQLException
      */
-    protected fun <W : Any> join(set: ResultSet, owner: Any?, property: String,
+    fun <W : Any> join(set: ResultSet, owner: Any?, property: String,
                                  targetType: Class<W>, prefix: String?): W? {
         if (owner != null) {
             val keyValues = getKeyValues(set, getKeys(targetType), prefix ?: metaResolver!!.getTableName(targetType), true)

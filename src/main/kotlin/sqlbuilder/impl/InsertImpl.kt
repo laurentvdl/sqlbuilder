@@ -20,8 +20,8 @@ class InsertImpl(val backend: Backend): Insert {
     private var batch = false
     private var getkeys = true
     private var checkNullability = false
-    private var includeFields: Array<out String>? = null
-    private var excludeFields: Array<out String>? = null
+    private var includeFields: Set<String>? = null
+    private var excludeFields: Set<String>? = null
 
     override fun into(entity: String): Insert {
         this.entity = entity
@@ -71,7 +71,7 @@ class InsertImpl(val backend: Backend): Insert {
 
         val keys = metaResolver.getKeys(bean.javaClass)
 
-        val values = allProperties.filterNotNull().map { getter ->
+        val values = allProperties.map { getter ->
             Pair(getter, getter.get(bean))
         }.filter({ it.second != null }).toMap()
 
@@ -140,12 +140,12 @@ class InsertImpl(val backend: Backend): Insert {
     }
 
     override fun excludeFields(vararg excludes: String): Insert {
-        this.excludeFields = excludes
+        this.excludeFields = excludes.toSet()
         return this
     }
 
     override fun includeFields(vararg includes: String): Insert {
-        this.includeFields = includes
+        this.includeFields = includes.toSet()
         return this
     }
 }

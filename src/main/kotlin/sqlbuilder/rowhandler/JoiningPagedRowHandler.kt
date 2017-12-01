@@ -9,7 +9,7 @@ import java.sql.SQLException
  *
  * @author Laurent Van der Linden
  */
-abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, private val rows: Int, private val prefix: String) : JoiningRowHandler<T>() {
+abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, private val rows: Int, private val primaryTableAlias: String) : JoiningRowHandler<T>() {
     private var primaryCount = 0
     private var skip: Boolean = false
     private var lastKeyValues: List<Any?>? = null
@@ -19,10 +19,14 @@ abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, private 
         val parameterizedType = javaClass.genericSuperclass as ParameterizedType
         val aType = parameterizedType.actualTypeArguments?.get(0)
         @Suppress("UNCHECKED_CAST")
-        val keyValues = getKeyValues(set, getKeys(aType as Class<T>), prefix, true)
-        if (lastKeyValues == null || !(lastKeyValues?.equals(keyValues) ?: false)) {
-            primaryCount++
-            lastKeyValues = keyValues
+        val keyValues = getKeyValues(set, getKeys(aType as Class<T>), primaryTableAlias, true)
+        if (lastKeyValues == null || lastKeyValues?.equals(keyValues) != true) {
+            if (primaryCount == offset + rows) {
+                return false
+            } else {
+                primaryCount++
+                lastKeyValues = keyValues
+            }
         }
         skip = offset > primaryCount - 1
         if (!skip) handleInPage(set, row)
@@ -42,9 +46,9 @@ abstract class JoiningPagedRowHandler<T : Any>(private val offset: Int, private 
     /**
      * Handle primary or full resultset depending on skip.
      * @param set query resultset
-     * @param i resultSet index
+     * @param row resultSet index
      * @throws SQLException
      */
     @Throws(SQLException::class)
-    abstract fun handleInPage(set: ResultSet, i: Int)
+    abstract fun handleInPage(set: ResultSet, row: Int)
 }

@@ -51,8 +51,8 @@ class SelectImpl(val backend: Backend) : Select {
     private var cacheStrategy: CacheStrategy? = null
     private var sql: String? = null
     private var parameters: Array<out Any>? = null
-    private var includeFields: Array<out String>? = null
-    private var excludeFields: Array<out String>? = null
+    private var includeFields: Set<String>? = null
+    private var excludeFields: Set<String>? = null
 
     private var sqlMappings: MutableMap<Any, String>? = null
     private var propertyMappings: MutableMap<String, Any>? = null
@@ -134,12 +134,12 @@ class SelectImpl(val backend: Backend) : Select {
     }
 
     override fun excludeFields(vararg excludes: String): Select {
-        this.excludeFields = excludes
+        this.excludeFields = excludes.toSet()
         return this
     }
 
     override fun includeFields(vararg includes: String): Select {
-        this.includeFields = includes
+        this.includeFields = includes.toSet()
         return this
     }
 
@@ -206,6 +206,10 @@ class SelectImpl(val backend: Backend) : Select {
         }
     }
 
+    override fun <T : Any> selectField(requiredType: Class<T>): T? {
+        return selectField(null as String?, requiredType)
+    }
+
     override fun <T : Any> selectField(soleField: String?, requiredType: Class<T>): T? {
         var handler: RowHandler = SingleFieldRowHandler(requiredType)
         handler = execute(if (soleField == null) null else listOf(soleField), handler)
@@ -219,6 +223,8 @@ class SelectImpl(val backend: Backend) : Select {
         @Suppress("UNCHECKED_CAST")
         return handler.result as T? ?: defaultValue
     }
+
+    override fun <T : Any> selectAllField(requiredType: Class<T>): List<T> = selectAllField(null, requiredType)
 
     override fun <T : Any> selectAllField(soleField: String?, requiredType: Class<T>): List<T> {
         var handler: RowHandler = SingleFieldListRowHandler(requiredType)
@@ -268,14 +274,15 @@ class SelectImpl(val backend: Backend) : Select {
     fun execute(fields: List<String>?, rowHandler: RowHandler): RowHandler {
         val (sql,whereParameters) = prepareSql(this.sql, fields, rowHandler)
 
-        if (cacheStrategy != null) {
+        cacheStrategy?.let { currentStrategy ->
             if (rowHandler is ReturningRowHandler<*> || rowHandler is OptionalReturningRowHandler<*>) {
-                val cachedResult = cacheStrategy!!.get(CacheableQuery(sql, whereParameters, offset, rows))
+                val cachedResult = currentStrategy.get(CacheableQuery(sql, whereParameters, offset, rows))
                 if (cachedResult != null) {
                     return CachedRowHandler(cachedResult)
                 }
             }
         }
+
         val con = backend.getSqlConnection()
         try {
             logger.info("{} ({})", sql, whereParameters)
@@ -303,14 +310,12 @@ class SelectImpl(val backend: Backend) : Select {
                     }
                 }
 
-                if (cacheStrategy != null) {
+                rowHandler.result?.let { result ->
                     if (rowHandler is ReturningRowHandler<*>) {
-                        cacheStrategy!!.put(CacheableQuery(sql, whereParameters, offset, rows), rowHandler.result!!)
+                        cacheStrategy?.put(CacheableQuery(sql, whereParameters, offset, rows), result)
                     }
                     if (rowHandler is OptionalReturningRowHandler<*>) {
-                        if (rowHandler.result != null) {
-                            cacheStrategy!!.put(CacheableQuery(sql, whereParameters, offset, rows), rowHandler.result!!)
-                        }
+                        cacheStrategy?.put(CacheableQuery(sql, whereParameters, offset, rows), result)
                     }
                 }
             }
@@ -356,7 +361,7 @@ class SelectImpl(val backend: Backend) : Select {
         }
         val whereParameters: MutableList<Any?>
         if (this.parameters == null) {
-            whereParameters = ArrayList<Any?>()
+            whereParameters = ArrayList()
         } else {
             whereParameters = parameters!!.toMutableList()
         }
@@ -414,8 +419,8 @@ class SelectImpl(val backend: Backend) : Select {
 
     private fun mapColumn(sqlColumn: Any, propertyName: String): Select {
         if (this.sqlMappings == null) {
-            this.sqlMappings = java.util.HashMap<Any, String>()
-            this.propertyMappings = java.util.HashMap<String, Any>()
+            this.sqlMappings = java.util.HashMap()
+            this.propertyMappings = java.util.HashMap()
         }
         this.sqlMappings!!.put(sqlColumn, propertyName.toLowerCase())
         this.propertyMappings!!.put(propertyName.toLowerCase(), sqlColumn)

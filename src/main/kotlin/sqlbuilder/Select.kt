@@ -1,5 +1,6 @@
 package sqlbuilder
 
+import org.intellij.lang.annotations.Language
 import java.io.File
 import java.io.OutputStream
 import java.io.Writer
@@ -105,7 +106,13 @@ interface Select {
 
     /**
      * Select first/only occurrence of a single field and return null if no result.
-     * @return result or defaultValue
+     * @return result or null
+     */
+    fun <T : Any> selectField(requiredType: Class<T>): T?
+
+    /**
+     * Select first/only occurrence of a single field and return null if no result.
+     * @return result or null
      */
     fun <T : Any> selectField(soleField: String?, requiredType: Class<T>): T?
 
@@ -114,6 +121,13 @@ interface Select {
      * @return result or defaultValue
      */
     fun <T : Any> selectField(soleField: String?, requiredType: Class<T>, defaultValue: T): T
+
+    /**
+     * Select all occurrences of a single field.
+     * @param requiredType
+     * @return
+     */
+    fun <T : Any> selectAllField(requiredType: Class<T>): List<T>
 
     /**
      * Select all occurrences of a single field.
@@ -161,7 +175,7 @@ interface Select {
      */
     fun <T : Any> select(rowHandler: OptionalReturningRowHandler<T>): T?
 
-    fun sql(sql: String, vararg parameters: Any): Select
+    fun sql(@Language("SQL") sql: String, vararg parameters: Any): Select
 
     /**
      * Map a SQL expression to a Bean Property: eg. sum(amount) -> totalAmount.

@@ -1,5 +1,10 @@
 package sqlbuilder
 
+import sqlbuilder.impl.SqlBuilderImpl
+import sqlbuilder.pool.DataSourceImpl
+import sqlbuilder.pool.DefaultConfig
+import sqlbuilder.pool.Drivers
+
 object Setup {
     @JvmStatic fun createTables(sqlBuilder: SqlBuilder) {
         sqlBuilder.update().updateStatement("drop table users if exists")
@@ -34,4 +39,10 @@ object Setup {
         )
         """)
     }
+
+    val sqlBuilder = SqlBuilderImpl(DataSourceImpl(
+            DefaultConfig(
+                    null, null, "jdbc:h2:mem:test", Drivers.H2
+            )
+    ))
 }

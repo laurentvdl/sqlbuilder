@@ -171,7 +171,7 @@ public class JavaUsage {
             .sql("select * from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
             .select(new JoiningPagedRowHandler<User>(1, 1, "users") {
                 @Override
-                public void handleInPage(@NotNull ResultSet set, int i) {
+                public void handleInPage(@NotNull ResultSet set, int row) {
                     final User user = mapPrimaryBean(set, User.class, "users");
                     final File file = join(set, user, "files", File.class, "files");
                     join(set, file, "attributes", Attribute.class, "attributes");

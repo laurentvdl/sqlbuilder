@@ -9,6 +9,7 @@ import sqlbuilder.Insert
 import sqlbuilder.PersistenceException
 import sqlbuilder.Select
 import sqlbuilder.SqlBuilder
+import sqlbuilder.TransactionIsolation
 import sqlbuilder.Update
 import sqlbuilder.meta.PropertyReference
 import sqlbuilder.usea
@@ -83,6 +84,10 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
 
     override fun startTransaction() {
         startTransaction(-1, false)
+    }
+
+    override fun startTransaction(isolationLevel: TransactionIsolation, readonly: Boolean) {
+        startTransaction(isolationLevel.isolation, readonly)
     }
 
     override fun startTransaction(isolationLevel: Int, readonly: Boolean) {

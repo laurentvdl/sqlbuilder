@@ -24,10 +24,16 @@ interface SqlBuilder {
      */
     fun startTransaction()
     /**
+     * @deprecated
      * Start a transaction using an isolationlevel other than TRANSACTION_READ_COMMITTED
      * @param isolationLevel Connection.TRANSACTION_...
      */
     fun startTransaction(isolationLevel: Int, readonly: Boolean)
+
+    /**
+     *
+     */
+    fun startTransaction(isolationLevel: TransactionIsolation, readonly: Boolean)
     fun commitTransaction()
     /**
      * This must be called in the a finally clause whenever you have started a transaction.

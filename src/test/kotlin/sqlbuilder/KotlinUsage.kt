@@ -2,47 +2,65 @@ package sqlbuilder
 
 import org.junit.Before
 import org.junit.Test
-import sqlbuilder.impl.SqlBuilderImpl
+import sqlbuilder.kotlin.pojo.Attribute
+import sqlbuilder.kotlin.pojo.File
+import sqlbuilder.kotlin.pojo.User
+import sqlbuilder.kotlin.select
+import sqlbuilder.kotlin.select.excludeProperties
+import sqlbuilder.kotlin.select.group
+import sqlbuilder.kotlin.select.includeProperties
+import sqlbuilder.kotlin.select.join.mapPrimaryBean
+import sqlbuilder.kotlin.select.selectBean
+import sqlbuilder.kotlin.select.selectBeans
+import sqlbuilder.kotlin.select.selectField
+import sqlbuilder.kotlin.select.selectJoinedEntities
+import sqlbuilder.kotlin.select.selectJoinedEntitiesPaged
+import sqlbuilder.kotlin.select.where
+import sqlbuilder.kotlin.update.excludeProperties
+import sqlbuilder.kotlin.update.includeProperties
 import sqlbuilder.meta.Table
 import sqlbuilder.meta.Transient
-import sqlbuilder.pool.DataSourceImpl
-import sqlbuilder.pool.DefaultConfig
-import sqlbuilder.pool.Drivers
 import sqlbuilder.rowhandler.JoiningRowHandler
 import java.sql.SQLException
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.fail
 
 class KotlinUsage {
-    private val sqlBuilder = SqlBuilderImpl(DataSourceImpl(
-            DefaultConfig(
-                    null, null, "jdbc:h2:mem:test", Drivers.H2
-            )
-    ))
+    private val sqlBuilder = Setup.sqlBuilder
 
     @Before fun setup() {
         Setup.createTables(sqlBuilder)
 
-        assertEquals(1L, sqlBuilder.insert().getKeys(true).insertBean(User().apply {
-            username = "test a"
-            birthYear = 1976
-        }), "generated key incorrect")
+        assertEquals(1L, sqlBuilder.insert().getKeys(true).insertBean(User(
+                username = "test a",
+                birthYear = 1976,
+                files = null,
+                id = null
+        )), "generated key incorrect")
 
-        assertEquals(2L, sqlBuilder.insert().getKeys(true).insertBean(User().apply {
-            username = "test b"
-            birthYear = 1977
-        }), "generated key incorrect")
+        assertEquals(2L, sqlBuilder.insert().getKeys(true).insertBean(User(
+                username = "test b",
+                birthYear = 1977,
+                files = null,
+                id = null
+        )), "generated key incorrect")
 
-        sqlBuilder.insert().insertBean(File().apply {
-            userid = 1
-            name = "home"
-        })
+        sqlBuilder.insert().insertBean(File(
+                userid = 1,
+                name = "home",
+                id = null,
+                attributes = null
+        ))
 
-        sqlBuilder.insert().insertBean(File().apply {
-            userid = 1
-            name = "guest"
-        })
+        sqlBuilder.insert().insertBean(File(
+                userid = 1,
+                name = "guest",
+                id = null,
+                attributes = null
+        ))
 
         sqlBuilder.insert().insertBean(Attribute().apply {
             fileid = 1
@@ -67,25 +85,38 @@ class KotlinUsage {
     @Test fun joinHandler() {
         val usersWithFiles = sqlBuilder.select()
                 .sql("select * from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
-                .select(object : JoiningRowHandler<User>() {
-                    override fun handle(set: ResultSet, row: Int): Boolean {
-                        val user = mapPrimaryBean(set, User::class.java, "users")
-                        val file = joinList(set, user, User::files, File::class.java, "files")
-                        joinSet(set, file, File::attributes, Attribute::class.java, "attributes")
-                        return true
-                    }
-                })
+                .selectJoinedEntities<User> { set, _ ->
+                    val user = mapPrimaryBean(set, User::class.java, "users")
+                    val file = join(set, user, User::files, "files")
+                    join(set, file, File::attributes, "attributes")
+                }
+        assertEquals(2, usersWithFiles.first().files?.size, "first user should have 2 files")
+    }
+
+    @Test fun joinPagedHandler() {
+        val usersWithFiles = sqlBuilder.select()
+                .sql("select * from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
+                .selectJoinedEntitiesPaged<User>(offset = 0, rows = 1, prefix = "users") { set, _ ->
+                    val user = mapPrimaryBean(set, User::class.java, "users")
+                    val file = join(set, user, User::files, "files")
+                    join(set, file, File::attributes, "attributes")
+                }
+        assertEquals(1, usersWithFiles.size, "only the first user should be included")
         assertEquals(2, usersWithFiles.first().files?.size, "first user should have 2 files")
     }
 
     @Test fun criteria() {
-        val filteredCount = sqlBuilder.select()
-                .from("users")
-                .where()
-                .and("username like ?", "%a")
-                .and("username like ?", "test%")
-                .endWhere()
-                .selectField("count(*)", Long::class.java)
+        val filteredCount = sqlBuilder.select {
+            sql("select count(*) from users")
+            where {
+                and("username like ?", "%a")
+                group {
+                    and("username like ?", "test%")
+                    or("username like ?", "abc%")
+                }
+            }
+            selectField<Long>()
+        }
 
         assertEquals(1L, filteredCount, "expecting x users starting matching wildcard")
     }
@@ -102,9 +133,9 @@ class KotlinUsage {
                 .selectBeans(User::class.java)
 
         val firstCount = sqlBuilder.select()
-                .from("users")
+                .sql("select count(*) from users")
                 .cache()
-                .selectField("count(*)", java.lang.Long::class.java)
+                .selectField<Long>()
 
         sqlBuilder.update().updateStatement("delete from users where id = ?", 1)
 
@@ -119,9 +150,9 @@ class KotlinUsage {
                 .selectBeans(User::class.java)
 
         val secondCount = sqlBuilder.select()
-                .from("users")
+                .sql("select count(*) from users")
                 .cache()
-                .selectField("count(*)", java.lang.Long::class.java)
+                .selectField<Long>()
 
         assertEquals(secondMaps.size, firstMaps.size)
         assertEquals(secondBeans.size, firstBeans.size)
@@ -139,9 +170,7 @@ class KotlinUsage {
 
         assertEquals(1, thirdBeans.size)
 
-        val thirdCount = sqlBuilder.select()
-                .from("users")
-                .selectField("count(*)", java.lang.Long::class.java)
+        val thirdCount = sqlBuilder.select().sql("select count(*) from users").selectField<Long>()
 
         assertEquals(1, thirdCount!!.toLong())
     }
@@ -164,14 +193,11 @@ class KotlinUsage {
     fun joinAliasCaseSensitivity() {
         val usersWithFiles = sqlBuilder.select()
                 .sql("select {User.* as users},{File.* as files},{Attribute.* as attributes} from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
-                .select(object : JoiningRowHandler<User>() {
-                    override fun handle(set: ResultSet, row: Int): Boolean {
-                        val user = mapPrimaryBean(set, User::class.java, "USERS")
-                        val file = joinList(set, user, User::files, File::class.java, "files")
-                        joinSet(set, file, File::attributes, Attribute::class.java, "attributes")
-                        return true
-                    }
-                }.entities(User::class.java, File::class.java, Attribute::class.java))
+                .selectJoinedEntities<User>(User::class.java, File::class.java, Attribute::class.java) { set: ResultSet, _: Int ->
+                    val user = mapPrimaryBean(set, "USERS")
+                    val file = join(set, user, User::files, "files")
+                    join(set, file, File::attributes, "attributes")
+                }
 
         assertNotNull(usersWithFiles.first().birthYear)
         assertNotNull(usersWithFiles.first().files?.first()?.name)
@@ -205,38 +231,74 @@ class KotlinUsage {
             }.entities(User::class.java, File::class.java, Attribute::class.java))
     }
 
-    @Table("users")
-    class User {
-        var id: Long? = null
-        var username: String? = null
-        var birthYear: Short? = null
-        var files: MutableList<File>? = null
+    @Test
+    fun joinCustomAliasMix() {
+        val usersWithFiles = sqlBuilder.select()
+                .sql("select u.id as users_id,{File.* as files} from users u left join files on u.id = files.userid")
+                .select(object : JoiningRowHandler<User>() {
+                    override fun handle(set: ResultSet, row: Int): Boolean {
+                        val user = mapPrimaryBean(set, User::class.java, "users")
+                        joinList(set, user, User::files, File::class.java, "files")
+                        return true
+                    }
+                }.entities(User::class.java, File::class.java, Attribute::class.java))
+
+        assertNotNull(usersWithFiles.first().id)
+        assertNotNull(usersWithFiles.first().files?.first()?.name)
+    }
+
+    @Test
+    fun excludeSelectProperties() {
+        val usersWithoutUsername = sqlBuilder.select().excludeProperties(User::username, User::files).selectBeans<User>()
+        assertNull(usersWithoutUsername.first().username)
+        assertNotNull(usersWithoutUsername.first().id)
+        assertNotNull(usersWithoutUsername.first().birthYear)
+    }
+
+    @Test
+    fun includeSelectProperties() {
+        val usersWithUsername = sqlBuilder.select().includeProperties(User::id, User::username).selectBeans<User>()
+        assertNotNull(usersWithUsername.first().id)
+        assertNotNull(usersWithUsername.first().username)
+        assertNull(usersWithUsername.first().birthYear)
+    }
+
+    @Test
+    fun excludePropertiesForUpdate() {
+        val firstUser = sqlBuilder.select().offset(0, 1).selectBean<User>() ?: fail("Expected at least 1 user")
+
+        firstUser.username = "update"
+        firstUser.birthYear = 2222
+        sqlBuilder.update().excludeProperties(User::birthYear).updateBean(firstUser)
+
+        val updatedUser = sqlBuilder.select().offset(0, 1).selectBean<User>() ?: fail("Expected at least 1 user")
+
+        assertEquals(firstUser.username, updatedUser.username)
+        assertNotEquals(firstUser.birthYear, updatedUser.birthYear)
+    }
+
+    @Test
+    fun includePropertiesForUpdate() {
+        val firstUser = sqlBuilder.select().offset(0, 1).selectBean<User>() ?: fail("Expected at least 1 user")
+
+        firstUser.username = "update"
+        firstUser.birthYear = 2222
+        sqlBuilder.update().includeProperties(User::birthYear).updateBean(firstUser)
+
+        val updatedUser = sqlBuilder.select().offset(0, 1).selectBean<User>() ?: fail("Expected at least 1 user")
+
+        assertNotEquals(firstUser.username, updatedUser.username)
+        assertEquals(firstUser.birthYear, updatedUser.birthYear)
     }
 
     @Table("users")
-    class UserWithNoBirthYear {
-        var id: Long? = null
-        var username: String? = null
+    data class UserWithNoBirthYear (
+        var id: Long?,
+        var username: String?,
         @Transient
-        var birthYear: Short? = null
-        var files: MutableList<File>? = null
-    }
-
-    @Table("files")
-    class File {
-        var id: Long? = null
-        var userid: Long? = null
-        var name: String? = null
-        var attributes: MutableSet<Attribute>? = null
-    }
-
-    @Table("attributes")
-    class Attribute {
-        var id: Long? = null
-        var fileid: Long? = null
-        var name: String? = null
-        var value: String? = null
-    }
+        var birthYear: Short?,
+        var files: MutableList<File>?
+    )
 
     class InvalidBean {
         var uuid: String? = null
