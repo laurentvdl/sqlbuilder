@@ -5,4 +5,4 @@ package sqlbuilder
  *
  * @author Laurent Van der Linden
  */
-class IncorrectMetadataException(message: String) : PersistenceException(message)
+open class IncorrectMetadataException(message: String) : PersistenceException(message)

@@ -1,5 +1,6 @@
 package sqlbuilder
 
+import sqlbuilder.meta.BeanFactory
 import sqlbuilder.meta.MetaResolver
 import sqlbuilder.meta.PropertyReference
 
@@ -21,4 +22,6 @@ interface Backend {
     val configuration: Configuration
 
     val metaResolver: MetaResolver
+
+    val beanFactory: BeanFactory
 }

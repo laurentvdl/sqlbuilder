@@ -1,6 +1,7 @@
 package sqlbuilder.rowhandler
 
 import org.slf4j.LoggerFactory
+import sqlbuilder.Backend
 import sqlbuilder.PersistenceException
 import sqlbuilder.ResultSet
 import sqlbuilder.meta.MetaResolver
@@ -15,7 +16,7 @@ import java.util.regex.Pattern
  *
  * @author Laurent Van der Linden
  */
-class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>) : ListRowHandler<T>, ReflectionHandler, PropertiesHandler, BeanListRowHandler<T>() {
+class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>, private val backend: Backend) : ListRowHandler<T>, ReflectionHandler, PropertiesHandler, BeanListRowHandler<T>() {
     private val trace = LoggerFactory.getLogger("sqlbuildertrace")
 
     var mappings: Map<Any, String>? = null
@@ -40,9 +41,9 @@ class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>) : ListRowH
         try {
             val meta = set.getJdbcResultSet().metaData
             val columns = meta.columnCount
-            val bean = beanClass.newInstance()
+            val bean = backend.beanFactory.instantiate(beanClass)
             for (index in 1..columns) {
-                if (propertyCache.size < index ) {
+                if (propertyCache.size < index) {
                     val cName = meta.getColumnLabel(index)!!.toLowerCase()
                     val mappedColumn = mappings?.get(cName) ?: mappings?.get(index) ?: cName
                     val prop = refCache[mappedColumn.toLowerCase()]
@@ -62,6 +63,8 @@ class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>) : ListRowH
             }
 
             return bean
+        } catch (e: PersistenceException) {
+            throw e
         } catch (e: Exception) {
             throw PersistenceException(e.message, e)
         }

@@ -18,7 +18,9 @@ import sqlbuilder.impl.mappers.StringMapper
 import sqlbuilder.impl.mappers.TimestampMapper
 import sqlbuilder.mapping.ToObjectMapper
 import sqlbuilder.mapping.ToSQLMapper
+import sqlbuilder.meta.BeanFactory
 import sqlbuilder.meta.MetaResolver
+import sqlbuilder.meta.ReflectionBeanFactory
 import sqlbuilder.meta.ReflectionResolver
 import java.util.ArrayList
 
@@ -100,6 +102,10 @@ open class DefaultConfiguration : Configuration {
     override fun unregisterToSQLMapper(toSQLMapper: ToSQLMapper): DefaultConfiguration {
         toSQLMappers.remove(toSQLMapper)
         return this
+    }
+
+    override fun beanFactroy(): BeanFactory {
+        return ReflectionBeanFactory()
     }
 
     init {

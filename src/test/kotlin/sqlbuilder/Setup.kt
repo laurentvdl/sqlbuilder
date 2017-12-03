@@ -4,6 +4,7 @@ import sqlbuilder.impl.SqlBuilderImpl
 import sqlbuilder.pool.DataSourceImpl
 import sqlbuilder.pool.DefaultConfig
 import sqlbuilder.pool.Drivers
+import kotlin.test.assertEquals
 
 object Setup {
     @JvmStatic fun createTables(sqlBuilder: SqlBuilder) {
@@ -45,4 +46,13 @@ object Setup {
                     null, null, "jdbc:h2:mem:test", Drivers.H2
             )
     ))
+
+    fun insertOneUser(username: String = "test a"): Long {
+        val key = sqlBuilder.insert().getKeys(true).insertBean(CachingTest.SerializableUser(
+                username = username,
+                id = null
+        ))
+        assertEquals(1L, key, "generated key incorrect")
+        return key
+    }
 }

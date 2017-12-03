@@ -2,6 +2,7 @@ package sqlbuilder
 
 import sqlbuilder.mapping.ToObjectMapper
 import sqlbuilder.mapping.ToSQLMapper
+import sqlbuilder.meta.BeanFactory
 import sqlbuilder.meta.MetaResolver
 
 /**
@@ -23,4 +24,6 @@ interface Configuration {
     fun registerToSQLMapper(toSQLMapper: ToSQLMapper): Configuration
 
     fun unregisterToSQLMapper(toSQLMapper: ToSQLMapper): Configuration
+
+    fun beanFactroy(): BeanFactory
 }

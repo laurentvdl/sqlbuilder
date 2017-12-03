@@ -31,6 +31,8 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
 
     override val metaResolver = configuration.createMetaResolver()
 
+    override val beanFactory = configuration.beanFactroy()
+
     override fun select(): Select {
         return SelectImpl(this)
     }

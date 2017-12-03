@@ -199,9 +199,9 @@ class SelectImpl(private val backend: Backend) : Select {
 
     private fun <T : Any> getRowHandler(beanClass: Class<T>): RowHandler {
         return if (sql == null && selectOption == null) {
-            ReflectiveBeanListRowHandler(beanClass)
+            ReflectiveBeanListRowHandler(beanClass, backend)
         } else {
-            DynamicBeanRowHandler(beanClass)
+            DynamicBeanRowHandler(beanClass, backend)
         }
     }
 
