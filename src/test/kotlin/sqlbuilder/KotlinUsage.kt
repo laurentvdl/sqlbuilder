@@ -2,9 +2,9 @@ package sqlbuilder
 
 import org.junit.Before
 import org.junit.Test
-import sqlbuilder.kotlin.pojo.Attribute
-import sqlbuilder.kotlin.pojo.File
-import sqlbuilder.kotlin.pojo.User
+import sqlbuilder.kotlin.beans.Attribute
+import sqlbuilder.kotlin.beans.File
+import sqlbuilder.kotlin.beans.User
 import sqlbuilder.kotlin.select
 import sqlbuilder.kotlin.select.excludeProperties
 import sqlbuilder.kotlin.select.group
@@ -20,8 +20,6 @@ import sqlbuilder.kotlin.update.excludeProperties
 import sqlbuilder.kotlin.update.includeProperties
 import sqlbuilder.meta.Table
 import sqlbuilder.meta.Transient
-import sqlbuilder.rowhandler.JoiningRowHandler
-import java.sql.SQLException
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -221,27 +219,20 @@ class KotlinUsage {
         sqlBuilder.select()
             .sql("select * from users " +
                     "left join users parents on users.parent_id = parents.id")
-            .select(object : JoiningRowHandler<User>() {
-                @Throws(SQLException::class)
-                override fun handle(set: ResultSet, row: Int): Boolean {
-                    val user = mapPrimaryBean(set, User::class.java, "users")
-                    join(set, user, "parent", User::class.java, "parents")
-                    return true
-                }
-            }.entities(User::class.java, File::class.java, Attribute::class.java))
+            .selectJoinedEntities<User>(User::class.java, File::class.java, Attribute::class.java) { set,_ ->
+                val user = mapPrimaryBean(set, User::class.java, "users")
+                join(set, user, "parent", User::class.java, "parents")
+            }
     }
 
     @Test
     fun joinCustomAliasMix() {
         val usersWithFiles = sqlBuilder.select()
                 .sql("select u.id as users_id,{File.* as files} from users u left join files on u.id = files.userid")
-                .select(object : JoiningRowHandler<User>() {
-                    override fun handle(set: ResultSet, row: Int): Boolean {
-                        val user = mapPrimaryBean(set, User::class.java, "users")
-                        joinList(set, user, User::files, File::class.java, "files")
-                        return true
-                    }
-                }.entities(User::class.java, File::class.java, Attribute::class.java))
+                .selectJoinedEntities<User>(User::class.java, File::class.java, Attribute::class.java) { set,_ ->
+                    val user = mapPrimaryBean(set, User::class.java, "users")
+                    join(set, user, User::files, "files")
+                }
 
         assertNotNull(usersWithFiles.first().id)
         assertNotNull(usersWithFiles.first().files?.first()?.name)

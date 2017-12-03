@@ -4,7 +4,7 @@ import org.junit.Before
 import org.junit.Test
 import sqlbuilder.Setup.sqlBuilder
 import sqlbuilder.exceptions.CacheException
-import sqlbuilder.kotlin.pojo.User
+import sqlbuilder.kotlin.beans.User
 import sqlbuilder.kotlin.select
 import sqlbuilder.kotlin.select.selectBeans
 import sqlbuilder.meta.Table

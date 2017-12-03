@@ -2,9 +2,9 @@ package sqlbuilder
 
 import org.junit.Before
 import org.junit.Test
+import sqlbuilder.beans.UserWithNoDefaultConstructor
 import sqlbuilder.exceptions.NoDefaultConstructorException
 import sqlbuilder.kotlin.select.selectBeans
-import sqlbuilder.pojo.UserWithNoDefaultConstructor
 
 class DefaultConstructorTest {
     @Before

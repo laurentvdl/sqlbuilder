@@ -15,10 +15,10 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
+import sqlbuilder.beans.Attribute;
+import sqlbuilder.beans.File;
+import sqlbuilder.beans.User;
 import sqlbuilder.impl.SqlBuilderImpl;
-import sqlbuilder.javabeans.Attribute;
-import sqlbuilder.javabeans.File;
-import sqlbuilder.javabeans.User;
 import sqlbuilder.mapping.ToObjectMapper;
 import sqlbuilder.mapping.ToObjectMappingParameters;
 import sqlbuilder.pool.DataSourceImpl;

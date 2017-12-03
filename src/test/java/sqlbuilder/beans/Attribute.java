@@ -1,4 +1,4 @@
-package sqlbuilder.javabeans;
+package sqlbuilder.beans;
 
 import sqlbuilder.meta.Id;
 import sqlbuilder.meta.Table;

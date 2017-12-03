@@ -1,4 +1,4 @@
-package sqlbuilder.pojo;
+package sqlbuilder.beans;
 
 import sqlbuilder.meta.Table;
 

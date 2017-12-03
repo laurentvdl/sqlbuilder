@@ -1,4 +1,4 @@
-package sqlbuilder.javabeans;
+package sqlbuilder.beans;
 
 import java.util.Set;
 

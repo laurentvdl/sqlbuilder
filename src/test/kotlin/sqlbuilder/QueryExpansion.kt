@@ -2,9 +2,9 @@ package sqlbuilder
 
 import org.junit.Assert
 import org.junit.Test
+import sqlbuilder.beans.File
+import sqlbuilder.beans.User
 import sqlbuilder.impl.DefaultConfiguration
-import sqlbuilder.javabeans.File
-import sqlbuilder.javabeans.User
 import sqlbuilder.meta.ReflectionResolver
 import sqlbuilder.rowhandler.JoiningRowHandler
 

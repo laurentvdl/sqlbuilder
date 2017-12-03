@@ -1,4 +1,4 @@
-package sqlbuilder.kotlin.pojo
+package sqlbuilder.kotlin.beans
 
 import sqlbuilder.meta.Table
 
