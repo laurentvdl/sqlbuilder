@@ -3,26 +3,6 @@ package sqlbuilder
 import sqlbuilder.meta.PropertyReference
 import java.lang.reflect.Field
 
-/**
- * Duplication of Kotlin extension f for Closable
- */
-inline fun <T : AutoCloseable, R> T.usea(block: (T) -> R): R {
-    var closed = false
-    try {
-        return block(this)
-    } catch (e: Exception) {
-        closed = true
-        try {
-            this.close()
-        } catch (ignore: Exception) {}
-        throw e
-    } finally {
-        if (!closed) {
-            this.close()
-        }
-    }
-}
-
 fun List<PropertyReference>.exclude(excludeFields: Set<String>?): List<PropertyReference> {
     return if (excludeFields != null) crossReference(excludeFields, false) else this
 }

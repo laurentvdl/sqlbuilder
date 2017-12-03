@@ -156,7 +156,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
     protected fun getKeyValues(set: ResultSet, keys: List<PropertyReference>, prefix: String, allowNull: Boolean): List<Any?> {
         return keys.mapTo(LinkedList()) { key ->
-            val value = getColumnFromTable(set, prefix, key, Any::class.java)
+            val value = getColumnFromTable(set, prefix, key, key.classType)
             if (value == null && !allowNull) {
                 throw PersistenceException("no value was found for key $key in this resultset using column alias" +
                         " '${prefix}_${key.columnName}', make sure to include all key columns in the query: ${set.query}")

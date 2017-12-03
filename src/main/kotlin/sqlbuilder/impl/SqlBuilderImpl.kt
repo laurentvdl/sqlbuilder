@@ -12,7 +12,6 @@ import sqlbuilder.SqlBuilder
 import sqlbuilder.TransactionIsolation
 import sqlbuilder.Update
 import sqlbuilder.meta.PropertyReference
-import sqlbuilder.usea
 import java.lang.ref.SoftReference
 import java.sql.Connection
 import java.sql.ResultSet
@@ -181,7 +180,7 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
         }
         logger.trace("checking nullability for {}.{}", schema, table)
 
-        val nonNullColumns = sqlCon.metaData?.getColumns(null, schema, table, null)!!.usea { cRs: ResultSet ->
+        val nonNullColumns = sqlCon.metaData?.getColumns(null, schema, table, null)!!.use { cRs: ResultSet ->
             val columns = ArrayList<String>()
             while (cRs.next()) {
                 if (cRs.getInt(11) != 1) {

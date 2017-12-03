@@ -17,9 +17,9 @@ import java.util.prefs.Preferences
  */
 class PreferencesConfig(preferencesPath: String, user: Boolean) : ConnectionConfigProvider {
     private val preferencesNode = if (user) {
-        Preferences.userRoot()!!.node(preferencesPath)!!
+        Preferences.userRoot().node(preferencesPath)!!
     } else {
-        Preferences.systemRoot()!!.node(preferencesPath)!!
+        Preferences.systemRoot().node(preferencesPath)!!
     }
 
     override val username: String? = preferencesNode.get("username", null)

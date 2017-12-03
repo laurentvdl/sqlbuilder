@@ -30,7 +30,6 @@ import sqlbuilder.rowhandler.ReflectionHandler
 import sqlbuilder.rowhandler.ReflectiveBeanListRowHandler
 import sqlbuilder.rowhandler.SingleFieldListRowHandler
 import sqlbuilder.rowhandler.SingleFieldRowHandler
-import sqlbuilder.usea
 import java.io.File
 import java.io.OutputStream
 import java.io.Writer
@@ -291,7 +290,7 @@ class SelectImpl(private val backend: Backend) : Select {
 
             val ps = con.prepareStatement(sql, cursorType, cursorConcurrency)!!
             if (fetchSize != null) ps.fetchSize = fetchSize!!
-            ps.usea { _ ->
+            ps.use { _ ->
                 val parameterCount = ps.parameterMetaData.parameterCount
                 whereParameters.withIndex().forEach { pair ->
                     if (pair.index < parameterCount) {

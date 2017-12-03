@@ -22,7 +22,6 @@ class FileStrategy(private val file: File) : CacheStrategy {
                     ObjectInputStream(fis).readObject()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
                 try {
                     file.delete()
                 } finally {

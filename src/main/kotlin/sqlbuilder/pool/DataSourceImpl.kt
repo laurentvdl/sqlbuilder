@@ -82,7 +82,6 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
     private fun findZombies() {
         val currentTs = System.currentTimeMillis()
         synchronized(lock) {
-            var x = 0
             val iterator = _activeConnections.iterator()
             while (iterator.hasNext()) {
                 val connection = iterator.next()
@@ -96,7 +95,6 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
                     // once it hits the fan, enable debugging
                     recordStacks = true
                 }
-                x++
             }
         }
     }
@@ -166,7 +164,7 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
             }
 
             val connection: TransactionalConnection
-            if (_idleConnections.size > 0) {
+            if (_idleConnections.isNotEmpty()) {
                 connection = _idleConnections.removeAt(0)
                 connection.ping()
             } else {
