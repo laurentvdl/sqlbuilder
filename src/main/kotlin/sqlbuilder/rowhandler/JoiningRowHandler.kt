@@ -322,7 +322,9 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         return sql
     }
 
-    fun entities(vararg types: Class<*>): JoiningRowHandler<T> {
+    fun entities(vararg types: Class<*>): JoiningRowHandler<T> = entities(types.toSet())
+
+    fun entities(types: Set<Class<*>>): JoiningRowHandler<T> {
         for (type in types) {
             this.expansionTypes.put(type.simpleName, type)
         }

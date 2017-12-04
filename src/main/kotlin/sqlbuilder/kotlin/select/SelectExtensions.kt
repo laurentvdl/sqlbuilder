@@ -32,19 +32,19 @@ inline fun WhereGroup.group(relation: Relation = Relation.AND, block: WhereGroup
     group.endGroup()
 }
 
-inline fun <T : Any> Select.selectJoinedEntities(vararg entities: Class<*>, crossinline rowHandler: JoiningRowHandler<T>.(set: ResultSet, row: Int) -> Unit): List<T> {
+inline fun <reified T : Any> Select.selectJoinedEntities(joinedEntities: Set<Class<*>> = emptySet(), crossinline rowHandler: JoiningRowHandler<T>.(set: ResultSet, row: Int) -> Unit): List<T> {
     return this.select(object : JoiningRowHandler<T>() {
         override fun handle(set: ResultSet, row: Int): Boolean {
             rowHandler(this, set, row)
             return true
         }
-    }.entities(*entities))
+    }.entities(joinedEntities.plus(T::class.java)))
 }
 
-inline fun <T : Any> Select.selectJoinedEntitiesPaged(offset: Int, rows: Int, prefix: String, vararg entities: Class<*>, crossinline rowHandler: JoiningPagedRowHandler<T>.(set: ResultSet, row: Int) -> Unit): List<T> {
+inline fun <reified T : Any> Select.selectJoinedEntitiesPaged(offset: Int, rows: Int, prefix: String, joinedEntities: Set<Class<*>> = emptySet(), crossinline rowHandler: JoiningPagedRowHandler<T>.(set: ResultSet, row: Int) -> Unit): List<T> {
     return this.select(object : JoiningPagedRowHandler<T>(offset, rows, prefix) {
         override fun handleInPage(set: ResultSet, row: Int) {
             rowHandler(this, set, row)
         }
-    }.entities(*entities))
+    }.entities(joinedEntities.plus(T::class.java)))
 }

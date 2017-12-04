@@ -8,7 +8,10 @@
 - query builder, allowing fluent construction of criteria arguments
 - comparable to Springs `JdbcTemplate`
 
-##Example:
+## Example:
+
+### Java
+
 ```java
 List<User> filteredUsers = sqlBuilder.select()
     .where()
@@ -34,7 +37,21 @@ List<User> allUsersAndFiles = sqlBuilder.select()
     });
 ```
 
-See more examples at <a href="https://github.com/laurentvdl/sqlbuilder/blob/master/src/test/java/sqlbuilder/JavaUsage.java">JavaUsage</a>.
+See more examples at <a href="https://github.com/laurentvdl/sqlbuilder/blob/master/src/test/java/sqlbuilder/JavaUsage.java">Java usage</a>.
+
+### Kotlin
+
+```kotlin
+val usersWithFiles = sqlBuilder.select()
+    .sql("select * from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
+    .selectJoinedEntities<User>() { set, _ ->
+        val user = mapPrimaryBean(set, User::class.java, "users")
+        val file = join(set, user, User::files, "files")
+        join(set, file, File::attributes, "attributes")
+    }
+```
+
+See more examples at <a href="https://github.com/laurentvdl/sqlbuilder/blob/master/src/test/java/sqlbuilder/KotlinUsage.java">Kotlin usage</a>.
 
 ## How to use
 
@@ -42,7 +59,7 @@ See more examples at <a href="https://github.com/laurentvdl/sqlbuilder/blob/mast
 
 ```groovy
 dependencies {
-    compile 'com.github.sqlbuilder:sqlbuilder:1.6.3'
+    compile 'com.github.sqlbuilder:sqlbuilder:1.7.0'
 }
 ```
 
@@ -52,7 +69,7 @@ dependencies {
 <dependency>
     <groupId>com.github.sqlbuilder</groupId>
     <artifactId>sqlbuilder</artifactId>
-    <version>1.6.3</version>
+    <version>1.7.0</version>
 </dependency>
 ```
 
@@ -64,6 +81,7 @@ dependencies {
   - a primitive
 - supports mapping of joined tables with cursor based pagination (not in memory like Hibernate)
 - all mappings are based on `RowHandler` interface
+- @Table and @Column annotations are optional, but help repetitive configuration
 
 ## It does not:
 

@@ -191,7 +191,7 @@ class KotlinUsage {
     fun joinAliasCaseSensitivity() {
         val usersWithFiles = sqlBuilder.select()
                 .sql("select {User.* as users},{File.* as files},{Attribute.* as attributes} from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
-                .selectJoinedEntities<User>(User::class.java, File::class.java, Attribute::class.java) { set: ResultSet, _: Int ->
+                .selectJoinedEntities<User>(setOf(File::class.java, Attribute::class.java)) { set: ResultSet, _: Int ->
                     val user = mapPrimaryBean(set, "USERS")
                     val file = join(set, user, User::files, "files")
                     join(set, file, File::attributes, "attributes")
@@ -219,7 +219,7 @@ class KotlinUsage {
         sqlBuilder.select()
             .sql("select * from users " +
                     "left join users parents on users.parent_id = parents.id")
-            .selectJoinedEntities<User>(User::class.java, File::class.java, Attribute::class.java) { set,_ ->
+            .selectJoinedEntities<User>(setOf(File::class.java, Attribute::class.java)) { set,_ ->
                 val user = mapPrimaryBean(set, User::class.java, "users")
                 join(set, user, "parent", User::class.java, "parents")
             }
@@ -229,7 +229,7 @@ class KotlinUsage {
     fun joinCustomAliasMix() {
         val usersWithFiles = sqlBuilder.select()
                 .sql("select u.id as users_id,{File.* as files} from users u left join files on u.id = files.userid")
-                .selectJoinedEntities<User>(User::class.java, File::class.java, Attribute::class.java) { set,_ ->
+                .selectJoinedEntities<User>(setOf(File::class.java, Attribute::class.java)) { set,_ ->
                     val user = mapPrimaryBean(set, User::class.java, "users")
                     join(set, user, User::files, "files")
                 }
