@@ -51,7 +51,7 @@ val usersWithFiles = sqlBuilder.select()
     }
 ```
 
-See more examples at <a href="https://github.com/laurentvdl/sqlbuilder/blob/master/src/test/java/sqlbuilder/KotlinUsage.java">Kotlin usage</a>.
+See more examples at <a href="https://github.com/laurentvdl/sqlbuilder/blob/master/src/test/kotlin/sqlbuilder/KotlinUsage.kt">Kotlin usage</a>.
 
 ## How to use
 
