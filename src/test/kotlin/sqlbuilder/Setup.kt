@@ -7,7 +7,7 @@ import sqlbuilder.pool.Drivers
 import kotlin.test.assertEquals
 
 object Setup {
-    @JvmStatic fun createTables(sqlBuilder: SqlBuilder) {
+    @JvmStatic fun createTables() {
         sqlBuilder.update().updateStatement("drop table users if exists")
         sqlBuilder.update().updateStatement("""
         create table if not exists users (

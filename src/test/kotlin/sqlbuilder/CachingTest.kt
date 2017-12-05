@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
 class CachingTest {
     @Before
     fun setup() {
-        Setup.createTables(sqlBuilder)
+        Setup.createTables()
 
         assertEquals(1L, sqlBuilder.insert().getKeys(true).insertBean(SerializableUser(
                 username = "test a",

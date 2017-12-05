@@ -9,7 +9,7 @@ import sqlbuilder.kotlin.select.selectBeans
 class DefaultConstructorTest {
     @Before
     fun setup() {
-        Setup.createTables(Setup.sqlBuilder)
+        Setup.createTables()
 
         Setup.insertOneUser()
     }

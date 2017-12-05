@@ -30,7 +30,7 @@ class KotlinUsage {
     private val sqlBuilder = Setup.sqlBuilder
 
     @Before fun setup() {
-        Setup.createTables(sqlBuilder)
+        Setup.createTables()
 
         assertEquals(1L, sqlBuilder.insert().getKeys(true).insertBean(User(
                 username = "test a",

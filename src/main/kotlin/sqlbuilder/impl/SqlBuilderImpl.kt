@@ -11,6 +11,7 @@ import sqlbuilder.Select
 import sqlbuilder.SqlBuilder
 import sqlbuilder.TransactionIsolation
 import sqlbuilder.Update
+import sqlbuilder.exceptions.NotNullColumnException
 import sqlbuilder.meta.PropertyReference
 import java.lang.ref.SoftReference
 import java.sql.Connection
@@ -197,7 +198,7 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
         }
 
         if (!missingProperties.isEmpty()) {
-            throw PersistenceException("column(s) $missingProperties are not nullable, yet not included in your update/insert")
+            throw NotNullColumnException(missingProperties)
         }
     }
 }

@@ -40,7 +40,7 @@ public class JavaUsage {
 
     @Before
     public void setup() {
-        Setup.createTables(sqlBuilder);
+        Setup.createTables();
 
         assertEquals(
             "generated key should be 1", 1L,
