@@ -11,6 +11,8 @@ buildscript {
     }
 }
 
+val kotlinVersion = "1.2.0"
+
 plugins {
     kotlin("jvm") version "1.2.0"
     id("org.jetbrains.kotlin.plugin.noarg").version("1.2.0")
@@ -18,7 +20,7 @@ plugins {
 }
 
 group = "com.github.sqlbuilder"
-version = "1.7.0"
+version = "1.7.1"
 
 val sourcesJar by tasks.creating(Jar::class) {
     classifier = "sources"
@@ -41,10 +43,10 @@ noArg {
 }
 
 dependencies {
-    compile(kotlin("stdlib-jre8"))
-    compile(kotlin("reflect"))
+    compile(kotlin("stdlib-jre8", version = kotlinVersion))
+    compile(kotlin("reflect", version = kotlinVersion))
     compile("org.slf4j:slf4j-api:1.7.7")
-    testCompile (kotlin("test"))
+    testCompile (kotlin("test", version = kotlinVersion))
     testCompile("com.h2database:h2:1.4.183")
     testCompile("junit:junit:4.11")
     testCompile("org.slf4j:slf4j-simple:1.7.7")
