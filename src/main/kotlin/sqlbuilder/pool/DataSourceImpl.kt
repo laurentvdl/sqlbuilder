@@ -30,6 +30,8 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
 
     private val lock = Object()
 
+    var preparedStatementInterceptor: PreparedStatementInterceptor? = null
+
     /**
      * Set the time a connection can be held without any invocations. After this time, the connection will be rolled back.
      * <br/>120000 by default
@@ -170,7 +172,7 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
             } else {
                 try {
                     val jdbcConnection = newFysicalConnection()
-                    connection = TransactionalConnection(jdbcConnection, this)
+                    connection = TransactionalConnection(jdbcConnection, this, preparedStatementInterceptor)
                 } catch (e: SQLException) {
                     throw PersistenceException(e.message, e)
                 }

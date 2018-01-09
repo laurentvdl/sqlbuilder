@@ -7,12 +7,14 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.sql.Connection
+import java.sql.PreparedStatement
 import java.sql.SQLException
 
 /**
  * @author Laurent Van der Linden
  */
-class TransactionalConnection(val target: Connection, val datasource: DataSourceImpl) : InvocationHandler {
+class TransactionalConnection(val target: Connection, val datasource: DataSourceImpl,
+                              private val preparedStatmentInterceptor: PreparedStatementInterceptor?) : InvocationHandler {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     var lastModified = System.currentTimeMillis()
@@ -37,27 +39,33 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
             }
         }
 
-        return synchronized(datasource) {
-            lastModified = System.currentTimeMillis()
-            val methodName = method.name
-            if ("close" == methodName) {
-                if (valid) {
-                    datasource.freeConnection(this)
-                } else {
-                    null
+        lastModified = System.currentTimeMillis()
+        val methodName = method.name
+
+        if ("close" == methodName) {
+            if (valid) {
+                synchronized(datasource) {
+                    return datasource.freeConnection(this)
                 }
             } else {
-                try {
-                    if (args == null) {
-                        method.invoke(target)
-                    } else {
-                        method.invoke(target, *args)
-                    }
-                } catch (e: InvocationTargetException) {
-                    throw e.cause!!
-                }
-
+                return null
             }
+        } else if ("prepareStatement" == methodName && args != null && preparedStatmentInterceptor != null) {
+            return PreparedStatementWrapper(invokeMethod(method, args) as PreparedStatement, args[0] as String, preparedStatmentInterceptor)
+        } else {
+            return invokeMethod(method, args)
+        }
+    }
+
+    private fun invokeMethod(method: Method, args: Array<out Any>?): Any? {
+        try {
+            return if (args == null) {
+                method.invoke(target)
+            } else {
+                method.invoke(target, *args)
+            }
+        } catch (invocationTargetException: InvocationTargetException) {
+            throw invocationTargetException.cause ?: invocationTargetException
         }
     }
 
@@ -95,6 +103,4 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
     override fun toString(): String{
         return "TransactionalConnection(target=$target, lastModified=$lastModified)"
     }
-
-
 }

@@ -59,7 +59,7 @@ See more examples at <a href="https://github.com/laurentvdl/sqlbuilder/blob/mast
 
 ```groovy
 dependencies {
-    compile 'com.github.sqlbuilder:sqlbuilder:1.7.1'
+    compile 'com.github.sqlbuilder:sqlbuilder:1.8.0'
 }
 ```
 
@@ -69,7 +69,7 @@ dependencies {
 <dependency>
     <groupId>com.github.sqlbuilder</groupId>
     <artifactId>sqlbuilder</artifactId>
-    <version>1.7.1</version>
+    <version>1.8.0</version>
 </dependency>
 ```
 
