@@ -50,7 +50,7 @@ class WhereGroup(private var parent: Any, private val select: Select, private va
      * @param condition where condition
      * @return this
      */
-    fun and(test: Boolean, condition: String): WhereGroup {
+    fun and(test: Boolean, condition: String?): WhereGroup {
         return andInternal(test, condition, null)
     }
 
@@ -71,15 +71,21 @@ class WhereGroup(private var parent: Any, private val select: Select, private va
      * @param parameters values for any where parameters (?) specified in the condition
      * @return this
      */
-    fun and(test: Boolean, condition: String, vararg parameters: Any?): WhereGroup {
+    fun and(test: Boolean, condition: String?, vararg parameters: Any?): WhereGroup {
         return andInternal(test, condition, parameters)
     }
 
     /**
      * varargs are not suitable for method overriding, use Array internally
      */
-    private fun andInternal(test: Boolean, condition: String, parameters: Array<out Any?>?): WhereGroup {
-        if (test) children.add(Condition(condition, parameters, Relation.AND))
+    private fun andInternal(test: Boolean, condition: String?, parameters: Array<out Any?>?): WhereGroup {
+        if (test) {
+            if (condition != null) {
+                children.add(Condition(condition, parameters, Relation.AND))
+            } else {
+                throw IllegalArgumentException("Condition should not be null when test evaluates to true")
+            }
+        }
         return this
     }
 
@@ -98,7 +104,7 @@ class WhereGroup(private var parent: Any, private val select: Select, private va
      * @param condition where condition
      * @return this
      */
-    fun or(test: Boolean, condition: String): WhereGroup {
+    fun or(test: Boolean, condition: String?): WhereGroup {
         return orInternal(test, condition, null)
     }
 
@@ -119,7 +125,7 @@ class WhereGroup(private var parent: Any, private val select: Select, private va
      * @param parameters values for any where parameters (?) specified in the condition
      * @return this
      */
-    fun or(test: Boolean, condition: String, vararg parameters: Any?): WhereGroup {
+    fun or(test: Boolean, condition: String?, vararg parameters: Any?): WhereGroup {
         return orInternal(test, condition, parameters)
     }
 
@@ -146,8 +152,14 @@ class WhereGroup(private var parent: Any, private val select: Select, private va
     /**
      * varargs are not suitable for method overriding, use Array internally
      */
-    private fun orInternal(test: Boolean, condition: String, parameters: Array<out Any?>?): WhereGroup {
-        if (test) children.add(Condition(condition, parameters, Relation.OR))
+    private fun orInternal(test: Boolean, condition: String?, parameters: Array<out Any?>?): WhereGroup {
+        if (test) {
+            if (condition != null) {
+                children.add(Condition(condition, parameters, Relation.OR))
+            } else {
+                throw IllegalArgumentException("Condition should not be null when test evaluates to true")
+            }
+        }
         return this
     }
 
