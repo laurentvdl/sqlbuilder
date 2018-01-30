@@ -282,6 +282,13 @@ class KotlinUsage {
         assertEquals(firstUser.birthYear, updatedUser.birthYear)
     }
 
+    @Test
+    fun generatedKeyIsStoredInBean() {
+        val user = User(null, "dude", 1979, emptyList<File>())
+        val generatedKey = sqlBuilder.insert().insertBean(user)
+        assertEquals(generatedKey, user.id)
+    }
+
     @Table("users")
     data class UserWithNoBirthYear (
         var id: Long?,

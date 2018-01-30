@@ -118,6 +118,8 @@ class InsertImpl(private val backend: Backend): Insert {
                         if (generatedKeys != null) {
                             if (generatedKeys.next()) {
                                 key = generatedKeys.getLong(1)
+
+                                setBeanGeneratedKey(bean, key)
                             }
                             generatedKeys.close()
                         }
@@ -136,6 +138,18 @@ class InsertImpl(private val backend: Backend): Insert {
             throw PersistenceException("insert <$sqlString> failed with parameters ${values.values}", sqlx)
         } finally {
             backend.closeConnection(sqlCon)
+        }
+    }
+
+    private fun setBeanGeneratedKey(bean: Any, key: Long) {
+        val keys = metaResolver.getKeys(bean.javaClass)
+        if (keys.size == 1) {
+            val soleKey = keys.first()
+            when {
+                soleKey.classType == Long::class.java || soleKey.classType == java.lang.Long::class.java -> soleKey.set(bean, key)
+                soleKey.classType == Int::class.java || soleKey.classType == Integer::class.java -> soleKey.set(bean, key.toInt())
+                soleKey.classType == Short::class.java || soleKey.classType == java.lang.Short::class.java -> soleKey.set(bean, key.toShort())
+            }
         }
     }
 

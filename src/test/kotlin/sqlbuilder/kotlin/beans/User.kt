@@ -7,5 +7,5 @@ data class User (
     var id: Long?,
     var username: String?,
     var birthYear: Short?,
-    var files: MutableList<File>?
+    var files: List<File>?
 )
