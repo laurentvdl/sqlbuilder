@@ -5,6 +5,7 @@ import sqlbuilder.Backend
 import sqlbuilder.CacheStrategy
 import sqlbuilder.CacheableQuery
 import sqlbuilder.IncorrectResultSizeException
+import sqlbuilder.LazyValue
 import sqlbuilder.OptionalReturningRowHandler
 import sqlbuilder.PersistenceException
 import sqlbuilder.Relation
@@ -284,7 +285,9 @@ class SelectImpl(private val backend: Backend) : Select {
 
         val con = backend.getSqlConnection()
         try {
-            logger.info("{} ({})", sql, whereParameters)
+            if (logger.isInfoEnabled) {
+                logger.info("{} ({})", sql, whereParameters.map { if (it is LazyValue) it.eval() else it })
+            }
 
             val sqlConverter = SqlConverter(backend.configuration)
 
