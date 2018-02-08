@@ -1,5 +1,6 @@
 package sqlbuilder.impl
 
+import be.jessa.ws.okapi.logging.debug
 import org.slf4j.LoggerFactory
 import sqlbuilder.Backend
 import sqlbuilder.CacheableQuery
@@ -100,6 +101,9 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
                 if (isolationLevel >= 0) connection!!.transactionIsolation = isolationLevel
                 connection!!.autoCommit = false
                 txConnections.set(connection)
+                logger.debug {
+                    "start transaction for connection $connection using isolation $isolationLevel and readonly set to $readonly"
+                }
             }
             connection.isReadOnly = readonly
         } catch (e: SQLException) {
@@ -113,6 +117,9 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
         if (connection != null) {
             txConnections.set(null)
             try {
+                logger.debug {
+                    "commit transaction for connection $connection"
+                }
                 connection.commit()
                 connection.autoCommit = true
             } catch (ignore: SQLException) {

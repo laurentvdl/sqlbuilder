@@ -7,9 +7,9 @@ import java.lang.reflect.Proxy
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
-import java.util.ArrayList
 import java.util.Arrays
 import java.util.Collections
+import java.util.LinkedList
 import java.util.Properties
 import java.util.Timer
 import java.util.TimerTask
@@ -20,8 +20,8 @@ import javax.sql.DataSource
 class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : DataSource {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    private val _idleConnections = ArrayList<TransactionalConnection>()
-    private val _activeConnections = ArrayList<TransactionalConnection>()
+    private val _idleConnections = LinkedList<TransactionalConnection>()
+    private val _activeConnections = LinkedList<TransactionalConnection>()
 
     private var timer: Timer? = null
     private var active = true
@@ -167,7 +167,7 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
 
             val connection: TransactionalConnection
             if (_idleConnections.isNotEmpty()) {
-                connection = _idleConnections.removeAt(0)
+                connection = _idleConnections.pop()
                 connection.ping()
             } else {
                 try {
@@ -195,7 +195,9 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
         synchronized(lock) {
             _activeConnections.remove(connection)
             if (active) {
-                _idleConnections.add(connection)
+                if (!_idleConnections.contains(connection)) {
+                    _idleConnections.add(connection)
+                }
             } else {
                 try {
                     connection.target.close()

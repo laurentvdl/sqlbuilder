@@ -11,7 +11,7 @@ buildscript {
     }
 }
 
-val kotlinVersion = "1.2.20"
+val kotlinVersion = "1.2.21"
 
 plugins {
     kotlin("jvm") version "1.2.20"
@@ -20,7 +20,7 @@ plugins {
 }
 
 group = "com.github.sqlbuilder"
-version = "1.9.0"
+version = "1.9.1"
 
 val sourcesJar by tasks.creating(Jar::class) {
     classifier = "sources"

@@ -43,12 +43,10 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
         val methodName = method.name
 
         if ("close" == methodName) {
-            if (valid) {
-                synchronized(datasource) {
-                    return datasource.freeConnection(this)
-                }
+            return if (valid) {
+                datasource.freeConnection(this)
             } else {
-                return null
+                null
             }
         } else if ("prepareStatement" == methodName && args != null && preparedStatmentInterceptor != null) {
             return PreparedStatementWrapper(invokeMethod(method, args) as PreparedStatement, args[0] as String, preparedStatmentInterceptor)
@@ -80,6 +78,7 @@ class TransactionalConnection(val target: Connection, val datasource: DataSource
             }
         }
         try {
+            logger.debug("closing target connection {}", target)
             target.close()
         } catch (e: SQLException) {
             logger.warn("close failed", e)
