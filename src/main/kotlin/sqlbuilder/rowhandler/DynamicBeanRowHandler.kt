@@ -53,7 +53,7 @@ class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>, private va
                     if (prop != null) {
                         propertyCache.add(prop)
                     } else {
-                        trace.warn("cannot set '$cName' on <${beanClass.name}> $refCache")
+                        trace.debug("cannot set '$cName' on <${beanClass.name}> $refCache")
                         propertyCache.add(null)
                     }
                 }
