@@ -94,7 +94,11 @@ class InsertImpl(private val backend: Backend): Insert {
 
                 logger.info(sqlString)
 
-                cachedStatement = sqlCon.prepareStatement(sqlString, keys.map { it.columnName }.toTypedArray())
+                cachedStatement = if (keys.isEmpty()) {
+                    sqlCon.prepareStatement(sqlString)
+                } else {
+                    sqlCon.prepareStatement(sqlString, keys.map { it.columnName }.toTypedArray())
+                }
             }
             try {
                 if (checkNullability) {
