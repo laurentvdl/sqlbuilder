@@ -1,6 +1,7 @@
 package sqlbuilder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -117,7 +118,7 @@ public class JavaUsage {
 
         validateJoinedResult(allUsersAndFiles);
         for (User userAndFiles : allUsersAndFiles) {
-            assertNull("mutli context tables are not supported without prefixed columns", userAndFiles.getParent());
+            assertNotEquals("table alias is use to distinguish tables in different role", userAndFiles.getId(), userAndFiles.getParent_id());
         }
 
         // some databases like Oracle don't fully support JDBC resultset metadata, so we need to be more explicit

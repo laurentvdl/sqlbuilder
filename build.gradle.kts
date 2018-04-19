@@ -20,7 +20,7 @@ plugins {
 }
 
 group = "com.github.sqlbuilder"
-version = "1.9.3"
+version = "1.9.4"
 
 val sourcesJar by tasks.creating(Jar::class) {
     classifier = "sources"

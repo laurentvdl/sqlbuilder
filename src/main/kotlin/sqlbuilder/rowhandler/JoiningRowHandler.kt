@@ -81,7 +81,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
     @SuppressWarnings("unchecked")
     @Throws(SQLException::class)
-    protected fun <S> getColumnFromTable(set: ResultSet, prefix: String, property: PropertyReference, propertyType: Class<S>): S? {
+    protected fun <S> getColumnFromTable(set: ResultSet, prefix: String?, property: PropertyReference, propertyType: Class<S>): S? {
         createColumnToIndexCache(set)
         val index = getColumnIndex(prefix, property)
         if (index != null) {
@@ -96,7 +96,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         } else {
             val columnName = tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(tableAlias.toLowerCase(), property.columnName)]
                     ?: indexFQColumnName(property.columnName, tableAlias)
-            columnToIndex[columnName]
+            columnToIndex[columnName] ?: columnToIndex[property.columnName]
         }
     }
 
@@ -131,11 +131,11 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
      * @return newly mapped object or cached value if the primary result is not unique
      * @throws SQLException
      */
-    fun mapPrimaryBean(set: ResultSet, primaryType: Class<T>, prefix: String): T {
+    fun mapPrimaryBean(set: ResultSet, primaryType: Class<T>, prefix: String?): T {
         val keyValues = getKeyValues(set, getKeys(primaryType), prefix, false)
         var instance = getById(primaryType, prefix, keyValues)
         if (instance == null) {
-            instance = mapSetToBean(set, prefix.toLowerCase(), primaryType.newInstance())
+            instance = mapSetToBean(set, prefix?.toLowerCase(), primaryType.newInstance())
             addPrimaryBean(instance)
             putById(instance, prefix, keyValues)
         }
@@ -154,7 +154,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         }
     }
 
-    protected fun getKeyValues(set: ResultSet, keys: List<PropertyReference>, prefix: String, allowNull: Boolean): List<Any?> {
+    protected fun getKeyValues(set: ResultSet, keys: List<PropertyReference>, prefix: String?, allowNull: Boolean): List<Any?> {
         return keys.mapTo(LinkedList()) { key ->
             val value = getColumnFromTable(set, prefix, key, key.classType)
             if (value == null && !allowNull) {
