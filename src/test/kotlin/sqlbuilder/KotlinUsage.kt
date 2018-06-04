@@ -10,6 +10,7 @@ import sqlbuilder.kotlin.select.excludeProperties
 import sqlbuilder.kotlin.select.group
 import sqlbuilder.kotlin.select.includeProperties
 import sqlbuilder.kotlin.select.join.mapPrimaryBean
+import sqlbuilder.kotlin.select.or
 import sqlbuilder.kotlin.select.selectBean
 import sqlbuilder.kotlin.select.selectBeans
 import sqlbuilder.kotlin.select.selectField
@@ -212,6 +213,17 @@ class KotlinUsage {
                     .and(false, "jiberu")
                 .endWhere()
             .selectBeans(User::class.java)
+
+        sqlBuilder.select {
+            where {
+                and("1 = 1")
+                group {
+                    or(false, "1 = 1")
+                    or(emptyList()) { subGroup: WhereGroup, item: String -> subGroup.or(item) }
+                }
+            }
+            selectBeans<User>()
+        }
     }
 
     @Test(expected = IncorrectJoinMapping::class)
@@ -287,6 +299,24 @@ class KotlinUsage {
         val user = User(null, "dude", 1979, emptyList<File>())
         val generatedKey = sqlBuilder.insert().insertBean(user)
         assertEquals(generatedKey, user.id)
+    }
+
+    @Test
+    fun filterByIterable() {
+        val userNames = listOf("test a", "test b")
+
+        var users = sqlBuilder.select {
+            where {
+                or(userNames, object: WhereGroupVisitor<String> {
+                    override fun forItem(subGroup: WhereGroup, item: String) {
+                        subGroup.or("username = ?", item)
+                    }
+                })
+            }
+            selectBeans<User>()
+        }
+
+        assertEquals(2, users.size)
     }
 
     @Table("users")

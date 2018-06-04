@@ -4,6 +4,7 @@ import sqlbuilder.Relation
 import sqlbuilder.ResultSet
 import sqlbuilder.Select
 import sqlbuilder.WhereGroup
+import sqlbuilder.WhereGroupVisitor
 import sqlbuilder.rowhandler.JoiningPagedRowHandler
 import sqlbuilder.rowhandler.JoiningRowHandler
 import kotlin.reflect.KProperty
@@ -30,6 +31,22 @@ inline fun WhereGroup.group(relation: Relation = Relation.AND, block: WhereGroup
     val group = this.group(relation)
     block(group)
     group.endGroup()
+}
+
+inline fun <T> WhereGroup.or(iterable: Iterable<T>, crossinline visitor: (subGroup: WhereGroup, item: T) -> Unit): WhereGroup {
+    return this.or(iterable, object: WhereGroupVisitor<T> {
+        override fun forItem(subGroup: WhereGroup, item: T) {
+            visitor(subGroup, item)
+        }
+    })
+}
+
+inline fun <T> WhereGroup.and(iterable: Iterable<T>, crossinline visitor: (subGroup: WhereGroup, item: T) -> Unit): WhereGroup {
+    return this.and(iterable, object: WhereGroupVisitor<T> {
+        override fun forItem(subGroup: WhereGroup, item: T) {
+            visitor(subGroup, item)
+        }
+    })
 }
 
 inline fun <reified T : Any> Select.selectJoinedEntities(joinedEntities: Set<Class<*>> = emptySet(), crossinline rowHandler: JoiningRowHandler<T>.(set: ResultSet, row: Int) -> Unit): List<T> {

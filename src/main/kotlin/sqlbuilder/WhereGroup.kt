@@ -140,7 +140,7 @@ class WhereGroup(private var parent: Any, private val select: Select, private va
     fun <T> or(iterable: Iterable<T>?, visitor: WhereGroupVisitor<T>): WhereGroup = forIterable(Relation.OR, iterable, visitor)
 
     fun <T> forIterable(relation: Relation, iterable: Iterable<T>?, visitor: WhereGroupVisitor<T>): WhereGroup {
-        if (iterable != null) {
+        if (iterable != null && iterable.any()) {
             val subGroup = group(relation)
             for (item in iterable) {
                 visitor.forItem(subGroup, item)
