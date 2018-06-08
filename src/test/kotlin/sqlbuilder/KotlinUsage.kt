@@ -25,6 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class KotlinUsage {
@@ -317,6 +318,30 @@ class KotlinUsage {
         }
 
         assertEquals(2, users.size)
+    }
+
+    @Test
+    fun alwaysInitializesRelationCollections() {
+        val username = "userwithnofiles"
+        sqlBuilder.insert().getKeys(true).insertBean(User(
+                username = username,
+                birthYear = 1976,
+                files = null,
+                id = null
+        ))
+
+        val userWithNoFiles = sqlBuilder.select()
+                .sql("select * from users " +
+                        " left join files files on users.id = files.userid" +
+                        " where username = ?", username)
+                .selectJoinedEntities<User>(setOf(File::class.java, Attribute::class.java)) { set,_ ->
+                    val user = mapPrimaryBean(set, User::class.java, "users")
+                    join(set, user, "files", File::class.java, "files")
+                }
+                .first()
+
+        assertNotNull(userWithNoFiles.files, "Files collection should be initialized")
+        assertTrue(userWithNoFiles.files!!.isEmpty(), "Files collection should be initialized")
     }
 
     @Table("users")

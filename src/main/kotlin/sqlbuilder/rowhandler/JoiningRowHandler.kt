@@ -10,7 +10,6 @@ import java.lang.reflect.Field
 import java.sql.SQLException
 import java.util.ArrayList
 import java.util.HashMap
-import java.util.HashSet
 import java.util.LinkedList
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
@@ -246,20 +245,22 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
             val inResultSet = keyValues.all { it != null }
 
+            val cacheKey = BeanProperty(owner.javaClass, property)
+            val relationField = relationFieldCache[cacheKey]
+                    ?: run<Field> {
+                        val relationField = metaResolver!!.findField(property, owner.javaClass)
+                                ?: throw IllegalArgumentException("${owner.javaClass} has no property named <$property>")
+                        relationField.isAccessible = true
+                        relationFieldCache[cacheKey] = relationField
+                        relationField
+                    }
+
+            val isList = List::class.java.isAssignableFrom(relationField.type!!)
+            val isSet = Set::class.java.isAssignableFrom(relationField.type!!)
+
+            initializeCollections<W>(isList, relationField, owner, isSet)
+
             if (inResultSet) {
-                val cacheKey = BeanProperty(owner.javaClass, property)
-                val relationField = relationFieldCache[cacheKey]
-                        ?: run<Field> {
-                    val relationField = metaResolver!!.findField(property, owner.javaClass)
-                            ?: throw IllegalArgumentException("${owner.javaClass} has no property named <$property>")
-                    relationField.isAccessible = true
-                    relationFieldCache.put(cacheKey, relationField)
-                    relationField
-                }
-
-                val isList = List::class.java.isAssignableFrom(relationField.type!!)
-                val isSet = Set::class.java.isAssignableFrom(relationField.type!!)
-
                 // look in cache first
                 @Suppress("UNCHECKED_CAST")
                 var instance = getById(targetType, prefix, keyValues)
@@ -270,29 +271,35 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
                 }
                 if (isList) {
                     @Suppress("UNCHECKED_CAST")
-                    var relationList = relationField.get(owner) as MutableList<W>?
-                    if (relationList == null) {
-                        relationList = ArrayList()
-                        relationField.set(owner, relationList)
-                    }
+                    var relationList = relationField.get(owner) as MutableList<W>
                     if (!relationList.contains(instance)) relationList.add(instance!!)
-                } else
-                    if (isSet) {
-                        @Suppress("UNCHECKED_CAST")
-                        val relationSet = relationField.get(owner) as MutableSet<W>? ?:
-                                run<MutableSet<W>> {
-                                    val setValue = HashSet<W>()
-                                    relationField.set(owner, setValue)
-                                    setValue
-                                }
-                        if (!relationSet.contains(instance)) relationSet.add(instance!!)
-                    } else {
-                        relationField.set(owner, instance)
-                    }
+                } else if (isSet) {
+                    @Suppress("UNCHECKED_CAST")
+                    val relationSet = relationField.get(owner) as MutableSet<W>
+                    if (!relationSet.contains(instance)) relationSet.add(instance!!)
+                } else {
+                    relationField.set(owner, instance)
+                }
                 return instance!!
             }
         }
         return null
+    }
+
+    private fun <W : Any> initializeCollections(isList: Boolean, relationField: Field, owner: Any?, isSet: Boolean) {
+        if (isList) {
+            var relationList = relationField.get(owner) as MutableList<W>?
+            if (relationList == null) {
+                relationList = ArrayList()
+                relationField.set(owner, relationList)
+            }
+        } else if (isSet) {
+            var relationSet = relationField.get(owner) as HashSet<W>?
+            if (relationSet == null) {
+                relationSet = HashSet()
+                relationField.set(owner, relationSet)
+            }
+        }
     }
 
     override fun expand(sql: String?): String? {
