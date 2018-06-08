@@ -15,7 +15,9 @@ object Setup {
             username varchar(255) not null,
             birthyear int,
             sex char(1),
-            parent_id bigint
+            parent_id bigint,
+            superuser smallint,
+            active smallint
         )
         """)
 

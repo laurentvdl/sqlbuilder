@@ -20,15 +20,19 @@ public class User {
     private Set<File> files;
     private Long parent_id;
     private User parent;
+    private Boolean superUser;
+    private boolean active;
 
     public User() {
     }
 
-    public User(String username, int birthYear, char gender, Long parent_id) {
+    public User(String username, int birthYear, char gender, Long parent_id, Boolean superUser, Boolean active) {
         this.username = username;
         this.birthYear = birthYear;
         this.gender = gender;
         this.parent_id = parent_id;
+        this.superUser = superUser;
+        this.active = active;
     }
 
     public Long getId() {
@@ -85,6 +89,22 @@ public class User {
 
     public void setParent(User parent) {
         this.parent = parent;
+    }
+
+    public Boolean isSuperUser() {
+        return superUser;
+    }
+
+    public void setSuperUser(Boolean superUser) {
+        this.superUser = superUser;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     @Override

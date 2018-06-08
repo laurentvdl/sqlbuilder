@@ -68,27 +68,29 @@ open class ReflectionResolver(val configuration: Configuration) : MetaResolver {
         for (method in methods) {
             val name = method.name!!
             val methodModifiers = method.modifiers
-            if (prefixes.any { name.startsWith(it) } && !Modifier.isTransient(methodModifiers) && !Modifier.isStatic(methodModifiers)) {
-                val propertyName = name.substring(3, 4).toLowerCase() + name.substring(4)
-                var accept = true
-                val privateField = findField(propertyName, beanClass)
-                if (privateField == null) {
-                    accept = false
-                } else {
-                    accept = accept && !isTransient(privateField)
-                }
-                if (accept) {
-                    if (mutators) {
-                        val parameters = method.parameterTypes
-                        if (parameters != null && parameters.size == 1 && (isSqlType(parameters[0]) || Enum::class.java.isAssignableFrom(parameters[0]))) {
-                            result.add(JavaGetterSetterPropertyReference(propertyName, method, parameters[0]))
-                            names.add(propertyName)
-                        }
+            for (prefix in prefixes) {
+                if (name.startsWith(prefix) && !Modifier.isTransient(methodModifiers) && !Modifier.isStatic(methodModifiers)) {
+                    val propertyName = name.substring(prefix.length, prefix.length + 1).toLowerCase() + name.substring(prefix.length + 1)
+                    var accept = true
+                    val privateField = findField(propertyName, beanClass)
+                    accept = if (privateField == null) {
+                        false
                     } else {
-                        val returnType = method.returnType
-                        if (returnType != null && isSqlType(returnType)) {
-                            result.add(JavaGetterSetterPropertyReference(propertyName, method, returnType))
-                            names.add(propertyName)
+                        accept && !isTransient(privateField)
+                    }
+                    if (accept) {
+                        if (mutators) {
+                            val parameters = method.parameterTypes
+                            if (parameters != null && parameters.size == 1 && (isSqlType(parameters[0]) || Enum::class.java.isAssignableFrom(parameters[0]))) {
+                                result.add(JavaGetterSetterPropertyReference(propertyName, method, parameters[0]))
+                                names.add(propertyName)
+                            }
+                        } else {
+                            val returnType = method.returnType
+                            if (returnType != null && isSqlType(returnType)) {
+                                result.add(JavaGetterSetterPropertyReference(propertyName, method, returnType))
+                                names.add(propertyName)
+                            }
                         }
                     }
                 }

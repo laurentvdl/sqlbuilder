@@ -20,7 +20,7 @@ plugins {
 }
 
 group = "com.github.sqlbuilder"
-version = "1.9.5"
+version = "1.9.6"
 
 val sourcesJar by tasks.creating(Jar::class) {
     classifier = "sources"
@@ -43,7 +43,7 @@ noArg {
 }
 
 dependencies {
-    compile(kotlin("stdlib-jre8", version = kotlinVersion))
+    compile(kotlin("stdlib-jdk8", version = kotlinVersion))
     compile(kotlin("reflect", version = kotlinVersion))
     compile("org.slf4j:slf4j-api:1.7.7")
     testCompile (kotlin("test", version = kotlinVersion))

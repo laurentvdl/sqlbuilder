@@ -1,6 +1,7 @@
 package sqlbuilder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -45,12 +46,12 @@ public class JavaUsage {
 
         assertEquals(
             "generated key should be 1", 1L,
-            sqlBuilder.insert().getKeys(true).insertBean(new User("javauser a", 2014, 'M', null))
+            sqlBuilder.insert().getKeys(true).insertBean(new User("javauser a", 2014, 'M', null, true, true))
         );
 
         assertEquals(
             "generated key should be 2", 2L,
-            sqlBuilder.insert().getKeys(true).into("users").insertBean(new User("javauser b", 2014, 'F', 1L))
+            sqlBuilder.insert().getKeys(true).into("users").insertBean(new User("javauser b", 2014, 'F', 1L, false, false))
         );
 
         final Long fileId = sqlBuilder.insert().getKeys(true).insertBean(new File(1L, "profile"));
@@ -323,5 +324,22 @@ public class JavaUsage {
                 .selectBeans(User.class);
 
         assertTrue("no users should have a username of NULL", users.isEmpty());
+    }
+
+    @Test
+    public void handlesBooleanIsGettersSetters() {
+        final User a = sqlBuilder.select()
+                .from("users u")
+                .where("username = ?", "javauser a")
+                .selectBean(User.class);
+        assertTrue("javauser a should be a super user", a.isSuperUser());
+        assertTrue("javauser a should be active", a.isActive());
+
+        final User b = sqlBuilder.select()
+                .from("users u")
+                .where("username = ?", "javauser b")
+                .selectBean(User.class);
+        assertFalse("javauser b should not be a super user", b.isSuperUser());
+        assertFalse("javauser a should not be active", b.isActive());
     }
 }
