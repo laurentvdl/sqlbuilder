@@ -288,12 +288,14 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
     private fun <W : Any> initializeCollections(isList: Boolean, relationField: Field, owner: Any?, isSet: Boolean) {
         if (isList) {
+            @Suppress("UNCHECKED_CAST")
             var relationList = relationField.get(owner) as MutableList<W>?
             if (relationList == null) {
                 relationList = ArrayList()
                 relationField.set(owner, relationList)
             }
         } else if (isSet) {
+            @Suppress("UNCHECKED_CAST")
             var relationSet = relationField.get(owner) as HashSet<W>?
             if (relationSet == null) {
                 relationSet = HashSet()
