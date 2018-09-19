@@ -11,6 +11,8 @@ import sqlbuilder.impl.mappers.EnumNameMapper
 import sqlbuilder.impl.mappers.FloatMapper
 import sqlbuilder.impl.mappers.InputStreamMapper
 import sqlbuilder.impl.mappers.IntegerMapper
+import sqlbuilder.impl.mappers.LocalDateMapper
+import sqlbuilder.impl.mappers.LocalDateTimeMapper
 import sqlbuilder.impl.mappers.LongMapper
 import sqlbuilder.impl.mappers.ReaderMapper
 import sqlbuilder.impl.mappers.ShortMapper
@@ -47,7 +49,9 @@ open class DefaultConfiguration : Configuration {
                 DateMapper(),
                 TimestampMapper(),
                 EnumNameMapper(),
-                BooleanMapper()
+                BooleanMapper(),
+                LocalDateMapper(),
+                LocalDateTimeMapper()
         )
 
         dualPurposeMappers.forEach {

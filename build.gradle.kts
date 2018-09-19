@@ -11,20 +11,20 @@ buildscript {
     }
 }
 
-val kotlinVersion = "1.2.41"
+val kotlinVersion = "1.2.70"
 
 plugins {
-    kotlin("jvm") version "1.2.41"
-    id("org.jetbrains.kotlin.plugin.noarg").version("1.2.41")
+    kotlin("jvm") version "1.2.70"
+    id("org.jetbrains.kotlin.plugin.noarg").version("1.2.70")
     `maven-publish`
 }
 
 group = "com.github.sqlbuilder"
-version = "1.9.7"
+version = "1.10.0"
 
-val sourcesJar by tasks.creating(Jar::class) {
+val sourcesJar by tasks.registering(Jar::class) {
     classifier = "sources"
-    from(java.sourceSets["main"].allSource)
+    from(sourceSets["main"].allSource)
 }
 
 java {
@@ -45,18 +45,18 @@ noArg {
 dependencies {
     compile(kotlin("stdlib-jdk8", version = kotlinVersion))
     compile(kotlin("reflect", version = kotlinVersion))
-    compile("org.slf4j:slf4j-api:1.7.7")
+    compile("org.slf4j:slf4j-api:1.7.25")
     testCompile (kotlin("test", version = kotlinVersion))
-    testCompile("com.h2database:h2:1.4.183")
+    testCompile("com.h2database:h2:1.4.197")
     testCompile("junit:junit:4.11")
     testCompile("org.slf4j:slf4j-simple:1.7.7")
 }
 
 publishing {
-    (publications) {
-        "mavenJava"(MavenPublication::class) {
+    publications {
+        register("mavenJava", MavenPublication::class) {
             from(components["java"])
-            artifact(sourcesJar)
+            artifact(sourcesJar.get())
         }
     }
     repositories {
