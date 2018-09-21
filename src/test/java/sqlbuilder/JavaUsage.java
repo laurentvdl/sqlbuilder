@@ -37,9 +37,8 @@ import sqlbuilder.rowhandler.JoiningRowHandler;
  * @author Laurent Van der Linden
  */
 public class JavaUsage {
-    private final SqlBuilder sqlBuilder = new SqlBuilderImpl(
-        new DataSourceImpl(new DefaultConfig(null, null, "jdbc:h2:mem:test", Drivers.H2))
-    );
+    private final DataSourceImpl dataSource = new DataSourceImpl(new DefaultConfig(null, null, "jdbc:h2:mem:test", Drivers.H2));
+    private final SqlBuilder sqlBuilder = new SqlBuilderImpl(dataSource);
 
     @Before
     public void setup() {
@@ -347,12 +346,13 @@ public class JavaUsage {
     @Test
     public void mapsBooleanValuesToChar() {
         final BooleanCharMapper booleanCharMapper = new BooleanCharMapper("X", "_");
-        sqlBuilder.getConfiguration().registerToSQLMapper(booleanCharMapper);
-        sqlBuilder.getConfiguration().registerToObjectMapper(booleanCharMapper);
-        sqlBuilder.update().updateStatement("create table truths (column char(1))");
-        sqlBuilder.update().updateStatement("insert into truths values (?)", false);
-        final Boolean truth = sqlBuilder.select().from("truths").selectField(Boolean.class);
-        final String truthText = sqlBuilder.select().from("truths").selectField(String.class);
+        final SqlBuilder customSqlBuilder = new SqlBuilderImpl(dataSource);
+        customSqlBuilder.getConfiguration().registerToSQLMapper(booleanCharMapper);
+        customSqlBuilder.getConfiguration().registerToObjectMapper(booleanCharMapper);
+        customSqlBuilder.update().updateStatement("create table truths (column char(1))");
+        customSqlBuilder.update().updateStatement("insert into truths values (?)", false);
+        final Boolean truth = customSqlBuilder.select().from("truths").selectField(Boolean.class);
+        final String truthText = customSqlBuilder.select().from("truths").selectField(String.class);
         assertNotNull(truth);
         assertFalse(truth);
         assertEquals(truthText, "_");
