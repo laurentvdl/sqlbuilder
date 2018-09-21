@@ -16,7 +16,7 @@ class BooleanCharMapper(val trueChar: String = "X", val falseChar: String = "_")
     }
 
     override fun handles(targetType: Class<*>): Boolean {
-        return Boolean::class.java == targetType || Boolean::class.javaPrimitiveType == targetType
+        return Boolean::class.java == targetType || Boolean::class.javaPrimitiveType == targetType || java.lang.Boolean::class.java == targetType
     }
 
     override fun toSQL(params: ToSQLMappingParameters) {

@@ -21,6 +21,7 @@ import sqlbuilder.beans.Attribute;
 import sqlbuilder.beans.File;
 import sqlbuilder.beans.User;
 import sqlbuilder.impl.SqlBuilderImpl;
+import sqlbuilder.impl.mappers.BooleanCharMapper;
 import sqlbuilder.mapping.ToObjectMapper;
 import sqlbuilder.mapping.ToObjectMappingParameters;
 import sqlbuilder.pool.DataSourceImpl;
@@ -341,5 +342,19 @@ public class JavaUsage {
                 .selectBean(User.class);
         assertFalse("javauser b should not be a super user", b.isSuperUser());
         assertFalse("javauser a should not be active", b.isActive());
+    }
+
+    @Test
+    public void mapsBooleanValuesToChar() {
+        final BooleanCharMapper booleanCharMapper = new BooleanCharMapper("X", "_");
+        sqlBuilder.getConfiguration().registerToSQLMapper(booleanCharMapper);
+        sqlBuilder.getConfiguration().registerToObjectMapper(booleanCharMapper);
+        sqlBuilder.update().updateStatement("create table truths (column char(1))");
+        sqlBuilder.update().updateStatement("insert into truths values (?)", false);
+        final Boolean truth = sqlBuilder.select().from("truths").selectField(Boolean.class);
+        final String truthText = sqlBuilder.select().from("truths").selectField(String.class);
+        assertNotNull(truth);
+        assertFalse(truth);
+        assertEquals(truthText, "_");
     }
 }

@@ -27,6 +27,6 @@ class BooleanMapper : BiMapper {
     }
 
     override fun handles(targetType: Class<*>): Boolean {
-        return Boolean::class.java == targetType || java.lang.Boolean::class.java == targetType
+        return Boolean::class.java == targetType || Boolean::class.javaPrimitiveType == targetType || java.lang.Boolean::class.java == targetType
     }
 }
