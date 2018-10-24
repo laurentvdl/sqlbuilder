@@ -11,11 +11,11 @@ buildscript {
     }
 }
 
-val kotlinVersion = "1.2.70"
+val kotlinVersion = "1.2.71"
 
 plugins {
-    kotlin("jvm") version "1.2.70"
-    id("org.jetbrains.kotlin.plugin.noarg").version("1.2.70")
+    kotlin("jvm") version "1.2.71"
+    id("org.jetbrains.kotlin.plugin.noarg").version("1.2.71")
     `maven-publish`
 }
 
