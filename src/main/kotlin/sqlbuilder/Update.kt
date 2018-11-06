@@ -38,7 +38,7 @@ interface Update {
      * @param parameters parameters objects
      * @return updated rows
      */
-    fun updateStatement(@Language("SQL") sql: String, vararg parameters: Any): Int
+    fun updateStatement(@Language("SQL") sql: String, vararg parameters: Any?): Int
 
     /**
      * Custom update that allows null parameters due to the types argument.
@@ -47,7 +47,7 @@ interface Update {
      * @param types array of java.sql.Types
      * @return updated rows
      */
-    fun updateStatement(@Language("SQL") sql: String, parameters: Array<out Any>?, types: IntArray?): Int
+    fun updateStatement(@Language("SQL") sql: String, parameters: Array<out Any?>?, types: IntArray?): Int
 
     /**
      * Special updatestatement that throws PersistenceException if updated rows do not match.
@@ -56,7 +56,7 @@ interface Update {
      * @param parameters
      * @return updated rows if matching the expected
      */
-    fun updateStatementExpecting(@Language("SQL") sql: String, expectedUpdateCount: Int, vararg parameters: Any): Int
+    fun updateStatementExpecting(@Language("SQL") sql: String, expectedUpdateCount: Int, vararg parameters: Any?): Int
 
     /**
      * store any generated id after executing the update statement (which should be an insert in this case)
@@ -65,6 +65,8 @@ interface Update {
      * @return
      */
     fun getKeys(cond: Boolean): Update
+
+    fun getKeys(vararg keys: String): Update
 
     fun getGeneratedKey(): Long
 
