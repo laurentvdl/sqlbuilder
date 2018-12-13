@@ -87,8 +87,8 @@ class KotlinUsage {
                 .sql("select * from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
                 .selectJoinedEntities<User> { set, _ ->
                     val user = mapPrimaryBean(set, User::class.java, "users")
-                    val file = join(set, user, User::files, "files")
-                    join(set, file, File::attributes, "attributes")
+                    val file = joinCollection(set, user, User::files, "files")
+                    joinCollection(set, file, File::attributes, "attributes")
                 }
         assertEquals(2, usersWithFiles.first().files?.size, "first user should have 2 files")
     }
@@ -98,8 +98,8 @@ class KotlinUsage {
                 .sql("select * from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
                 .selectJoinedEntitiesPaged<User>(offset = 0, rows = 1, prefix = "users") { set, _ ->
                     val user = mapPrimaryBean(set, User::class.java, "users")
-                    val file = join(set, user, User::files, "files")
-                    join(set, file, File::attributes, "attributes")
+                    val file = joinCollection(set, user, User::files, "files")
+                    joinCollection(set, file, File::attributes, "attributes")
                 }
         assertEquals(1, usersWithFiles.size, "only the first user should be included")
         assertEquals(2, usersWithFiles.first().files?.size, "first user should have 2 files")
@@ -195,8 +195,8 @@ class KotlinUsage {
                 .sql("select {User.* as users},{File.* as files},{Attribute.* as attributes} from users left join files on users.id = files.userid left join attributes on files.id = attributes.fileid")
                 .selectJoinedEntities<User>(setOf(File::class.java, Attribute::class.java)) { set: ResultSet, _: Int ->
                     val user = mapPrimaryBean(set, "USERS")
-                    val file = join(set, user, User::files, "files")
-                    join(set, file, File::attributes, "attributes")
+                    val file = joinCollection(set, user, User::files, "files")
+                    joinCollection(set, file, File::attributes, "attributes")
                 }
 
         assertNotNull(usersWithFiles.first().birthYear)
@@ -244,7 +244,7 @@ class KotlinUsage {
                 .sql("select u.id as users_id,{File.* as files} from users u left join files on u.id = files.userid")
                 .selectJoinedEntities<User>(setOf(File::class.java, Attribute::class.java)) { set,_ ->
                     val user = mapPrimaryBean(set, User::class.java, "users")
-                    join(set, user, User::files, "files")
+                    joinCollection(set, user, User::files, "files")
                 }
 
         assertNotNull(usersWithFiles.first().id)

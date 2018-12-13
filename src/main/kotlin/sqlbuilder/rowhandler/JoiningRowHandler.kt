@@ -223,7 +223,15 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         return instance
     }
 
+    @Suppress("DeprecatedCallableAddReplaceWith")
+    @Deprecated("use either joinCollection or joinInstance instead")
     inline fun <reified P : Any> join(set: ResultSet, owner: Any?, property: KProperty<Collection<P>?>, prefix: String?) =
+            join(set, owner, property.name, P::class.java, prefix)
+
+    inline fun <reified P : Any> joinCollection(set: ResultSet, owner: Any?, property: KProperty<Collection<P>?>, prefix: String?) =
+            join(set, owner, property.name, P::class.java, prefix)
+
+    inline fun <reified P : Any> joinInstance(set: ResultSet, owner: Any?, property: KProperty<P?>, prefix: String?) =
             join(set, owner, property.name, P::class.java, prefix)
 
     /**

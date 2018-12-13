@@ -11,16 +11,16 @@ buildscript {
     }
 }
 
-val kotlinVersion = "1.3.0"
+val kotlinVersion = "1.3.11"
 
 plugins {
-    kotlin("jvm") version "1.3.0"
-    id("org.jetbrains.kotlin.plugin.noarg").version("1.3.0")
+    kotlin("jvm") version "1.3.11"
+    id("org.jetbrains.kotlin.plugin.noarg").version("1.3.11")
     `maven-publish`
 }
 
 group = "com.github.sqlbuilder"
-version = "1.11.1"
+version = "1.12.0"
 
 val sourcesJar by tasks.registering(Jar::class) {
     classifier = "sources"
