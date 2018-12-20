@@ -5,6 +5,7 @@ import sqlbuilder.mapping.ToSQLMappingParameters
 import java.sql.PreparedStatement
 import java.sql.SQLException
 import java.sql.Types
+import java.util.function.Supplier
 
 /**
  * Helper class that sets/gets from sql objects according to type.
@@ -38,11 +39,18 @@ class SqlConverter(private val configuration: Configuration) {
                 }
             }
         } else {
+            @Suppress("DEPRECATION")
             if (convertedParam is LazyValue) {
                 try {
                     convertedParam = convertedParam.eval()
                 } catch (e: Exception) {
-                    throw PersistenceException("unable to eval lazy value: " + convertedParam, e)
+                    throw PersistenceException("unable to eval lazy value: $convertedParam", e)
+                }
+            } else if (convertedParam is Supplier<*>) {
+                try {
+                    convertedParam = convertedParam.get()
+                } catch (e: Exception) {
+                    throw PersistenceException("unable to eval lazy value: $convertedParam", e)
                 }
             }
 

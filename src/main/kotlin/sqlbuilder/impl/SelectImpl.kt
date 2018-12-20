@@ -36,6 +36,7 @@ import java.io.OutputStream
 import java.io.Writer
 import java.sql.ResultSet
 import java.util.ArrayList
+import java.util.function.Supplier
 
 class SelectImpl(private val backend: Backend) : Select {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -286,7 +287,14 @@ class SelectImpl(private val backend: Backend) : Select {
         val con = backend.getSqlConnection()
         try {
             if (logger.isInfoEnabled) {
-                logger.info("{} ({})", sql, whereParameters.map { if (it is LazyValue) it.eval() else it })
+                logger.info("{} ({})", sql, whereParameters.map { parameter ->
+                    @Suppress("DEPRECATION")
+                    when (parameter) {
+                        is LazyValue -> parameter.eval()
+                        is Supplier<*> -> parameter.get()
+                        else -> parameter
+                    }
+                })
             }
 
             val sqlConverter = SqlConverter(backend.configuration)
