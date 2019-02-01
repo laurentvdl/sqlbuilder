@@ -6,8 +6,11 @@ import sqlbuilder.Insert
 import sqlbuilder.PersistenceException
 import sqlbuilder.SqlConverter
 import sqlbuilder.exclude
+import sqlbuilder.impl.mappers.AnyMapper
 import sqlbuilder.include
+import sqlbuilder.mapping.ToObjectMappingParameters
 import java.sql.PreparedStatement
+import java.sql.ResultSet
 import java.sql.SQLException
 
 class InsertImpl(private val backend: Backend): Insert {
@@ -121,9 +124,8 @@ class InsertImpl(private val backend: Backend): Insert {
                         val generatedKeys = cachedStatement!!.generatedKeys
                         if (generatedKeys != null) {
                             if (generatedKeys.next()) {
+                                setBeanGeneratedKey(bean, generatedKeys)
                                 key = generatedKeys.getLong(1)
-
-                                setBeanGeneratedKey(bean, key)
                             }
                             generatedKeys.close()
                         }
@@ -145,15 +147,12 @@ class InsertImpl(private val backend: Backend): Insert {
         }
     }
 
-    private fun setBeanGeneratedKey(bean: Any, key: Long) {
+    private fun setBeanGeneratedKey(bean: Any, resultSet: ResultSet) {
         val keys = metaResolver.getKeys(bean.javaClass)
         if (keys.size == 1) {
             val soleKey = keys.first()
-            when {
-                soleKey.classType == Long::class.java || soleKey.classType == java.lang.Long::class.java -> soleKey.set(bean, key)
-                soleKey.classType == Int::class.java || soleKey.classType == Integer::class.java -> soleKey.set(bean, key.toInt())
-                soleKey.classType == Short::class.java || soleKey.classType == java.lang.Short::class.java -> soleKey.set(bean, key.toShort())
-            }
+            val objectMapperForType = backend.configuration.objectMapperForType(soleKey.classType) ?: AnyMapper()
+            soleKey.set(bean, objectMapperForType.toObject(ToObjectMappingParameters(1, resultSet, soleKey.classType)))
         }
     }
 
