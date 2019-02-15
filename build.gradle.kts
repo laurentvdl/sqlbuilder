@@ -1,8 +1,3 @@
-import org.gradle.kotlin.dsl.extra
-import org.gradle.kotlin.dsl.getValue
-import org.gradle.kotlin.dsl.kotlin
-import org.gradle.kotlin.dsl.repositories
-import org.gradle.kotlin.dsl.version
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
@@ -11,11 +6,11 @@ buildscript {
     }
 }
 
-val kotlinVersion = "1.3.20"
+val kotlinVersion = "1.3.21"
 
 plugins {
-    kotlin("jvm") version "1.3.20"
-    id("org.jetbrains.kotlin.plugin.noarg").version("1.3.20")
+    kotlin("jvm") version "1.3.21"
+    id("org.jetbrains.kotlin.plugin.noarg").version("1.3.21")
     `maven-publish`
 }
 

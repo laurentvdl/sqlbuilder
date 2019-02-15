@@ -37,10 +37,10 @@ class JavaGetterSetterPropertyReference(override var name: String, private val m
     private fun findColumnName(): String {
         try {
             val fieldAnnotationName = method.declaringClass.getDeclaredField(this.name)?.getAnnotation(Column::class.java)?.name
-            if (fieldAnnotationName != null) {
-                return fieldAnnotationName.toLowerCase()
+            return if (fieldAnnotationName != null) {
+                fieldAnnotationName.toLowerCase()
             } else {
-                return name.toLowerCase()
+                name.toLowerCase()
             }
         } catch(ignore: NoSuchFieldException) {
             return name.toLowerCase()

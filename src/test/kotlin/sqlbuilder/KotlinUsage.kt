@@ -344,6 +344,21 @@ class KotlinUsage {
         assertTrue(userWithNoFiles.files!!.isEmpty(), "Files collection should be initialized")
     }
 
+    @Test
+    fun recognizesFinalFields() {
+        val username = "userwithnofiles"
+        sqlBuilder.insert().getKeys(true).insertBean(User(
+            username = username,
+            birthYear = 1976,
+            files = null,
+            id = null
+        ))
+
+        val finalUser = sqlBuilder.select().where("username = ?", username).selectBean(UserWithFinalFields::class.java)
+        assertNotNull(finalUser)
+        assertNotNull(finalUser.username)
+    }
+
     @Table("users")
     data class UserWithNoBirthYear (
         var id: Long?,
@@ -356,4 +371,10 @@ class KotlinUsage {
     class InvalidBean {
         var uuid: String? = null
     }
+
+    @Table("users")
+    data class UserWithFinalFields (
+        val id: Long?,
+        val username: String?
+    )
 }
