@@ -4,6 +4,7 @@ import sqlbuilder.mapping.ToObjectMapper
 import sqlbuilder.mapping.ToSQLMapper
 import sqlbuilder.meta.BeanFactory
 import sqlbuilder.meta.MetaResolver
+import sqlbuilder.meta.PropertyResolver
 
 /**
  * Configuration container for all pluggable aspects of a SqlBuilder instance.
@@ -26,4 +27,6 @@ interface Configuration {
     fun unregisterToSQLMapper(toSQLMapper: ToSQLMapper): Configuration
 
     fun beanFactroy(): BeanFactory
+
+    var propertyResolutionStrategies: List<PropertyResolver>
 }

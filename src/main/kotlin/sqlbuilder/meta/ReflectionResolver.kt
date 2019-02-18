@@ -3,10 +3,7 @@ package sqlbuilder.meta
 import sqlbuilder.Configuration
 import sqlbuilder.allFields
 import java.lang.reflect.Field
-import java.lang.reflect.Modifier
 import java.util.HashMap
-import java.util.HashSet
-import java.util.LinkedList
 
 /**
  * Scans for public static fields containing info about the tablename and primary key(s):
@@ -44,80 +41,26 @@ open class ReflectionResolver(val configuration: Configuration) : MetaResolver {
     }
 
     override fun getProperties(beanClass: Class<*>, mutators: Boolean): List<PropertyReference> {
-        if (mutators) {
-            return mutatorPropertiesCache.getOrPut(beanClass) {
+        return if (mutators) {
+            mutatorPropertiesCache.getOrPut(beanClass) {
                 scanProperties(beanClass, mutators)
             }
         } else {
-            return accessorPropertiesCache.getOrPut(beanClass) {
+            accessorPropertiesCache.getOrPut(beanClass) {
                 scanProperties(beanClass, mutators)
             }
         }
     }
 
     fun scanProperties(beanClass: Class<*>, mutators: Boolean): List<PropertyReference> {
-        val prefixes: Set<String>
-        if (mutators) {
-            prefixes = setOf("set")
-        } else {
-            prefixes = setOf("get", "is")
-        }
-        val result = LinkedList<PropertyReference>()
-        val names = HashSet<String>()
-        val methods = beanClass.methods
-        for (method in methods) {
-            val name = method.name!!
-            val methodModifiers = method.modifiers
-            for (prefix in prefixes) {
-                if (name.startsWith(prefix) && !Modifier.isTransient(methodModifiers) && !Modifier.isStatic(methodModifiers)) {
-                    val propertyName = name.substring(prefix.length, prefix.length + 1).toLowerCase() + name.substring(prefix.length + 1)
-                    var accept = true
-                    val privateField = findField(propertyName, beanClass)
-                    accept = if (privateField == null) {
-                        false
-                    } else {
-                        accept && !isTransient(privateField)
-                    }
-                    if (accept) {
-                        if (mutators) {
-                            val parameters = method.parameterTypes
-                            if (parameters != null && parameters.size == 1 && (isSqlType(parameters[0]) || Enum::class.java.isAssignableFrom(parameters[0]))) {
-                                result.add(JavaGetterSetterPropertyReference(propertyName, method, parameters[0]))
-                                names.add(propertyName)
-                            }
-                        } else {
-                            val returnType = method.returnType
-                            if (returnType != null && isSqlType(returnType)) {
-                                result.add(JavaGetterSetterPropertyReference(propertyName, method, returnType))
-                                names.add(propertyName)
-                            }
-                        }
-                    }
-                }
+        configuration.propertyResolutionStrategies.forEach { propertyResolver ->
+            val propertiesForBean = propertyResolver.resolvePropertiesForBean(beanClass, mutators, configuration)
+            if (propertiesForBean.isNotEmpty()) {
+                return propertiesForBean.sortedBy { it.columnName }
             }
         }
 
-        if (result.isEmpty()) {
-            val fields = beanClass.allFields
-            for (field in fields) {
-                val modifiers = field.modifiers
-                val name = field.name!!
-                if (!names.contains(name) && !Modifier.isAbstract(modifiers) && !Modifier.isStatic(modifiers) && isSqlType(field.type!!) && !Modifier.isTransient(modifiers)) {
-                    result.add(JavaFieldPropertyReference(field))
-                }
-            }
-        }
-
-        return result.sortedBy { it.columnName }
-    }
-
-    protected fun isTransient(privateField: Field): Boolean {
-        val modifiers = privateField.modifiers
-        return Modifier.isTransient(modifiers) || privateField.isAnnotationPresent(Transient::class.java)
-    }
-
-    private fun isSqlType(clazz: Class<*>): Boolean {
-        return configuration.objectMapperForType(clazz) != null
+        return emptyList()
     }
 
     override fun findField(name: String, fieldType: Class<*>): Field? {

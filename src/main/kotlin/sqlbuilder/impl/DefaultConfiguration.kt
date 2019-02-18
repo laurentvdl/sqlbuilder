@@ -21,7 +21,10 @@ import sqlbuilder.impl.mappers.TimestampMapper
 import sqlbuilder.mapping.ToObjectMapper
 import sqlbuilder.mapping.ToSQLMapper
 import sqlbuilder.meta.BeanFactory
+import sqlbuilder.meta.FieldPropertyResolver
 import sqlbuilder.meta.MetaResolver
+import sqlbuilder.meta.MethodPropertyResolver
+import sqlbuilder.meta.PropertyResolver
 import sqlbuilder.meta.ReflectionBeanFactory
 import sqlbuilder.meta.ReflectionResolver
 import java.util.ArrayList
@@ -111,6 +114,11 @@ open class DefaultConfiguration : Configuration {
     override fun beanFactroy(): BeanFactory {
         return ReflectionBeanFactory()
     }
+
+    override var propertyResolutionStrategies: List<PropertyResolver> = listOf(
+            MethodPropertyResolver(),
+            FieldPropertyResolver()
+    )
 
     init {
         registerDefaultMappers()

@@ -14,7 +14,6 @@ import java.util.Properties
 import java.util.Timer
 import java.util.TimerTask
 import java.util.logging.Logger
-import javax.annotation.PreDestroy
 import javax.sql.DataSource
 
 class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : DataSource {
@@ -212,7 +211,7 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
         return connection
     }
 
-    @PreDestroy fun stop() {
+    fun stop() {
         synchronized(lock) {
             active = false
             if (timer != null) {

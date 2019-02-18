@@ -2,6 +2,7 @@ package sqlbuilder
 
 import org.junit.Before
 import org.junit.Test
+import sqlbuilder.impl.SqlBuilderImpl
 import sqlbuilder.kotlin.beans.Attribute
 import sqlbuilder.kotlin.beans.File
 import sqlbuilder.kotlin.beans.User
@@ -19,6 +20,7 @@ import sqlbuilder.kotlin.select.selectJoinedEntitiesPaged
 import sqlbuilder.kotlin.select.where
 import sqlbuilder.kotlin.update.excludeProperties
 import sqlbuilder.kotlin.update.includeProperties
+import sqlbuilder.meta.FieldPropertyResolver
 import sqlbuilder.meta.Table
 import sqlbuilder.meta.Transient
 import kotlin.test.assertEquals
@@ -345,16 +347,19 @@ class KotlinUsage {
     }
 
     @Test
-    fun recognizesFinalFields() {
+    fun recognizesFinalFieldsWithFieldFirstConfiguration() {
+        val sqlBuilderUsingFields = SqlBuilderImpl(Setup.dataSource).apply {
+            configuration.propertyResolutionStrategies = listOf(FieldPropertyResolver())
+        }
         val username = "userwithnofiles"
-        sqlBuilder.insert().getKeys(true).insertBean(User(
+        sqlBuilderUsingFields.insert().getKeys(true).insertBean(User(
             username = username,
             birthYear = 1976,
             files = null,
             id = null
         ))
 
-        val finalUser = sqlBuilder.select().where("username = ?", username).selectBean(UserWithFinalFields::class.java)
+        val finalUser = sqlBuilderUsingFields.select().where("username = ?", username).selectBean(UserWithFinalFields::class.java)
         assertNotNull(finalUser)
         assertNotNull(finalUser.username)
     }
@@ -374,7 +379,7 @@ class KotlinUsage {
 
     @Table("users")
     data class UserWithFinalFields (
-        val id: Long?,
+        var id: Long?,
         val username: String?
     )
 }
