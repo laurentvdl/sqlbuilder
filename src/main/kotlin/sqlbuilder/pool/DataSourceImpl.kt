@@ -5,18 +5,20 @@ import sqlbuilder.PersistenceException
 import java.io.PrintWriter
 import java.lang.reflect.Proxy
 import java.sql.Connection
-import java.sql.DriverManager
 import java.sql.SQLException
 import java.util.Arrays
 import java.util.Collections
 import java.util.LinkedList
-import java.util.Properties
 import java.util.Timer
 import java.util.TimerTask
 import java.util.logging.Logger
 import javax.sql.DataSource
 
-class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : DataSource {
+class DataSourceImpl(private val connectionProvider: ConnectionProvider) : DataSource {
+    constructor(connectionConfigProvider: ConnectionConfigProvider) :this(ConfigurationConnectionProvider(connectionConfigProvider)) {
+        this.identityPlugin = connectionConfigProvider.identityPlugin
+    }
+
     private val logger = LoggerFactory.getLogger(javaClass)
 
     private val _idleConnections = LinkedList<TransactionalConnection>()
@@ -28,6 +30,8 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
     private var _logWriter: PrintWriter? = null
 
     private val lock = Object()
+
+    var identityPlugin: IdentityPlugin? = null
 
     var preparedStatementInterceptor: PreparedStatementInterceptor? = null
 
@@ -102,35 +106,12 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
 
     @Throws(SQLException::class)
     override fun getConnection(): Connection {
-        loadDriver()
         return Proxy.newProxyInstance(javaClass.classLoader, arrayOf<Class<*>>(Connection::class.java), obtainConnection()) as Connection
-    }
-
-    private fun loadDriver() {
-        val driver = configProvider.driverClassName
-        try {
-            Class.forName(driver)
-        } catch (e: ClassNotFoundException) {
-            throw PersistenceException("Driver <$driver> not in classpath", e)
-        }
-
     }
 
     @Throws(SQLException::class)
     private fun newFysicalConnection(): Connection {
-        val properties = configProvider.properties ?: Properties()
-
-        // ask DB2 to explain it's error codes
-        properties.setProperty("retrieveMessagesFromServerOnGetMessage", "true")
-
-        if (configProvider.username != null) {
-            properties.setProperty("user", configProvider.username)
-        }
-        if (configProvider.password != null) {
-            properties.setProperty("password", configProvider.password)
-        }
-
-        return DriverManager.getConnection(configProvider.url, properties)
+        return connectionProvider.connection
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -153,7 +134,7 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
             if (!active) throw IllegalStateException("datasource is inactive")
 
             if (timer == null) {
-                val timer = Timer(configProvider.url + " cleaner", true)
+                val timer = Timer(connectionProvider.identifier + " cleaner", true)
                 timer.schedule(object : TimerTask() {
                     override fun run() {
                         cleanIdles()
@@ -181,10 +162,9 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
             connection
         }
 
-        val identityPlugin = configProvider.identityPlugin
-        if (identityPlugin != null) {
+        identityPlugin?.let {
             // set username of actual user for tracing
-            val traceUser = identityPlugin.traceUsername
+            val traceUser = it.traceUsername
             if (traceUser != null) connection.setClientUser(traceUser)
         }
         return connection
@@ -226,7 +206,7 @@ class DataSourceImpl(private val configProvider: ConnectionConfigProvider) : Dat
             }
             _idleConnections.clear()
         }
-        logger.info("stopped datasource ${configProvider.url}")
+        logger.info("stopped datasource ${connectionProvider.identifier}")
     }
 
     override fun getParentLogger(): Logger? {
