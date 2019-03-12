@@ -320,13 +320,11 @@ class SelectImpl(private val backend: Backend) : Select {
                     }
                 }
 
-                rowHandler.result?.let { result ->
-                    if (rowHandler is ReturningRowHandler<*>) {
-                        cacheStrategy?.put(CacheableQuery(sql, whereParameters, offset, rows), result)
-                    }
-                    if (rowHandler is OptionalReturningRowHandler<*>) {
-                        cacheStrategy?.put(CacheableQuery(sql, whereParameters, offset, rows), result)
-                    }
+                if (rowHandler is ReturningRowHandler<*>) {
+                    cacheStrategy?.put(CacheableQuery(sql, whereParameters, offset, rows), rowHandler.result)
+                }
+                if (rowHandler is OptionalReturningRowHandler<*>) {
+                    cacheStrategy?.put(CacheableQuery(sql, whereParameters, offset, rows), rowHandler.result)
                 }
             }
         } catch (e: Exception) {

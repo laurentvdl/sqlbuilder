@@ -11,8 +11,6 @@ import java.io.Serializable
 /**
  * Caching strategy that use Serialisation to store any query to a single file.
  * This means the user must specify a different file for every query and parameter combination.
- *
- * @author Laurent Van der Linden
  */
 class FileStrategy(private val file: File) : CacheStrategy {
     override fun get(query: CacheableQuery): Any? {
@@ -32,22 +30,24 @@ class FileStrategy(private val file: File) : CacheStrategy {
         return null
     }
 
-    override fun put(query: CacheableQuery, result: Any) {
-        if (result is Serializable) {
-            try {
-                ObjectOutputStream(FileOutputStream(file)).use { oos ->
-                    oos.writeObject(result)
-                }
-            } catch (e: Exception) {
+    override fun put(query: CacheableQuery, result: Any?) {
+        if (result != null) {
+            if (result is Serializable) {
                 try {
-                    file.delete()
+                    ObjectOutputStream(FileOutputStream(file)).use { oos ->
+                        oos.writeObject(result)
+                    }
+                } catch (e: Exception) {
+                    try {
+                        file.delete()
+                    } finally {
+                        throw CacheException("failed to cache value to file ${file.absolutePath}", e)
+                    }
                 } finally {
-                    throw CacheException("failed to cache value to file ${file.absolutePath}", e)
                 }
-            } finally {
+            } else {
+                throw CacheException("when using a FileStrategy cache, all query results must be java.io.Serializable")
             }
-        } else {
-            throw CacheException("when using a FileStrategy cache, all query results must be java.io.Serializable")
         }
     }
 }

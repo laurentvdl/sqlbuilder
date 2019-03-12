@@ -26,7 +26,9 @@ class MemoryCache(private val backend: Backend, private val cacheId: String?) : 
         return null
     }
 
-    override fun put(query: CacheableQuery, result: Any) {
-        backend.getCache(cacheId).put(query, SoftReference(result))
+    override fun put(query: CacheableQuery, result: Any?) {
+        if (result != null) {
+            backend.getCache(cacheId).put(query, SoftReference(result))
+        }
     }
 }
