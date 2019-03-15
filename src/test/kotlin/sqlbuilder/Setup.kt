@@ -48,7 +48,7 @@ object Setup {
                     null, null, "jdbc:h2:mem:test", Drivers.H2
             )
     )
-    val sqlBuilder = SqlBuilderImpl(dataSource)
+    private val sqlBuilder = SqlBuilderImpl(dataSource)
 
     fun insertOneUser(username: String = "test a"): Long {
         val key = sqlBuilder.insert().getKeys(true).insertBean(CachingTest.SerializableUser(

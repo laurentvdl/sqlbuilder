@@ -2,8 +2,8 @@ package sqlbuilder
 
 import org.junit.Before
 import org.junit.Test
-import sqlbuilder.Setup.sqlBuilder
 import sqlbuilder.exceptions.CacheException
+import sqlbuilder.impl.SqlBuilderImpl
 import sqlbuilder.kotlin.beans.User
 import sqlbuilder.kotlin.select
 import sqlbuilder.kotlin.select.selectBeans
@@ -12,6 +12,8 @@ import java.io.Serializable
 import kotlin.test.assertEquals
 
 class CachingTest {
+    private val sqlBuilder = SqlBuilderImpl(Setup.dataSource)
+
     @Before
     fun setup() {
         Setup.createTables()

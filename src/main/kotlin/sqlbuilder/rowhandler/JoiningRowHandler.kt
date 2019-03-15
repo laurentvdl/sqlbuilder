@@ -43,7 +43,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         beans.put(MappingKey(type, prefix, ids), Object())
     }
 
-    protected open fun addPrimaryBean(instance: T) {
+    open fun addPrimaryBean(instance: T) {
         list.add(instance)
     }
 
@@ -57,7 +57,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
      * @return same instance populated
      */
     @Throws(SQLException::class)
-    protected open fun <S : Any> mapSetToBean(set: ResultSet, tableAlias: String?, instance: S): S {
+    open fun <S : Any> mapSetToBean(set: ResultSet, tableAlias: String?, instance: S): S {
         createColumnToIndexCache(set)
         val javaClass = instance.javaClass
         var propertyReferences = propertyReferenceCache[javaClass]
@@ -80,7 +80,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
     @SuppressWarnings("unchecked")
     @Throws(SQLException::class)
-    protected fun <S> getColumnFromTable(set: ResultSet, prefix: String?, property: PropertyReference, propertyType: Class<S>): S? {
+    fun <S> getColumnFromTable(set: ResultSet, prefix: String?, property: PropertyReference, propertyType: Class<S>): S? {
         createColumnToIndexCache(set)
         val index = getColumnIndex(prefix, property)
         if (index != null) {
@@ -164,7 +164,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         }
     }
 
-    private fun <R, W : Any> joinInstance(set: ResultSet, owner: R, targetType: Class<W>, prefix: String): W? {
+    fun <R, W : Any> joinInstance(set: ResultSet, owner: R, targetType: Class<W>, prefix: String): W? {
         if (owner != null) {
             val keyValues = getKeyValues(set, getKeys(targetType), prefix, true)
 

@@ -31,7 +31,9 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class KotlinUsage {
-    private val sqlBuilder = Setup.sqlBuilder
+    private val sqlBuilder = SqlBuilderImpl(Setup.dataSource).apply {
+        this.configuration.propertyResolutionStrategies = listOf(FieldPropertyResolver())
+    }
 
     @Before fun setup() {
         Setup.createTables()
