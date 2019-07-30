@@ -6,3 +6,4 @@ build/
 gradle-app.setting
 .idea
 .gradletasknamecache
+out

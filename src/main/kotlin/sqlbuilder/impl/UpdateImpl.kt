@@ -7,11 +7,13 @@ import sqlbuilder.IncorrectResultSizeException
 import sqlbuilder.PersistenceException
 import sqlbuilder.SqlConverter
 import sqlbuilder.Update
+import sqlbuilder.exceptions.IntegrityConstraintViolationException
 import sqlbuilder.exclude
 import sqlbuilder.include
 import sqlbuilder.meta.PropertyReference
 import java.sql.PreparedStatement
 import java.sql.SQLException
+import java.sql.SQLIntegrityConstraintViolationException
 import java.sql.Statement
 import java.util.Arrays
 
@@ -106,6 +108,8 @@ class UpdateImpl(private val backend: Backend): Update {
                 if (updates != 1) {
                     throw PersistenceException("updateBean resulted in $updates updated rows instead of 1 using <$sql> with bean $bean")
                 }
+            } catch (sqlix: SQLIntegrityConstraintViolationException) {
+                throw IntegrityConstraintViolationException("update <$sql> failed due to integrity constraint", sqlix)
             } catch (sqlx: SQLException) {
                 throw PersistenceException("update <$sql> failed", sqlx)
             }

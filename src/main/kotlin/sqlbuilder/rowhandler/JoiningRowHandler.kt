@@ -35,12 +35,12 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
     }
 
     protected fun <S : Any> putById(instance: S, prefix: String?, ids: List<Any?>): S {
-        beans.put(MappingKey(instance.javaClass, prefix, ids), instance)
+        beans[MappingKey(instance.javaClass, prefix, ids)] = instance
         return instance
     }
 
     protected fun putById(type: Class<*>, prefix: String?, ids: List<Any>) {
-        beans.put(MappingKey(type, prefix, ids), Object())
+        beans[MappingKey(type, prefix, ids)] = Object()
     }
 
     open fun addPrimaryBean(instance: T) {
@@ -63,7 +63,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
         var propertyReferences = propertyReferenceCache[javaClass]
         if (propertyReferences == null) {
             propertyReferences = metaResolver!!.getProperties(javaClass, true)
-            propertyReferenceCache.put(javaClass, propertyReferences)
+            propertyReferenceCache[javaClass] = propertyReferences
         }
         for (property in propertyReferences) {
             val index = getColumnIndex(tableAlias ?: metaResolver!!.getTableName(javaClass), property)
@@ -107,13 +107,13 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             for (x in 1..columnCount) {
                 val tableName = metaData.getTableName(x)
                 val columnLabel = metaData.getColumnLabel(x)
-                columnToIndex.put(columnLabel.toLowerCase(), x)
+                columnToIndex[columnLabel.toLowerCase()] = x
                 if (tableName?.isNotEmpty() == true) {
                     val key = indexFQColumnName(columnLabel, tableName)
                     if (columnToIndex.containsKey(key)) {
                         throw IncorrectJoinMapping(set.query, x, columnToIndex[key]!!, tableName, columnLabel)
                     }
-                    columnToIndex.put(key, x)
+                    columnToIndex[key] = x
                 }
             }
         }
@@ -279,7 +279,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
                 }
                 if (isList) {
                     @Suppress("UNCHECKED_CAST")
-                    var relationList = relationField.get(owner) as MutableList<W>
+                    val relationList = relationField.get(owner) as MutableList<W>
                     if (!relationList.contains(instance)) relationList.add(instance!!)
                 } else if (isSet) {
                     @Suppress("UNCHECKED_CAST")
@@ -343,7 +343,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
 
     fun entities(types: Set<Class<*>>): JoiningRowHandler<T> {
         for (type in types) {
-            this.expansionTypes.put(type.simpleName, type)
+            this.expansionTypes[type.simpleName] = type
         }
         return this
     }

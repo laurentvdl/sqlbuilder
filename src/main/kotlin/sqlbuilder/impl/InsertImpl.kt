@@ -5,6 +5,7 @@ import sqlbuilder.Backend
 import sqlbuilder.Insert
 import sqlbuilder.PersistenceException
 import sqlbuilder.SqlConverter
+import sqlbuilder.exceptions.IntegrityConstraintViolationException
 import sqlbuilder.exclude
 import sqlbuilder.impl.mappers.AnyMapper
 import sqlbuilder.include
@@ -12,6 +13,7 @@ import sqlbuilder.mapping.ToObjectMappingParameters
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
+import java.sql.SQLIntegrityConstraintViolationException
 
 class InsertImpl(private val backend: Backend): Insert {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -140,6 +142,8 @@ class InsertImpl(private val backend: Backend): Insert {
                 }
             }
             return 0
+        } catch (sqlix: SQLIntegrityConstraintViolationException) {
+            throw IntegrityConstraintViolationException("insert <$sqlString> failed with parameters ${values.values} due to integrity constraint", sqlix)
         } catch (sqlx: SQLException) {
             throw PersistenceException("insert <$sqlString> failed with parameters ${values.values}", sqlx)
         } finally {
