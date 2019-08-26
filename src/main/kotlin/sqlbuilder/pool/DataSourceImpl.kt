@@ -13,6 +13,7 @@ import java.util.Timer
 import java.util.TimerTask
 import java.util.logging.Logger
 import javax.sql.DataSource
+import kotlin.concurrent.thread
 
 class DataSourceImpl(private val connectionProvider: ConnectionProvider) : DataSource {
     constructor(connectionConfigProvider: ConnectionConfigProvider) :this(ConfigurationConnectionProvider(connectionConfigProvider)) {
@@ -92,13 +93,17 @@ class DataSourceImpl(private val connectionProvider: ConnectionProvider) : DataS
                 val connection = iterator.next()
                 val diff = currentTs - connection.lastModified
                 if (diff > zombieTimeout) {
-                    connection.close(true)
                     iterator.remove()
                     logger.error("removed zombie (after $diff milliseconds) that was invoking ${connection.lastMethod?.declaringClass?.name}.${connection.lastMethod?.name}" +
                             " with arguments ${connection.lastArguments.let { Arrays.toString(it) } ?: "[]"}" +
                             (if (connection.lastCallstack == null) "" else " at ${connection.lastCallstack}"))
                     // once it hits the fan, enable debugging
                     recordStacks = true
+
+                    thread(name = "Close zombie connection $connection") {
+                        // if this blocks further down, do not block our connection pool (lock)
+                        connection.close(true)
+                    }
                 }
             }
         }
