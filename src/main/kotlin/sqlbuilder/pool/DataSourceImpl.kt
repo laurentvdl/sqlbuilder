@@ -16,7 +16,7 @@ import javax.sql.DataSource
 import kotlin.concurrent.thread
 
 class DataSourceImpl(private val connectionProvider: ConnectionProvider) : DataSource {
-    constructor(connectionConfigProvider: ConnectionConfigProvider) :this(ConfigurationConnectionProvider(connectionConfigProvider)) {
+    constructor(connectionConfigProvider: ConnectionConfigProvider) : this(ConfigurationConnectionProvider(connectionConfigProvider)) {
         this.identityPlugin = connectionConfigProvider.identityPlugin
     }
 
@@ -129,7 +129,7 @@ class DataSourceImpl(private val connectionProvider: ConnectionProvider) : DataS
         }
     }
 
-    @Throws(SQLException::class )
+    @Throws(SQLException::class)
     override fun isWrapperFor(iface: Class<*>): Boolean {
         return iface == javaClass
     }
@@ -150,17 +150,16 @@ class DataSourceImpl(private val connectionProvider: ConnectionProvider) : DataS
                 this.timer = timer
             }
 
-            val connection: TransactionalConnection
+            var connection: TransactionalConnection
             if (_idleConnections.isNotEmpty()) {
                 connection = _idleConnections.pop()
                 connection.ping()
-            } else {
-                try {
-                    val jdbcConnection = newFysicalConnection()
-                    connection = TransactionalConnection(jdbcConnection, this, preparedStatementInterceptor)
-                } catch (e: SQLException) {
-                    throw PersistenceException(e.message, e)
+
+                if (connection.target.isClosed) {
+                    connection = createNewConnection()
                 }
+            } else {
+                connection = createNewConnection()
 
             }
             _activeConnections.add(connection)
@@ -173,6 +172,15 @@ class DataSourceImpl(private val connectionProvider: ConnectionProvider) : DataS
             if (traceUser != null) connection.setClientUser(traceUser)
         }
         return connection
+    }
+
+    private fun createNewConnection(): TransactionalConnection {
+        try {
+            val jdbcConnection = newFysicalConnection()
+            return TransactionalConnection(jdbcConnection, this, preparedStatementInterceptor)
+        } catch (e: SQLException) {
+            throw PersistenceException(e.message, e)
+        }
     }
 
     fun freeConnection(connection: TransactionalConnection) {
@@ -206,7 +214,8 @@ class DataSourceImpl(private val connectionProvider: ConnectionProvider) : DataS
             for (transactionalConnection in _idleConnections) {
                 try {
                     transactionalConnection.target.close()
-                } catch (ignore: SQLException) {}
+                } catch (ignore: SQLException) {
+                }
 
             }
             _idleConnections.clear()
@@ -229,17 +238,18 @@ class DataSourceImpl(private val connectionProvider: ConnectionProvider) : DataS
     override fun setLoginTimeout(seconds: Int) {
         throw UnsupportedOperationException()
     }
+
     override fun getLoginTimeout(): Int {
         throw UnsupportedOperationException()
     }
 
-    override fun toString(): String{
+    override fun toString(): String {
         return "DataSourceImpl(idleConnections=$_idleConnections, activeConnections=$_activeConnections, active=$active, zombieTimeout=$zombieTimeout, idleTimeout=$idleTimeout, cleanupDelay=$cleanupDelay, recordStacks=$recordStacks)"
     }
 
     val idleConnections: List<TransactionalConnection>
-       get() = Collections.unmodifiableList(_idleConnections)
+        get() = Collections.unmodifiableList(_idleConnections)
 
     val activeConnections: List<TransactionalConnection>
-       get() = Collections.unmodifiableList(_activeConnections)
+        get() = Collections.unmodifiableList(_activeConnections)
 }
