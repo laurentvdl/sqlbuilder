@@ -53,7 +53,8 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
 
     override fun <T : Any> save(bean: T, vararg excludedFields: String): T {
         val keys = metaResolver.getKeys(bean.javaClass)
-        val singleKey = keys.singleOrNull() ?: throw IllegalArgumentException("bean <${bean.javaClass}> has no single primary key")
+        val singleKey = keys.singleOrNull()
+                ?: throw IllegalArgumentException("bean <${bean.javaClass}> has no single primary key")
         val valueBefore = singleKey.get(bean)
         if (valueBefore != null) {
             update().excludeFields(*excludedFields).updateBean(bean)
@@ -122,19 +123,18 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
                 }
                 connection.commit()
                 connection.autoCommit = true
-            } catch (ignore: SQLException) {
+            } catch (e: SQLException) {
+                throw PersistenceException(e.message, e)
+            } finally {
+                closeConnection(connection)
             }
 
-            closeConnection(connection)
         }
     }
 
     override fun closeConnection(connection: Connection) {
         if (txConnections.get() == null) {
-            try {
-                connection.close()
-            } catch (ignore: SQLException) {}
-
+            connection.close()
         }
     }
 
@@ -145,9 +145,11 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
             try {
                 connection.rollback()
                 connection.autoCommit = true
-            } catch (ignore: SQLException) {}
-
-            closeConnection(connection)
+            } catch (e: SQLException) {
+                throw PersistenceException(e.message, e)
+            } finally {
+                closeConnection(connection)
+            }
         }
     }
 
