@@ -81,7 +81,7 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
             }
             return connection!!
         } catch (e: SQLException) {
-            throw PersistenceException(e.message, e)
+            throw PersistenceException("failed to obtain a new connection", e)
         }
 
     }
@@ -108,7 +108,7 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
             }
             connection.isReadOnly = readonly
         } catch (e: SQLException) {
-            throw PersistenceException(e.message, e)
+            throw PersistenceException("failed to start transaction with parameters {isolationLevel: $isolationLevel, readonly: $readonly}", e)
         }
 
     }
@@ -124,11 +124,10 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
                 connection.commit()
                 connection.autoCommit = true
             } catch (e: SQLException) {
-                throw PersistenceException(e.message, e)
+                throw PersistenceException("failed to commit transaction for $connection", e)
             } finally {
                 closeConnection(connection)
             }
-
         }
     }
 
@@ -146,7 +145,7 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
                 connection.rollback()
                 connection.autoCommit = true
             } catch (e: SQLException) {
-                throw PersistenceException(e.message, e)
+                throw PersistenceException("failed to rollback transaction on $connection", e)
             } finally {
                 closeConnection(connection)
             }
@@ -158,7 +157,7 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
             var specificCache = caches[cacheId]
             if (specificCache == null) {
                 specificCache = ConcurrentHashMap()
-                caches.put(cacheId, specificCache)
+                caches[cacheId] = specificCache
             }
             return specificCache
         }
