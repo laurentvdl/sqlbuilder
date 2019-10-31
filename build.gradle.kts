@@ -12,10 +12,11 @@ plugins {
     kotlin("jvm") version "1.3.50"
     id("org.jetbrains.kotlin.plugin.noarg").version("1.3.50")
     `maven-publish`
+    osgi
 }
 
 group = "com.github.sqlbuilder"
-version = "1.17.0-SNAPSHOT"
+version = "1.17.1"
 
 val sourcesJar by tasks.registering(Jar::class) {
     classifier = "sources"
@@ -68,6 +69,15 @@ publishing {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+}
+
+tasks.withType<Jar>().configureEach {
+    manifest {
+        // the manifest of the default jar is of type OsgiManifest
+        (manifest as? OsgiManifest)?.apply {
+            instruction("Import-Package","!kotlin.jdk7,*")
+        }
     }
 }
 
