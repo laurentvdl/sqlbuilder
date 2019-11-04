@@ -4,7 +4,7 @@ import sqlbuilder.Select
 import sqlbuilder.SqlBuilder
 import sqlbuilder.TransactionIsolation
 
-inline fun <R> SqlBuilder.withTransaction(
+fun <R> SqlBuilder.withTransaction(
         transactionIsolation: TransactionIsolation = TransactionIsolation.TRANSACTION_DEFAULT,
         readonly: Boolean = false,
         block: (sqlBuilder: SqlBuilder) -> R): R {
