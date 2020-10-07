@@ -6,17 +6,16 @@ buildscript {
     }
 }
 
-val kotlinVersion = "1.3.50"
+val kotlinVersion = "1.4.10"
 
 plugins {
-    kotlin("jvm") version "1.3.50"
-    id("org.jetbrains.kotlin.plugin.noarg").version("1.3.50")
+    kotlin("jvm") version "1.4.10"
+    id("org.jetbrains.kotlin.plugin.noarg").version("1.4.10")
     `maven-publish`
-    osgi
 }
 
 group = "com.github.sqlbuilder"
-version = "1.17.2"
+version = "1.18.0"
 
 val sourcesJar by tasks.registering(Jar::class) {
     classifier = "sources"
@@ -39,13 +38,13 @@ noArg {
 }
 
 dependencies {
-    compile(kotlin("stdlib-jdk8", version = kotlinVersion))
-    compile(kotlin("reflect", version = kotlinVersion))
-    compile("org.slf4j:slf4j-api:1.7.25")
-    testCompile (kotlin("test", version = kotlinVersion))
-    testCompile("com.h2database:h2:1.4.197")
-    testCompile("junit:junit:4.11")
-    testCompile("org.slf4j:slf4j-simple:1.7.7")
+    implementation(kotlin("stdlib-jdk8", version = kotlinVersion))
+    implementation(kotlin("reflect", version = kotlinVersion))
+    implementation("org.slf4j:slf4j-api:1.7.25")
+    testImplementation (kotlin("test", version = kotlinVersion))
+    testImplementation("com.h2database:h2:1.4.197")
+    testImplementation("junit:junit:4.11")
+    testImplementation("org.slf4j:slf4j-simple:1.7.7")
 }
 
 publishing {
@@ -69,15 +68,6 @@ publishing {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         jvmTarget = "1.8"
-    }
-}
-
-tasks.withType<Jar>().configureEach {
-    manifest {
-        // the manifest of the default jar is of type OsgiManifest
-        (manifest as? OsgiManifest)?.apply {
-            instruction("Import-Package","!kotlin.jdk7,*")
-        }
     }
 }
 

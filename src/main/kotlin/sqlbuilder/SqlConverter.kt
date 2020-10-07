@@ -18,7 +18,11 @@ class SqlConverter(private val configuration: Configuration) {
         var convertedParam = param
         var convertedValueType = valueType
 
-        logger.debug("set({},{})", index, convertedParam)
+        if (convertedParam is ByteArray) {
+            logger.debug("set({},{})", index, "ByteArray with length ${convertedParam.size}")
+        } else {
+            logger.debug("set({},{})", index, convertedParam)
+        }
 
         if (convertedParam == null) {
             if (sqlType != null) {
