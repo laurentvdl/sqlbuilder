@@ -33,7 +33,7 @@ class JavaFieldPropertyReference(private val field: Field) : PropertyReference {
     }
 
     override val columnName: String
-        get() = this.field.getAnnotation(Column::class.java)?.name?.toLowerCase() ?: name.toLowerCase()
+        get() = this.field.getAnnotation(Column::class.java)?.name ?: name
 
     override fun toString(): String {
         return "property <${field.declaringClass}.$name>"
