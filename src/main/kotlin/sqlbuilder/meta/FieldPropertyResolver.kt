@@ -14,8 +14,8 @@ class FieldPropertyResolver : PropertyResolver {
         val fields = beanClass.allFields
         for (field in fields) {
             val modifiers = field.modifiers
-            val name = field.name!!
-            if (!names.contains(name) && !Modifier.isAbstract(modifiers) && !Modifier.isStatic(modifiers) && isSqlType(field.type!!, configuration) && !isTransient(field)) {
+            val name = field.name
+            if (!names.contains(name) && !Modifier.isAbstract(modifiers) && !Modifier.isStatic(modifiers) && isSqlType(field.type, configuration) && !isTransient(field)) {
                 result.add(JavaFieldPropertyReference(field))
             }
         }

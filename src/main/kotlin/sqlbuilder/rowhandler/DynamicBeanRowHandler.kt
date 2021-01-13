@@ -21,11 +21,12 @@ class DynamicBeanRowHandler<T : Any>(private val beanClass: Class<T>, private va
 
     var mappings: Map<Any, String>? = null
 
+    @Suppress("SetterBackingFieldAssignment")
     override var properties: List<PropertyReference>? = null
         set(setters) {
             refCache.clear()
             for (ref in setters!!) {
-                refCache.put(ref.columnName.toLowerCase(), ref)
+                refCache[ref.columnName.toLowerCase()] = ref
             }
         }
 

@@ -8,6 +8,7 @@ import sqlbuilder.kotlin.beans.User
 import sqlbuilder.kotlin.select
 import sqlbuilder.kotlin.select.selectBeans
 import sqlbuilder.meta.Table
+import java.io.File
 import java.io.Serializable
 import kotlin.test.assertEquals
 
@@ -57,7 +58,7 @@ class CachingTest {
     @Test(expected = CacheException::class)
     fun cacheNonSerializableResults() {
         sqlBuilder.select {
-            cache(createTempFile("users", "cache"))
+            cache(File.createTempFile("users", "cache"))
             selectBeans<User>()
         }
     }

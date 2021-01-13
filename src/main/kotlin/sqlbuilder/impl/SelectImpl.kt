@@ -146,7 +146,7 @@ class SelectImpl(private val backend: Backend) : Select {
 
     override fun <T : Any> selectBean(beanClass: Class<T>): T? {
         val result = selectBeans(beanClass)
-        if (!result.isEmpty()) {
+        if (result.isNotEmpty()) {
             if (result.size > 1) {
                 throw IncorrectResultSizeException("more than 1 result")
             }
@@ -429,8 +429,8 @@ class SelectImpl(private val backend: Backend) : Select {
             this.sqlMappings = java.util.HashMap()
             this.propertyMappings = java.util.HashMap()
         }
-        this.sqlMappings!!.put(sqlColumn, propertyName.toLowerCase())
-        this.propertyMappings!!.put(propertyName.toLowerCase(), sqlColumn)
+        this.sqlMappings!![sqlColumn] = propertyName.toLowerCase()
+        this.propertyMappings!![propertyName.toLowerCase()] = sqlColumn
         return this
     }
 

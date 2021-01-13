@@ -6,16 +6,16 @@ buildscript {
     }
 }
 
-val kotlinVersion = "1.4.10"
+val kotlinVersion = "1.4.21-2"
 
 plugins {
-    kotlin("jvm") version "1.4.10"
-    id("org.jetbrains.kotlin.plugin.noarg").version("1.4.10")
+    kotlin("jvm") version "1.4.21-2"
+    id("org.jetbrains.kotlin.plugin.noarg").version("1.4.21-2")
     `maven-publish`
 }
 
 group = "com.github.sqlbuilder"
-version = "1.18.0"
+version = "1.19.0"
 
 val sourcesJar by tasks.registering(Jar::class) {
     classifier = "sources"
@@ -25,10 +25,10 @@ val sourcesJar by tasks.registering(Jar::class) {
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+    withSourcesJar()
 }
 
 repositories {
-    mavenLocal()
     jcenter()
     mavenCentral()
 }
@@ -48,12 +48,6 @@ dependencies {
 }
 
 publishing {
-    publications {
-        register("mavenJava", MavenPublication::class) {
-            from(components["java"])
-            artifact(sourcesJar.get())
-        }
-    }
     repositories {
         maven {
             url = uri("https://api.bintray.com/maven/laurentvanderlinden/maven/sqlbuilder")

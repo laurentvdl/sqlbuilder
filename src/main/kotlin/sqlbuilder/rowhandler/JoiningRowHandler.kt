@@ -90,12 +90,15 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
     }
 
     protected fun getColumnIndex(tableAlias: String?, property: PropertyReference): Int? {
+        val columnNameLowercase = property.columnName.toLowerCase()
         return if (tableAlias == null) {
-            columnToIndex[property.columnName] ?: throw PersistenceException("no column was found for property $property using column name ${property.columnName}")
+            columnToIndex[columnNameLowercase] ?: throw PersistenceException("no column was found for property $property using column name $columnNameLowercase")
         } else {
-            val columnName = tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(tableAlias.toLowerCase(), property.columnName)]
-                    ?: indexFQColumnName(property.columnName, tableAlias)
-            columnToIndex[columnName] ?: columnToIndex[property.columnName]
+            val columnName = tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(
+                tableAlias.toLowerCase(),
+                columnNameLowercase
+            )] ?: indexFQColumnName(columnNameLowercase, tableAlias)
+            columnToIndex[columnName] ?: columnToIndex[columnNameLowercase]
         }
     }
 
@@ -106,8 +109,8 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
             val columnCount = metaData.columnCount
             for (x in 1..columnCount) {
                 val tableName = metaData.getTableName(x)
-                val columnLabel = metaData.getColumnLabel(x)
-                columnToIndex[columnLabel.toLowerCase()] = x
+                val columnLabel = metaData.getColumnLabel(x).toLowerCase()
+                columnToIndex[columnLabel] = x
                 if (tableName?.isNotEmpty() == true) {
                     val key = indexFQColumnName(columnLabel, tableName)
                     if (columnToIndex.containsKey(key)) {
@@ -131,12 +134,13 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
      * @throws SQLException
      */
     fun mapPrimaryBean(set: ResultSet, primaryType: Class<T>, prefix: String?): T {
-        val keyValues = getKeyValues(set, getKeys(primaryType), prefix, false)
-        var instance = getById(primaryType, prefix, keyValues)
+        val prefixLowercase = prefix?.toLowerCase()
+        val keyValues = getKeyValues(set, getKeys(primaryType), prefixLowercase, false)
+        var instance = getById(primaryType, prefixLowercase, keyValues)
         if (instance == null) {
-            instance = mapSetToBean(set, prefix?.toLowerCase(), primaryType.newInstance())
+            instance = mapSetToBean(set, prefixLowercase, primaryType.newInstance())
             addPrimaryBean(instance)
-            putById(instance, prefix, keyValues)
+            putById(instance, prefixLowercase, keyValues)
         }
 
         return instance!!
@@ -196,7 +200,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
                     property.setter.call(owner, embeddedSet)
                 }
                 embeddedSet
-            }!!
+            }
 
             relationSet.add(instance)
         }
@@ -263,8 +267,8 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
                         relationField
                     }
 
-            val isList = List::class.java.isAssignableFrom(relationField.type!!)
-            val isSet = Set::class.java.isAssignableFrom(relationField.type!!)
+            val isList = List::class.java.isAssignableFrom(relationField.type)
+            val isSet = Set::class.java.isAssignableFrom(relationField.type)
 
             initializeCollections<W>(isList, relationField, owner, isSet)
 
@@ -326,7 +330,7 @@ abstract class JoiningRowHandler<T : Any> : ListRowHandler<T>, RowHandler, Refle
                     val properties = metaResolver!!.getProperties(type, true)
                     properties.joinToString(",", transform = { prop ->
                         val columnAlias = "${alias}_${columnIndex++}"
-                        tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(alias.toLowerCase(), prop.columnName)] = columnAlias
+                        tableAliasScopedPropertyToColumn[TableAliasScopedPropertyReference(alias.toLowerCase(), prop.columnName.toLowerCase())] = columnAlias
                         "$columnPrefix.${prop.columnName} as $columnAlias"
                     })
                 } else {
