@@ -48,6 +48,11 @@ dependencies {
 }
 
 publishing {
+    publications {
+        register("mavenJava", MavenPublication::class) {
+            from(components["java"])
+        }
+    }
     repositories {
         maven {
             url = uri("https://api.bintray.com/maven/laurentvanderlinden/maven/sqlbuilder")
