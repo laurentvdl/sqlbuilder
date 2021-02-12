@@ -142,6 +142,9 @@ class SqlBuilderImpl(private val dataSource: DataSource) : SqlBuilder, Backend {
         if (connection != null) {
             txConnections.set(null)
             try {
+                logger.debug {
+                    "rollback transaction for connection $connection"
+                }
                 connection.rollback()
                 connection.autoCommit = true
             } catch (e: SQLException) {
