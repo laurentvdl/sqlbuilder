@@ -312,11 +312,7 @@ class KotlinUsage {
 
         var users = sqlBuilder.select {
             where {
-                or(userNames, object: WhereGroupVisitor<String> {
-                    override fun forItem(subGroup: WhereGroup, item: String) {
-                        subGroup.or("username = ?", item)
-                    }
-                })
+                or(userNames) { subGroup, item -> subGroup.or("username = ?", item) }
             }
             selectBeans<User>()
         }
